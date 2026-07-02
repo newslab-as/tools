@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NewsLab · Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---------------------------------------------------------------------------
+   NewsLab Tools Hub — matched to the Production Planner visual system.
+   Warm paper · ABC Diatype + JetBrains Mono · squared corners · hairline rules.
+
+   HOW EDITING WORKS
+   - "Your tools" (personal) saves to this browser only (localStorage).
+   - "Agency tools" is the shared directory. Editing it stages a local draft;
+     use Export in edit mode to download config.json and commit it to the repo.
+   - If a config.json sits next to this file, it overrides the defaults below.
+
+   To change the seed content without the UI, edit DEFAULT_CONFIG far below.
+---------------------------------------------------------------------------- */
+
+:root{
+  --bg:#f2f1ed;
+  --surface:#faf9f6;
+  --surface-2:#ebe8df;
+  --ink:#14130f;
+  --muted:#6b6963;
+  --faint:#b8b5ac;
+  --line:#e2dfd6;
+  --line-strong:#d5d1c6;
+  --accent:#14130f;          /* interactive = ink, like the planner */
+  --accent-soft:#e6e2d8;     /* soft focus ring */
+  --danger:#b8463a;          /* brick red, from the planner */
+  --edit:#b8463a;            /* edit-mode signal */
+  --edit-soft:#f6e7dd;
+  --note:#f6efc9;            /* team notice, sticky-note yellow */
+  --note-line:#e4d894;
+  --radius:0px;
+  --radius-sm:4px;
+  --shadow:0 12px 34px rgba(20,19,15,.10);
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'ABC Diatype',Arial,'Helvetica Neue',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#14130f;
+  --surface:#1c1a15;
+  --surface-2:#26241d;
+  --ink:#f2f1ed;
+  --muted:#a8a49a;
+  --faint:#6b6963;
+  --line:#2e2b23;
+  --line-strong:#3d3930;
+  --accent:#f2f1ed;
+  --accent-soft:#2e2b23;
+  --danger:#d99587;
+  --edit:#d99587;
+  --edit-soft:#2b201c;
+  --note:#2c2814;
+  --note-line:#4a4325;
+  --shadow:0 12px 34px rgba(0,0,0,.5);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+button{font-family:var(--mono);cursor:pointer;color:inherit}
+a{color:inherit;text-decoration:none}
+input,textarea,select{font-family:var(--sans);color:inherit}
+
+/* shared mono label treatment */
+.mono-label{font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+
+/* ---------- layout shell ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:saturate(120%) blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.topbar-inner{display:flex;align-items:center;gap:18px;height:62px}
+.brand{display:flex;align-items:center;gap:10px;flex:0 0 auto;user-select:none}
+.brand .mark{font-weight:500;letter-spacing:-.03em;font-size:20px}
+.brand .dot{width:6px;height:6px;background:var(--danger)}
+.brand .sub{font-family:var(--mono);text-transform:uppercase;letter-spacing:.16em;font-size:10px;color:var(--muted)}
+
+.search{position:relative;flex:1 1 auto;max-width:420px}
+.search input{
+  width:100%;height:38px;border:1px solid var(--line-strong);background:var(--surface);
+  border-radius:var(--radius);padding:0 14px 0 38px;font-size:14px;outline:none;
+  transition:border-color .15s, box-shadow .15s;
+}
+.search input:focus{border-color:var(--ink);box-shadow:0 0 0 3px var(--accent-soft)}
+.search .ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none}
+.search .kbd{
+  position:absolute;right:9px;top:50%;transform:translateY(-50%);
+  font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);
+  padding:3px 6px;background:var(--surface-2);
+}
+.topbar .spacer{flex:1 1 auto}
+.iconbtn{
+  height:36px;width:36px;border:1px solid var(--line-strong);border-radius:var(--radius);
+  background:var(--surface);display:inline-flex;align-items:center;justify-content:center;
+  transition:background .15s,border-color .15s;
+}
+.iconbtn:hover{background:var(--surface-2);border-color:var(--ink)}
+.editbtn{
+  height:36px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--surface);
+  padding:0 16px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:12px;
+  display:inline-flex;align-items:center;gap:8px;color:var(--muted);
+  transition:background .15s,border-color .15s,color .15s;
+}
+.editbtn:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
+.editbtn.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+
+/* ---------- edit-mode banner ---------- */
+.editbar{
+  display:none;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--edit-soft);border:1px solid color-mix(in srgb,var(--edit) 40%,transparent);
+  border-radius:var(--radius);padding:12px 16px;margin:20px 0 4px;font-size:13px;
+}
+body.editing .editbar{display:flex}
+.editbar b{color:var(--edit)}
+.editbar .grow{flex:1 1 auto}
+.pill{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--radius);
+  padding:7px 12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.07em;font-size:11px;
+  display:inline-flex;align-items:center;gap:6px;color:var(--muted);
+}
+.pill:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
+.pill.warn{color:var(--edit);border-color:color-mix(in srgb,var(--edit) 45%,transparent)}
+.pill.warn:hover{background:var(--edit);color:#fff;border-color:var(--edit)}
+
+/* ---------- notice ---------- */
+.notice{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--note);border:1px solid var(--note-line);
+  border-radius:var(--radius);padding:14px 16px;margin:20px 0;font-size:14px;line-height:1.45;
+}
+.notice svg{flex:0 0 auto;margin-top:1px;color:var(--ink);opacity:.7}
+.notice-edit{margin:20px 0}
+.notice-edit textarea{
+  width:100%;min-height:54px;border:1px dashed var(--line-strong);border-radius:var(--radius);
+  background:var(--surface);padding:12px 14px;font-size:14px;resize:vertical;outline:none;
+}
+.notice-edit textarea:focus{border-color:var(--ink)}
+
+/* ---------- section ---------- */
+.section{margin:40px 0 8px}
+.section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.section-head h2{margin:0;font-size:22px;font-weight:500;letter-spacing:-.025em}
+.section-head .count{font-family:var(--mono);font-size:12px;color:var(--faint)}
+.section-head .desc{margin-left:auto;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:10px;color:var(--faint)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.chip{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--radius);
+  padding:6px 12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.07em;font-size:11px;
+  color:var(--muted);display:inline-flex;align-items:center;gap:8px;
+  transition:background .12s,color .12s,border-color .12s;
+}
+.chip:hover{background:var(--surface-2);color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip .cdot{width:7px;height:7px} /* square, matches radius-0 language */
+
+/* ---------- grid + tiles ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.tile{
+  position:relative;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px 16px 15px;min-height:116px;
+  display:flex;flex-direction:column;gap:9px;
+  transition:border-color .14s,background .14s;
+}
+.tile:hover{border-color:var(--ink)}
+.tile .row1{display:flex;align-items:center;gap:9px}
+.tile .code{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.04em}
+.tile .cat{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;font-size:10px;color:var(--muted)}
+.tile .cat .cdot{width:7px;height:7px}
+.tile .title{font-size:17px;font-weight:500;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.tile .title .ext{color:var(--faint);font-size:13px;opacity:0;transition:opacity .14s}
+.tile:hover .title .ext{opacity:1}
+.tile .body{font-size:13px;color:var(--muted);line-height:1.42}
+.tile .badge{
+  align-self:flex-start;margin-top:auto;font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);border:1px solid var(--line-strong);
+  padding:4px 7px;border-radius:var(--radius);
+}
+.tile.disabled{opacity:.6}
+.tile.disabled:hover{border-color:var(--line)}
+
+/* edit controls on tiles */
+.tile .ctrls{position:absolute;top:10px;right:10px;display:none;gap:5px}
+body.editing .tile .ctrls{display:flex}
+.tile .ctrls button{
+  width:27px;height:27px;border-radius:var(--radius);border:1px solid var(--line-strong);
+  background:var(--surface);display:inline-flex;align-items:center;justify-content:center;color:var(--muted);
+}
+.tile .ctrls button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
+.tile .ctrls .del:hover{color:#fff;background:var(--danger);border-color:var(--danger)}
+body.editing .tile[draggable="true"]{cursor:grab}
+.tile.dragging{opacity:.35}
+.tile.dragover{border-color:var(--ink);border-style:dashed}
+body.editing .tile .cat{margin-right:66px}
+
+/* add tile */
+.tile.add{
+  display:none;align-items:center;justify-content:center;text-align:center;flex-direction:row;
+  border:1px dashed var(--line-strong);background:transparent;color:var(--muted);min-height:116px;
+  font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:11px;gap:8px;
+}
+body.editing .tile.add{display:flex}
+.tile.add:hover{border-color:var(--ink);color:var(--ink)}
+
+/* empty state */
+.empty{
+  border:1px dashed var(--line-strong);border-radius:var(--radius);
+  padding:28px;text-align:center;color:var(--muted);font-size:14px;
+}
+.empty b{color:var(--ink);font-weight:500;display:block;margin-bottom:4px;font-size:15px}
+
+/* ---------- footer ---------- */
+.foot{
+  margin:52px 0 44px;padding-top:18px;border-top:1px solid var(--line);
+  display:flex;gap:16px;align-items:center;
+  font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:10px;color:var(--faint);flex-wrap:wrap;
+}
+.foot .grow{flex:1 1 auto}
+.foot a{cursor:pointer}
+.foot a:hover{color:var(--ink)}
+
+/* ---------- modal ---------- */
+.scrim{
+  position:fixed;inset:0;z-index:60;background:rgba(20,19,15,.38);
+  display:none;align-items:flex-start;justify-content:center;padding:68px 18px;overflow:auto;
+}
+.scrim.open{display:flex}
+.modal{
+  width:100%;max-width:460px;background:var(--surface);border:1px solid var(--line-strong);
+  border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;
+}
+.modal h3{margin:0 0 4px;font-size:22px;font-weight:500;letter-spacing:-.025em}
+.modal .mh-sub{margin:0 0 20px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.07em;font-size:10px;color:var(--muted)}
+.field{margin-bottom:15px}
+.field label{display:block;font-family:var(--mono);text-transform:uppercase;letter-spacing:.07em;font-size:10px;color:var(--muted);margin-bottom:6px}
+.field input,.field textarea,.field select{
+  width:100%;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--surface);
+  padding:9px 11px;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--ink);box-shadow:0 0 0 3px var(--accent-soft)}
+.field .hint{font-size:12px;color:var(--faint);margin-top:6px}
+.modal-actions{display:flex;gap:9px;margin-top:22px}
+.modal-actions .grow{flex:1 1 auto}
+.btn{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--radius);
+  padding:10px 16px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.07em;font-size:11px;color:var(--muted);
+}
+.btn:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,transparent)}
+.btn.danger:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+
+.io-area{width:100%;min-height:150px;font-family:var(--mono);font-size:12px;line-height:1.55;border:1px solid var(--line-strong);border-radius:var(--radius);padding:12px;background:var(--surface-2);resize:vertical;outline:none}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:var(--radius);
+  font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;font-size:11px;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:80;box-shadow:var(--shadow);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:560px){
+  .brand .sub{display:none}
+  .search .kbd{display:none}
+  .section-head .desc{display:none}
+  .section-head h2{font-size:19px}
+}
+
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand" id="brand">
+      <span class="mark">NewsLab</span><span class="dot"></span><span class="sub" id="tagline">tools</span>
+    </div>
+    <div class="search">
+      <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" type="text" placeholder="Search tools…" autocomplete="off" spellcheck="false" aria-label="Search tools" />
+      <span class="kbd">/</span>
+    </div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+      <svg id="themeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"></svg>
+    </button>
+    <button class="editbtn" id="editBtn" aria-pressed="false">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <span id="editLabel">Edit</span>
+    </button>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <!-- edit-mode banner -->
+  <div class="editbar">
+    <span><b>Editing.</b> Personal changes save to this browser. Agency changes are a local draft until you export &amp; commit.</span>
+    <span class="grow"></span>
+    <button class="pill" id="editNoticeBtn">Notice</button>
+    <button class="pill" id="catBtn">Categories</button>
+    <button class="pill warn" id="exportBtn">Export agency config</button>
+    <button class="pill" id="importBtn">Import</button>
+  </div>
+
+  <div id="noticeSlot"></div>
+
+  <!-- AGENCY -->
+  <section class="section" id="agencySection">
+    <div class="section-head">
+      <h2>Agency tools</h2>
+      <span class="count" id="agencyCount"></span>
+      <span class="desc">Shared across the team</span>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="agencyGrid"></div>
+  </section>
+
+  <!-- PERSONAL -->
+  <section class="section" id="personalSection">
+    <div class="section-head">
+      <h2>Your tools</h2>
+      <span class="count" id="personalCount"></span>
+      <span class="desc">Only on this device</span>
+    </div>
+    <div class="grid" id="personalGrid"></div>
+  </section>
+
+  <footer class="foot">
+    <span id="footMeta"></span>
+    <span class="grow"></span>
+    <a id="discardDraft" style="display:none;cursor:pointer">discard agency draft</a>
+    <span>tools.newslab.no</span>
+  </footer>
+</main>
+
+<!-- Add / edit tile modal -->
+<div class="scrim" id="tileScrim">
+  <div class="modal">
+    <h3 id="tileTitle">Add tool</h3>
+    <p class="mh-sub" id="tileSub"></p>
+    <div class="field">
+      <label for="fName">Name</label>
+      <input id="fName" type="text" placeholder="Production Planner" />
+    </div>
+    <div class="field">
+      <label for="fUrl">Link</label>
+      <input id="fUrl" type="text" placeholder="https://…" />
+      <div class="hint">Leave blank for a placeholder tile (shows as “coming soon”).</div>
+    </div>
+    <div class="field">
+      <label for="fDesc">Description</label>
+      <input id="fDesc" type="text" placeholder="What it's for, in a few words" />
+    </div>
+    <div class="field">
+      <label for="fCat">Category</label>
+      <select id="fCat"></select>
+    </div>
+    <div class="field">
+      <label for="fBadge">Badge <span style="color:var(--faint);font-weight:400">(optional)</span></label>
+      <input id="fBadge" type="text" placeholder="Soon, Beta, New…" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn danger" id="tileDelete" style="display:none">Delete</button>
+      <span class="grow"></span>
+      <button class="btn" id="tileCancel">Cancel</button>
+      <button class="btn primary" id="tileSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import / export modal -->
+<div class="scrim" id="ioScrim">
+  <div class="modal">
+    <h3 id="ioTitle">Agency config</h3>
+    <p class="mh-sub" id="ioSub"></p>
+    <textarea class="io-area" id="ioArea" spellcheck="false"></textarea>
+    <div class="modal-actions">
+      <span class="grow"></span>
+      <button class="btn" id="ioClose">Close</button>
+      <button class="btn primary" id="ioAction">Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- Categories modal -->
+<div class="scrim" id="catScrim">
+  <div class="modal">
+    <h3>Categories</h3>
+    <p class="mh-sub">Grouping labels for the agency directory. One per line as <span style="font-family:var(--mono)">label</span> or <span style="font-family:var(--mono)">label #hexcolour</span>.</p>
+    <textarea class="io-area" id="catArea" spellcheck="false" style="min-height:170px"></textarea>
+    <div class="modal-actions">
+      <span class="grow"></span>
+      <button class="btn" id="catCancel">Cancel</button>
+      <button class="btn primary" id="catSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===========================================================================
+   DEFAULT_CONFIG — the seed agency directory.
+   Edit here to change what ships in the file, or use edit mode + Export.
+   =========================================================================== */
+const DEFAULT_CONFIG = {
+  meta: { agencyName: "NewsLab", tagline: "tools", version: 1 },
+  notice: "",
+  categories: [
+    { id:"tools",     label:"Tools",     color:"#d99587" },
+    { id:"design",    label:"Design",    color:"#b0a3d4" },
+    { id:"files",     label:"Files",     color:"#b8d99e" },
+    { id:"resources", label:"Resources", color:"#d9c876" },
+    { id:"admin",     label:"Admin",     color:"#dcb392" }
+  ],
+  agency: [
+    { id:"prod-planner", name:"Production Planner", url:"https://tools.newslab.no/production-planner",
+      desc:"Interactive project timeline builder", cat:"tools" },
+    { id:"budget-gen", name:"Budget generator", url:"",
+      desc:"Build client budgets from templates", cat:"tools", badge:"Soon" },
+    { id:"brand", name:"Brand assets", url:"",
+      desc:"Logos, fonts and colour tokens", cat:"resources", badge:"Soon" },
+    { id:"figma", name:"Figma", url:"https://figma.com",
+      desc:"Design files and Sites projects", cat:"design" },
+    { id:"drive", name:"Google Drive", url:"https://drive.google.com",
+      desc:"Shared agency drive", cat:"files" },
+    { id:"mercell", name:"Mercell", url:"https://www.mercell.com",
+      desc:"Tender and procurement portal", cat:"admin" }
+  ]
+};
+
+/* ---------- safe storage (degrades to memory if unavailable) ---------- */
+const store = (() => {
+  let ok = true;
+  try { const k="__nl_test"; localStorage.setItem(k,"1"); localStorage.removeItem(k); }
+  catch(e){ ok = false; }
+  const mem = {};
+  return {
+    get(k){ try { return ok ? localStorage.getItem(k) : (mem[k] ?? null); } catch(e){ return mem[k] ?? null; } },
+    set(k,v){ try { ok ? localStorage.setItem(k,v) : (mem[k]=v); } catch(e){ mem[k]=v; } },
+    del(k){ try { ok ? localStorage.removeItem(k) : delete mem[k]; } catch(e){ delete mem[k]; } }
+  };
+})();
+const K = { personal:"nl_hub_personal", draft:"nl_hub_agency_draft", prefs:"nl_hub_prefs", usage:"nl_hub_usage" };
+
+/* ---------- state ---------- */
+const state = {
+  config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
+  base: JSON.parse(JSON.stringify(DEFAULT_CONFIG)), // published baseline
+  personal: [],
+  usage: {},
+  edit: false,
+  query: "",
+  activeCat: null,
+  agencyDirty: false,
+  dark: false
+};
+
+/* ---------- helpers ---------- */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const uid = ()=> "id"+Math.random().toString(36).slice(2,9);
+const esc = s => (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2200); }
+function catById(id){ return state.config.categories.find(c=>c.id===id); }
+function catColor(id){ return (catById(id)||{}).color || "var(--faint)"; }
+function catLabel(id){ return (catById(id)||{}).label || "—"; }
+function safeUrl(u){ if(!u) return ""; return /^https?:\/\//i.test(u) ? u : "https://"+u; }
+
+/* ---------- load ---------- */
+async function boot(){
+  // theme
+  const prefs = JSON.parse(store.get(K.prefs) || "{}");
+  state.dark = prefs.dark ?? window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme();
+
+  // agency baseline: external config.json overrides embedded default
+  try{
+    const res = await fetch("config.json", {cache:"no-store"});
+    if(res.ok){
+      const cfg = await res.json();
+      state.base = normaliseConfig(cfg);
+    }
+  }catch(e){ /* no config.json — fine, use embedded default */ }
+
+  // apply agency draft if present
+  const draft = store.get(K.draft);
+  if(draft){
+    try{
+      state.config = normaliseConfig(JSON.parse(draft));
+      state.agencyDirty = true;
+    }catch(e){ state.config = JSON.parse(JSON.stringify(state.base)); }
+  } else {
+    state.config = JSON.parse(JSON.stringify(state.base));
+  }
+
+  // personal + usage
+  try{ state.personal = JSON.parse(store.get(K.personal) || "[]"); }catch(e){ state.personal = []; }
+  try{ state.usage = JSON.parse(store.get(K.usage) || "{}"); }catch(e){ state.usage = {}; }
+
+  $("#tagline").textContent = state.config.meta.tagline || "tools";
+  render();
+}
+
+function normaliseConfig(cfg){
+  const c = Object.assign({meta:{},categories:[],agency:[],notice:""}, cfg||{});
+  c.meta = Object.assign({agencyName:"NewsLab",tagline:"tools",version:1}, c.meta||{});
+  c.categories = Array.isArray(c.categories)&&c.categories.length ? c.categories : DEFAULT_CONFIG.categories;
+  c.agency = (Array.isArray(c.agency)?c.agency:[]).map(t=>({id:t.id||uid(),name:t.name||"Untitled",url:t.url||"",desc:t.desc||"",cat:t.cat||c.categories[0].id,badge:t.badge||""}));
+  return c;
+}
+
+/* ---------- persistence ---------- */
+function savePersonal(){ store.set(K.personal, JSON.stringify(state.personal)); }
+function saveDraft(){
+  state.agencyDirty = JSON.stringify(state.config) !== JSON.stringify(state.base);
+  if(state.agencyDirty) store.set(K.draft, JSON.stringify(state.config));
+  else store.del(K.draft);
+}
+function savePrefs(){ store.set(K.prefs, JSON.stringify({dark:state.dark})); }
+function saveUsage(){ store.set(K.usage, JSON.stringify(state.usage)); }
+
+/* ---------- rendering ---------- */
+function render(){
+  renderNotice();
+  renderChips();
+  renderGrid("agency");
+  renderGrid("personal");
+  $("#agencyCount").textContent = state.config.agency.length ? String(state.config.agency.length).padStart(2,"0") : "00";
+  $("#personalCount").textContent = String(state.personal.length).padStart(2,"0");
+  const v = state.config.meta.version || 1;
+  $("#footMeta").textContent = state.agencyDirty ? "agency draft · unpublished" : ("v"+v);
+  $("#discardDraft").style.display = state.agencyDirty ? "inline" : "none";
+}
+
+function matchQuery(t){
+  const q = state.query.trim().toLowerCase();
+  if(!q) return true;
+  return (t.name+" "+t.desc+" "+catLabel(t.cat)).toLowerCase().includes(q);
+}
+
+function renderNotice(){
+  const slot = $("#noticeSlot");
+  const n = state.config.notice || "";
+  if(state.edit){
+    slot.innerHTML = `<div class="notice-edit"><textarea id="noticeInput" placeholder="Add a notice for the team — deadlines, downtime, a heads-up…">${esc(n)}</textarea></div>`;
+    $("#noticeInput").addEventListener("input", e=>{ state.config.notice = e.target.value; saveDraft(); render(); });
+  } else if(n){
+    slot.innerHTML = `<div class="notice"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:0 0 auto;margin-top:1px;color:var(--accent)"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg><span>${esc(n)}</span></div>`;
+  } else {
+    slot.innerHTML = "";
+  }
+}
+
+function renderChips(){
+  const wrap = $("#chips");
+  const cats = state.config.categories.filter(c => state.config.agency.some(t=>t.cat===c.id));
+  if(cats.length < 2){ wrap.innerHTML=""; return; }
+  let html = `<button class="chip ${state.activeCat?'':'on'}" data-cat="">All</button>`;
+  html += cats.map(c=>`<button class="chip ${state.activeCat===c.id?'on':''}" data-cat="${c.id}"><span class="cdot" style="background:${c.color}"></span>${esc(c.label)}</button>`).join("");
+  wrap.innerHTML = html;
+  $$(".chip", wrap).forEach(b=>b.addEventListener("click",()=>{ state.activeCat = b.dataset.cat || null; renderChips(); renderGrid("agency"); }));
+}
+
+function tileHTML(t, scope, idx){
+  const url = safeUrl(t.url);
+  const disabled = !url;
+  const code = (scope==="agency"?"A":"P") + "·" + String(idx+1).padStart(2,"0");
+  const badge = t.badge ? `<span class="badge">${esc(t.badge)}</span>` : (disabled && scope==="agency" ? `<span class="badge">Soon</span>` : "");
+  const tag = disabled ? "div" : "a";
+  const attrs = disabled ? "" : `href="${esc(url)}" target="_blank" rel="noopener" data-track="${esc(t.id)}"`;
+  return `<${tag} class="tile ${disabled?'disabled':''}" ${attrs} data-scope="${scope}" data-id="${esc(t.id)}" ${state.edit?'draggable="true"':''}>
+    <div class="ctrls">
+      <button class="edit" title="Edit" data-act="edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+      <button class="del" title="Delete" data-act="del"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+    </div>
+    <div class="row1">
+      <span class="code">${code}</span>
+      <span class="cat"><span class="cdot" style="background:${catColor(t.cat)}"></span>${esc(catLabel(t.cat))}</span>
+    </div>
+    <div class="title">${esc(t.name)}${!disabled?'<span class="ext">↗</span>':''}</div>
+    <div class="body">${esc(t.desc)}</div>
+    ${badge}
+  </${tag}>`;
+}
+
+function renderGrid(scope){
+  const isAgency = scope==="agency";
+  const grid = $(isAgency ? "#agencyGrid" : "#personalGrid");
+  let items = isAgency ? state.config.agency : state.personal;
+  const filtered = items.filter(t => matchQuery(t) && (!isAgency || !state.activeCat || t.cat===state.activeCat));
+
+  let html = filtered.map((t)=> tileHTML(t, scope, items.indexOf(t))).join("");
+
+  // add tile (edit mode)
+  html += `<button class="tile add" data-add="${scope}">＋ Add tool</button>`;
+
+  // empty states (not while filtering/searching)
+  const filtering = state.query.trim() || (isAgency && state.activeCat);
+  if(items.length===0 && !state.edit){
+    html = isAgency
+      ? `<div class="empty" style="grid-column:1/-1"><b>No agency tools yet</b>Turn on Edit to add the team's shared links.</div>`
+      : `<div class="empty" style="grid-column:1/-1"><b>Nothing pinned yet</b>Turn on Edit to add the tools you reach for most.</div>`;
+  } else if(filtered.length===0 && filtering && !state.edit){
+    html = `<div class="empty" style="grid-column:1/-1">No matches.</div>`;
+  }
+
+  grid.innerHTML = html;
+
+  // wire controls
+  $$("[data-act]", grid).forEach(b=>b.addEventListener("click", e=>{
+    e.preventDefault(); e.stopPropagation();
+    const tile = b.closest(".tile"); const id = tile.dataset.id;
+    if(b.dataset.act==="edit") openTileModal(scope, id);
+    else deleteTile(scope, id);
+  }));
+  $$("[data-add]", grid).forEach(b=>b.addEventListener("click", ()=> openTileModal(b.dataset.add, null)));
+
+  // click tracking for launches
+  $$("[data-track]", grid).forEach(a=>a.addEventListener("click", ()=>{
+    const id = a.dataset.track; state.usage[id] = (state.usage[id]||0)+1; saveUsage();
+  }));
+
+  if(state.edit) enableDrag(grid, scope);
+}
+
+/* ---------- drag reorder ---------- */
+function enableDrag(grid, scope){
+  let dragEl = null;
+  $$(".tile[draggable=true]", grid).forEach(tile=>{
+    tile.addEventListener("dragstart", e=>{ dragEl=tile; tile.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; });
+    tile.addEventListener("dragend", ()=>{ tile.classList.remove("dragging"); $$(".tile",grid).forEach(t=>t.classList.remove("dragover")); });
+    tile.addEventListener("dragover", e=>{ e.preventDefault(); if(tile!==dragEl){ tile.classList.add("dragover"); } });
+    tile.addEventListener("dragleave", ()=> tile.classList.remove("dragover"));
+    tile.addEventListener("drop", e=>{
+      e.preventDefault(); tile.classList.remove("dragover");
+      if(!dragEl || dragEl===tile) return;
+      const arr = scope==="agency" ? state.config.agency : state.personal;
+      const from = arr.findIndex(x=>x.id===dragEl.dataset.id);
+      const to   = arr.findIndex(x=>x.id===tile.dataset.id);
+      if(from<0||to<0) return;
+      arr.splice(to,0, arr.splice(from,1)[0]);
+      if(scope==="agency") saveDraft(); else savePersonal();
+      render();
+    });
+  });
+}
+
+/* ---------- tile modal ---------- */
+let modalCtx = { scope:null, id:null };
+function fillCatSelect(sel, current){
+  sel.innerHTML = state.config.categories.map(c=>`<option value="${c.id}" ${c.id===current?'selected':''}>${esc(c.label)}</option>`).join("");
+}
+function openTileModal(scope, id){
+  modalCtx = { scope, id };
+  const editing = !!id;
+  const arr = scope==="agency" ? state.config.agency : state.personal;
+  const t = editing ? arr.find(x=>x.id===id) : {name:"",url:"",desc:"",cat:state.config.categories[0].id,badge:""};
+  $("#tileTitle").textContent = editing ? "Edit tool" : "Add tool";
+  $("#tileSub").textContent = scope==="agency" ? "Shared agency directory" : "Saved to this browser only";
+  $("#fName").value=t.name; $("#fUrl").value=t.url; $("#fDesc").value=t.desc; $("#fBadge").value=t.badge||"";
+  fillCatSelect($("#fCat"), t.cat);
+  $("#tileDelete").style.display = editing ? "inline-flex" : "none";
+  openScrim("#tileScrim"); setTimeout(()=>$("#fName").focus(),40);
+}
+function saveTile(){
+  const name=$("#fName").value.trim();
+  if(!name){ toast("Give it a name"); $("#fName").focus(); return; }
+  const rec = { name, url:$("#fUrl").value.trim(), desc:$("#fDesc").value.trim(), cat:$("#fCat").value, badge:$("#fBadge").value.trim() };
+  const arr = modalCtx.scope==="agency" ? state.config.agency : state.personal;
+  if(modalCtx.id){ const t=arr.find(x=>x.id===modalCtx.id); Object.assign(t,rec); }
+  else { arr.push(Object.assign({id:uid()}, rec)); }
+  (modalCtx.scope==="agency" ? saveDraft : savePersonal)();
+  closeScrim("#tileScrim"); render(); toast(modalCtx.id?"Saved":"Added");
+}
+function deleteTile(scope, id){
+  const arr = scope==="agency" ? state.config.agency : state.personal;
+  const i = arr.findIndex(x=>x.id===id); if(i<0) return;
+  arr.splice(i,1);
+  (scope==="agency" ? saveDraft : savePersonal)();
+  render(); toast("Removed");
+}
+
+/* ---------- import / export ---------- */
+function openExport(){
+  const cfg = { meta:state.config.meta, notice:state.config.notice, categories:state.config.categories, agency:state.config.agency };
+  $("#ioTitle").textContent = "Export agency config";
+  $("#ioSub").innerHTML = "Save this as <b>config.json</b> next to index.html and commit it. Everyone sees the update on next load.";
+  $("#ioArea").value = JSON.stringify(cfg, null, 2);
+  $("#ioAction").textContent = "Copy";
+  $("#ioAction").dataset.mode = "copy";
+  openScrim("#ioScrim");
+}
+function openImport(){
+  $("#ioTitle").textContent = "Import agency config";
+  $("#ioSub").textContent = "Paste a config.json to replace the current agency draft.";
+  $("#ioArea").value = "";
+  $("#ioAction").textContent = "Import";
+  $("#ioAction").dataset.mode = "import";
+  openScrim("#ioScrim");
+}
+function ioAction(){
+  const mode = $("#ioAction").dataset.mode;
+  if(mode==="copy"){
+    const dl = () => { const b=new Blob([$("#ioArea").value],{type:"application/json"}); const u=URL.createObjectURL(b); const a=document.createElement("a"); a.href=u; a.download="config.json"; a.click(); URL.revokeObjectURL(u); };
+    if(navigator.clipboard){ navigator.clipboard.writeText($("#ioArea").value).then(()=>toast("Copied — also downloading config.json")); }
+    dl(); closeScrim("#ioScrim");
+  } else {
+    try{
+      const cfg = normaliseConfig(JSON.parse($("#ioArea").value));
+      state.config = cfg; saveDraft(); closeScrim("#ioScrim"); render(); toast("Imported as draft");
+    }catch(e){ toast("That's not valid JSON"); }
+  }
+}
+
+/* ---------- categories modal ---------- */
+function openCats(){
+  $("#catArea").value = state.config.categories.map(c=>`${c.label} ${c.color}`).join("\n");
+  openScrim("#catScrim");
+}
+function saveCats(){
+  const lines = $("#catArea").value.split("\n").map(l=>l.trim()).filter(Boolean);
+  if(!lines.length){ toast("Keep at least one category"); return; }
+  const cats = lines.map(l=>{
+    const m = l.match(/^(.*?)\s+(#[0-9a-fA-F]{3,8})\s*$/);
+    const label = (m?m[1]:l).trim();
+    const color = m?m[2]:"#dcb392";
+    return { id: label.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||uid(), label, color };
+  });
+  // remap tiles whose category disappeared
+  const ids = new Set(cats.map(c=>c.id));
+  state.config.agency.forEach(t=>{ if(!ids.has(t.cat)) t.cat = cats[0].id; });
+  state.config.categories = cats;
+  saveDraft(); closeScrim("#catScrim"); render(); toast("Categories updated");
+}
+
+/* ---------- scrims ---------- */
+function openScrim(sel){ $(sel).classList.add("open"); }
+function closeScrim(sel){ $(sel).classList.remove("open"); }
+$$(".scrim").forEach(s=>s.addEventListener("mousedown", e=>{ if(e.target===s) s.classList.remove("open"); }));
+
+/* ---------- theme ---------- */
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", state.dark?"dark":"light");
+  const ic = $("#themeIcon");
+  ic.innerHTML = state.dark
+    ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>'
+    : '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>';
+}
+
+/* ---------- edit toggle ---------- */
+function setEdit(on){
+  state.edit = on;
+  document.body.classList.toggle("editing", on);
+  $("#editBtn").classList.toggle("on", on);
+  $("#editBtn").setAttribute("aria-pressed", String(on));
+  $("#editLabel").textContent = on ? "Done" : "Edit";
+  render();
+}
+
+/* ---------- events ---------- */
+$("#editBtn").addEventListener("click", ()=> setEdit(!state.edit));
+$("#themeBtn").addEventListener("click", ()=>{ state.dark=!state.dark; applyTheme(); savePrefs(); });
+$("#q").addEventListener("input", e=>{ state.query=e.target.value; renderGrid("agency"); renderGrid("personal"); });
+$("#exportBtn").addEventListener("click", openExport);
+$("#importBtn").addEventListener("click", openImport);
+$("#editNoticeBtn").addEventListener("click", ()=>{ $("#noticeSlot").scrollIntoView({behavior:"smooth",block:"center"}); const i=$("#noticeInput"); if(i) i.focus(); });
+$("#catBtn").addEventListener("click", openCats);
+$("#tileSave").addEventListener("click", saveTile);
+$("#tileCancel").addEventListener("click", ()=>closeScrim("#tileScrim"));
+$("#tileDelete").addEventListener("click", ()=>{ if(modalCtx.id){ deleteTile(modalCtx.scope, modalCtx.id); closeScrim("#tileScrim"); } });
+$("#ioAction").addEventListener("click", ioAction);
+$("#ioClose").addEventListener("click", ()=>closeScrim("#ioScrim"));
+$("#catSave").addEventListener("click", saveCats);
+$("#catCancel").addEventListener("click", ()=>closeScrim("#catScrim"));
+$("#discardDraft").addEventListener("click", ()=>{ state.config=JSON.parse(JSON.stringify(state.base)); store.del(K.draft); state.agencyDirty=false; render(); toast("Reverted to published"); });
+
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape"){ $$(".scrim.open").forEach(s=>s.classList.remove("open")); }
+  if((e.key==="/"||((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k")) && !/input|textarea|select/i.test(document.activeElement.tagName)){
+    e.preventDefault(); $("#q").focus();
+  }
+  if(e.key==="Enter" && $("#tileScrim").classList.contains("open") && document.activeElement.id!=="fDesc"){ saveTile(); }
+});
+
+boot();
+</script>
+</body>
+</html>
