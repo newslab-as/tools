@@ -1,0 +1,25 @@
+{
+  "meta": { "agencyName": "NewsLab", "tagline": "tools", "version": 1 },
+  "notice": "",
+  "categories": [
+    { "id": "tools",     "label": "Tools",     "color": "#d99587" },
+    { "id": "design",    "label": "Design",    "color": "#b0a3d4" },
+    { "id": "files",     "label": "Files",     "color": "#b8d99e" },
+    { "id": "resources", "label": "Resources", "color": "#d9c876" },
+    { "id": "admin",     "label": "Admin",     "color": "#dcb392" }
+  ],
+  "agency": [
+    { "id": "prod-planner", "name": "Production Planner", "url": "https://tools.newslab.no/production-planner",
+      "desc": "Interactive project timeline builder", "cat": "tools" },
+    { "id": "budget-gen", "name": "Budget generator", "url": "",
+      "desc": "Build client budgets from templates", "cat": "tools", "badge": "Soon" },
+    { "id": "brand", "name": "Brand assets", "url": "",
+      "desc": "Logos, fonts and colour tokens", "cat": "resources", "badge": "Soon" },
+    { "id": "figma", "name": "Figma", "url": "https://figma.com",
+      "desc": "Design files and Sites projects", "cat": "design" },
+    { "id": "drive", "name": "Google Drive", "url": "https://drive.google.com",
+      "desc": "Shared agency drive", "cat": "files" },
+    { "id": "mercell", "name": "Mercell", "url": "https://www.mercell.com",
+      "desc": "Tender and procurement portal", "cat": "admin" }
+  ]
+}
