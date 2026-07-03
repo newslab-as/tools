@@ -1298,18 +1298,31 @@ async function pushPersonalUpdate(){
 window.addEventListener("nl-personal-change", pushPersonalUpdate);
 
 /* ---------- auth ---------- */
-function updateAuthUI(user){
+let currentEmail = null;
+
+// Custom-token sign-ins (Cloudflare Access bridge) never populate user.email/
+// displayName — those only come from an actual identity-provider profile like
+// the Google popup flow. The "email" custom claim we mint into the token *is*
+// present in the decoded ID token either way, so read it from there instead.
+async function resolveEmail(user){
+  if(!user) return null;
+  if(user.email) return user.email;
+  try{ const idt = await user.getIdTokenResult(); return idt.claims.email || null; }
+  catch(e){ return null; }
+}
+
+function updateAuthUI(user, email){
   const btn = $("#authBtn"), label = $("#authLabel");
   btn.classList.toggle("signed-in", !!user);
   if(user){
-    label.textContent = (user.displayName || user.email || tr("signIn")).split(" ")[0];
-    btn.title = tr("signOutTitle") + " (" + user.email + ")";
+    label.textContent = user.displayName ? user.displayName.split(" ")[0] : (email ? email.split("@")[0] : tr("signIn"));
+    btn.title = tr("signOutTitle") + (email ? " (" + email + ")" : "");
   } else {
     label.textContent = tr("signIn");
     btn.title = tr("signInTitle");
   }
 }
-window.updateAuthUIStrings = () => updateAuthUI(currentUser);
+window.updateAuthUIStrings = () => updateAuthUI(currentUser, currentEmail);
 
 // Blocks the entire page (viewing and editing) until signed in with @newslab.no —
 // no close control on the modal itself; it only ever closes from here.
@@ -1323,11 +1336,13 @@ async function doSignIn(){
   catch(e){ if(e.code !== "auth/popup-closed-by-user") toast(tr("toastSignInFail")); }
 }
 
-onAuthStateChanged(auth, user => {
-  currentUser = user && user.email && user.email.endsWith("@newslab.no") ? user : null;
+onAuthStateChanged(auth, async user => {
+  const email = await resolveEmail(user);
+  currentUser = user && email && email.toLowerCase().endsWith("@newslab.no") ? user : null;
+  currentEmail = currentUser ? email : null;
   if(user && !currentUser){ toast(tr("toastWrongDomain")); signOut(auth); return; }
   state.signedIn = !!currentUser;
-  updateAuthUI(currentUser);
+  updateAuthUI(currentUser, currentEmail);
   setAuthGate(!currentUser);
   if(currentUser){ seedAgencyIfMissing(); listenPersonal(currentUser.uid); }
   else { stopPersonalSync(); }
