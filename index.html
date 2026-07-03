@@ -158,7 +158,7 @@ body.editing .editbar{display:flex}
 .pill.warn{color:var(--edit);border-color:color-mix(in srgb,var(--edit) 45%,transparent)}
 .pill.warn:hover{background:var(--edit);color:#fff;border-color:var(--edit)}
 .pill.agency-only{display:none}
-body.agency-editable .pill.agency-only{display:inline-flex}
+body.can-edit .pill.agency-only{display:inline-flex}
 
 /* ---------- notice ---------- */
 .notice{
@@ -219,8 +219,7 @@ body.agency-editable .pill.agency-only{display:inline-flex}
 
 /* edit controls on tiles */
 .tile .ctrls{position:absolute;top:10px;right:10px;display:none;gap:5px}
-body.editing #personalGrid .tile .ctrls{display:flex}
-body.agency-editable #agencyGrid .tile .ctrls{display:flex}
+body.can-edit .tile .ctrls{display:flex}
 .tile .ctrls button{
   width:27px;height:27px;border-radius:var(--radius);border:1px solid var(--line-strong);
   background:var(--surface);display:inline-flex;align-items:center;justify-content:center;color:var(--muted);
@@ -230,8 +229,7 @@ body.agency-editable #agencyGrid .tile .ctrls{display:flex}
 .tile[draggable="true"]{cursor:grab}
 .tile.dragging{opacity:.35}
 .tile.dragover{border-color:var(--ink);border-style:dashed}
-body.editing #personalGrid .tile .cat{margin-right:66px}
-body.agency-editable #agencyGrid .tile .cat{margin-right:66px}
+body.can-edit .tile .cat{margin-right:66px}
 
 /* add tile */
 .tile.add{
@@ -239,8 +237,7 @@ body.agency-editable #agencyGrid .tile .cat{margin-right:66px}
   border:1px dashed var(--line-strong);background:transparent;color:var(--muted);min-height:116px;
   font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:11px;gap:8px;
 }
-body.editing #personalGrid .tile.add{display:flex}
-body.agency-editable #agencyGrid .tile.add{display:flex}
+body.can-edit .tile.add{display:flex}
 .tile.add:hover{border-color:var(--ink);color:var(--ink)}
 
 /* empty state */
@@ -292,6 +289,12 @@ body.agency-editable #agencyGrid .tile.add{display:flex}
 .btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,transparent)}
 .btn.danger:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
 
+.scrim.auth-gate{z-index:90}
+.auth-gate-modal{text-align:center}
+.auth-gate-modal .mh-sub{text-transform:none;letter-spacing:0;font-size:13px;line-height:1.5;color:var(--muted)}
+.auth-gate-btn{width:100%;justify-content:center;display:inline-flex;align-items:center;gap:9px;margin-top:6px}
+body.auth-locked{overflow:hidden}
+
 .io-area{width:100%;min-height:150px;font-family:var(--mono);font-size:12px;line-height:1.55;border:1px solid var(--line-strong);border-radius:var(--radius);padding:12px;background:var(--surface-2);resize:vertical;outline:none}
 
 /* toast */
@@ -313,7 +316,7 @@ body.agency-editable #agencyGrid .tile.add{display:flex}
 .kboard-name{font-size:15px;font-weight:500;letter-spacing:-.02em;flex:1 1 auto;outline:none}
 .kboard-name[contenteditable="true"]{border-bottom:1px dashed var(--line-strong)}
 .kctrls{display:none;gap:5px;flex:0 0 auto}
-body.agency-editable .kctrls{display:flex}
+body.can-edit .kctrls{display:flex}
 .kctrls button{width:22px;height:22px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
 .kctrls button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
 .kctrls .del:hover{color:#fff;background:var(--danger);border-color:var(--danger)}
@@ -343,7 +346,7 @@ body.agency-editable .kctrls{display:flex}
 }
 .kcol-add button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
 .kanban-add-board{display:none;margin-top:4px}
-body.agency-editable .kanban-add-board{display:flex}
+body.can-edit .kanban-add-board{display:flex}
 
 /* ---------- feedback button ---------- */
 .feedback-btn{
@@ -517,6 +520,24 @@ body.agency-editable .kanban-add-board{display:flex}
   </div>
 </div>
 
+<!-- Auth gate — blocks the whole page until signed in with @newslab.no. No close
+     control by design: the module script below hides it once sign-in succeeds. -->
+<div class="scrim open auth-gate" id="authGateScrim">
+  <div class="modal auth-gate-modal">
+    <h3 id="authGateTitle">Sign in to sync</h3>
+    <p class="mh-sub" id="authGateBody">Sign in with your @newslab.no Google account to view and use the tools hub.</p>
+    <button class="btn primary auth-gate-btn" id="authGateBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0 0 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.09V7.06H2.18A11 11 0 0 0 1 12c0 1.78.43 3.46 1.18 4.94z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.06l3.66 2.85C6.71 7.31 9.14 5.38 12 5.38z"/>
+      </svg>
+      <span id="authGateBtnLabel">Sign in with Google</span>
+    </button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -600,6 +621,7 @@ const STRINGS = {
     emptyAgencyTitle:"No agency tools yet", emptyAgencyBody:"Turn on Edit to add the team's shared links.",
     emptyAgencySignedOut:"Sign in with @newslab.no to add the team's shared links.",
     emptyPersonalTitle:"Nothing pinned yet", emptyPersonalBody:"Turn on Edit to add the tools you reach for most.",
+    emptyPersonalSignedOut:"Sign in with @newslab.no to pin the tools you reach for most.",
     noMatches:"No matches.",
     emptyBoardsTitle:"No boards yet", emptyBoardsBody:"Turn on Edit to start a board for tool ideas and requests.",
     emptyBoardsSignedOut:"Sign in with @newslab.no to start a board for tool ideas and requests.",
@@ -622,7 +644,9 @@ const STRINGS = {
     toastSyncFail:"Couldn't sync — check your connection and try again", toastSignInFail:"Sign-in failed",
     syncingLabel:"Syncing…", syncErrorLabel:"⚠ Not saved — sync failed. Edit again to retry, or check your connection.",
     tileBadgeSoon:"Soon", btnEditTitle:"Edit",
-    newBoard:"New board", untitledBoard:"Untitled board", deleteBoardTitle:"Delete board", removeCardTitle:"Remove", addCardTitle:"Add card"
+    newBoard:"New board", untitledBoard:"Untitled board", deleteBoardTitle:"Delete board", removeCardTitle:"Remove", addCardTitle:"Add card",
+    authGateTitle:"Sign in to sync", authGateBody:"Sign in with your @newslab.no Google account to view and use the tools hub.",
+    authGateBtn:"Sign in with Google"
   },
   no: {
     searchPlaceholder:"Søk i verktøy…", toggleTheme:"Bytt tema",
@@ -639,6 +663,7 @@ const STRINGS = {
     emptyAgencyTitle:"Ingen byråverktøy ennå", emptyAgencyBody:"Slå på Rediger for å legge til teamets delte lenker.",
     emptyAgencySignedOut:"Logg inn med @newslab.no for å legge til teamets delte lenker.",
     emptyPersonalTitle:"Ingenting festet ennå", emptyPersonalBody:"Slå på Rediger for å legge til verktøyene du bruker mest.",
+    emptyPersonalSignedOut:"Logg inn med @newslab.no for å feste verktøyene du bruker mest.",
     noMatches:"Ingen treff.",
     emptyBoardsTitle:"Ingen tavler ennå", emptyBoardsBody:"Slå på Rediger for å starte en tavle for verktøyidéer og forespørsler.",
     emptyBoardsSignedOut:"Logg inn med @newslab.no for å starte en tavle for verktøyidéer og forespørsler.",
@@ -661,7 +686,9 @@ const STRINGS = {
     toastSyncFail:"Kunne ikke synkronisere — sjekk tilkoblingen og prøv igjen", toastSignInFail:"Innlogging mislyktes",
     syncingLabel:"Synkroniserer…", syncErrorLabel:"⚠ Ikke lagret — synkronisering feilet. Rediger igjen for å prøve på nytt, eller sjekk tilkoblingen.",
     tileBadgeSoon:"Snart", btnEditTitle:"Rediger",
-    newBoard:"Ny tavle", untitledBoard:"Uten navn", deleteBoardTitle:"Slett tavle", removeCardTitle:"Fjern", addCardTitle:"Legg til kort"
+    newBoard:"Ny tavle", untitledBoard:"Uten navn", deleteBoardTitle:"Slett tavle", removeCardTitle:"Fjern", addCardTitle:"Legg til kort",
+    authGateTitle:"Logg inn for å synkronisere", authGateBody:"Logg inn med din @newslab.no Google-konto for å se og bruke verktøyhuben.",
+    authGateBtn:"Logg inn med Google"
   }
 };
 function tr(key){ return (STRINGS[state.lang] || STRINGS.en)[key] ?? STRINGS.en[key] ?? key; }
@@ -742,7 +769,7 @@ function saveUsage(){ store.set(K.usage, JSON.stringify(state.usage)); }
 
 /* ---------- rendering ---------- */
 function render(){
-  document.body.classList.toggle("agency-editable", state.edit && state.signedIn);
+  document.body.classList.toggle("can-edit", state.edit && state.signedIn);
   $(".editbar span").innerHTML = state.signedIn ? tr("editBannerSignedIn") : tr("editBannerSignedOut");
   $("#personalSection .desc").textContent = state.signedIn ? tr("personalDescSignedIn") : tr("personalDesc");
   const statusEl = $("#syncStatus");
@@ -815,14 +842,14 @@ function renderGrid(scope){
   const isAgency = scope==="agency";
   const grid = $(isAgency ? "#agencyGrid" : "#personalGrid");
   let items = isAgency ? state.config.agency : state.personal;
-  // Agency editing requires being signed in with @newslab.no (writes sync live to
-  // Firestore); personal tools always stay editable, local-only when signed out.
-  const canEditThis = isAgency ? (state.edit && state.signedIn) : state.edit;
+  // All editing — agency and personal alike — requires being signed in with
+  // @newslab.no; the auth-gate modal blocks the page entirely until then.
+  const canEditThis = state.edit && state.signedIn;
   const filtered = items.filter(t => matchQuery(t) && (!isAgency || !state.activeCat || t.cat===state.activeCat));
 
   let html = filtered.map((t)=> tileHTML(t, scope, items.indexOf(t), canEditThis)).join("");
 
-  // add tile (edit mode; visibility further gated by CSS for agency sign-in)
+  // add tile (edit mode; visibility further gated by CSS for sign-in)
   html += `<button class="tile add" data-add="${scope}">${tr("addTool")}</button>`;
 
   // empty states (not while filtering/searching)
@@ -830,7 +857,7 @@ function renderGrid(scope){
   if(items.length===0 && !canEditThis){
     html = isAgency
       ? `<div class="empty" style="grid-column:1/-1"><b>${esc(tr("emptyAgencyTitle"))}</b>${esc(state.signedIn ? tr("emptyAgencyBody") : tr("emptyAgencySignedOut"))}</div>`
-      : `<div class="empty" style="grid-column:1/-1"><b>${esc(tr("emptyPersonalTitle"))}</b>${esc(tr("emptyPersonalBody"))}</div>`;
+      : `<div class="empty" style="grid-column:1/-1"><b>${esc(tr("emptyPersonalTitle"))}</b>${esc(state.signedIn ? tr("emptyPersonalBody") : tr("emptyPersonalSignedOut"))}</div>`;
   } else if(filtered.length===0 && filtering && !canEditThis){
     html = `<div class="empty" style="grid-column:1/-1">${esc(tr("noMatches"))}</div>`;
   }
@@ -1071,7 +1098,7 @@ function saveCats(){
 /* ---------- scrims ---------- */
 function openScrim(sel){ $(sel).classList.add("open"); }
 function closeScrim(sel){ $(sel).classList.remove("open"); }
-$$(".scrim").forEach(s=>s.addEventListener("mousedown", e=>{ if(e.target===s) s.classList.remove("open"); }));
+$$(".scrim:not(#authGateScrim)").forEach(s=>s.addEventListener("mousedown", e=>{ if(e.target===s) s.classList.remove("open"); }));
 
 /* ---------- theme ---------- */
 function applyTheme(){
@@ -1111,6 +1138,9 @@ function applyI18n(){
   $("#catScrim .mh-sub").innerHTML = tr("catSubHTML");
   $("#catCancel").textContent = tr("btnCancel");
   $("#catSave").textContent = tr("btnSave");
+  $("#authGateTitle").textContent = tr("authGateTitle");
+  $("#authGateBody").textContent = tr("authGateBody");
+  $("#authGateBtnLabel").textContent = tr("authGateBtn");
   if(typeof updateAuthUIStrings === "function") updateAuthUIStrings();
   render();
 }
@@ -1147,7 +1177,7 @@ $("#langToggle").addEventListener("click", ()=> setLang(state.lang==="en"?"no":"
 $("#langToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setLang(state.lang==="en"?"no":"en"); } });
 
 document.addEventListener("keydown", e=>{
-  if(e.key==="Escape"){ $$(".scrim.open").forEach(s=>s.classList.remove("open")); }
+  if(e.key==="Escape"){ $$(".scrim.open:not(#authGateScrim)").forEach(s=>s.classList.remove("open")); }
   if((e.key==="/"||((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k")) && !/input|textarea|select/i.test(document.activeElement.tagName)){
     e.preventDefault(); $("#q").focus();
   }
@@ -1266,11 +1296,24 @@ function updateAuthUI(user){
 }
 window.updateAuthUIStrings = () => updateAuthUI(currentUser);
 
+// Blocks the entire page (viewing and editing) until signed in with @newslab.no —
+// no close control on the modal itself; it only ever closes from here.
+function setAuthGate(locked){
+  $("#authGateScrim").classList.toggle("open", locked);
+  document.body.classList.toggle("auth-locked", locked);
+}
+
+async function doSignIn(){
+  try{ await signInWithPopup(auth, provider); }
+  catch(e){ if(e.code !== "auth/popup-closed-by-user") toast(tr("toastSignInFail")); }
+}
+
 onAuthStateChanged(auth, user => {
   currentUser = user && user.email && user.email.endsWith("@newslab.no") ? user : null;
   if(user && !currentUser){ toast(tr("toastWrongDomain")); signOut(auth); return; }
   state.signedIn = !!currentUser;
   updateAuthUI(currentUser);
+  setAuthGate(!currentUser);
   if(currentUser){ seedAgencyIfMissing(); listenPersonal(currentUser.uid); }
   else { stopPersonalSync(); }
   render();
@@ -1278,11 +1321,9 @@ onAuthStateChanged(auth, user => {
 
 $("#authBtn").addEventListener("click", async () => {
   if(currentUser){ await signOut(auth); toast(tr("toastSignedOut")); }
-  else {
-    try{ await signInWithPopup(auth, provider); }
-    catch(e){ if(e.code !== "auth/popup-closed-by-user") toast(tr("toastSignInFail")); }
-  }
+  else { await doSignIn(); }
 });
+$("#authGateBtn").addEventListener("click", doSignIn);
 </script>
 </body>
 </html>
