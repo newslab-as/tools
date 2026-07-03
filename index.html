@@ -147,6 +147,8 @@ input,textarea,select{font-family:var(--sans);color:inherit}
 body.editing .editbar{display:flex}
 .editbar b{color:var(--edit)}
 .editbar .grow{flex:1 1 auto}
+.sync-status{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sync-status.error{color:var(--danger);font-weight:500}
 .pill{
   border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--radius);
   padding:7px 12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.07em;font-size:11px;
@@ -413,6 +415,7 @@ body.agency-editable .kanban-add-board{display:flex}
   <!-- edit-mode banner -->
   <div class="editbar">
     <span><b>Editing.</b> Personal changes save to this browser. Agency changes sync live for the whole team.</span>
+    <span class="sync-status" id="syncStatus"></span>
     <span class="grow"></span>
     <button class="pill agency-only" id="editNoticeBtn">Notice</button>
     <button class="pill agency-only" id="catBtn">Categories</button>
@@ -577,7 +580,8 @@ const state = {
   dark: false,
   kanbanOpen: false,
   lang: "en",
-  signedIn: false
+  signedIn: false,
+  syncStatus: "idle" // "idle" | "syncing" | "error" — surfaced so a failed write is never silently lost
 };
 
 /* ---------- i18n ---------- */
@@ -617,6 +621,7 @@ const STRINGS = {
     toastCatUpdated:"Categories updated", toastBoardRemoved:"Board removed",
     toastWrongDomain:"Please sign in with your @newslab.no account", toastSignedOut:"Signed out",
     toastSyncFail:"Couldn't sync — check your connection and try again", toastSignInFail:"Sign-in failed",
+    syncingLabel:"Syncing…", syncErrorLabel:"⚠ Not saved — sync failed. Edit again to retry, or check your connection.",
     tileBadgeSoon:"Soon", btnEditTitle:"Edit",
     newBoard:"New board", untitledBoard:"Untitled board", deleteBoardTitle:"Delete board", removeCardTitle:"Remove", addCardTitle:"Add card"
   },
@@ -655,6 +660,7 @@ const STRINGS = {
     toastCatUpdated:"Kategorier oppdatert", toastBoardRemoved:"Tavle fjernet",
     toastWrongDomain:"Vennligst logg inn med din @newslab.no-konto", toastSignedOut:"Logget ut",
     toastSyncFail:"Kunne ikke synkronisere — sjekk tilkoblingen og prøv igjen", toastSignInFail:"Innlogging mislyktes",
+    syncingLabel:"Synkroniserer…", syncErrorLabel:"⚠ Ikke lagret — synkronisering feilet. Rediger igjen for å prøve på nytt, eller sjekk tilkoblingen.",
     tileBadgeSoon:"Snart", btnEditTitle:"Rediger",
     newBoard:"Ny tavle", untitledBoard:"Uten navn", deleteBoardTitle:"Slett tavle", removeCardTitle:"Fjern", addCardTitle:"Legg til kort"
   }
@@ -739,6 +745,10 @@ function saveUsage(){ store.set(K.usage, JSON.stringify(state.usage)); }
 function render(){
   document.body.classList.toggle("agency-editable", state.edit && state.signedIn);
   $(".editbar span").innerHTML = state.signedIn ? tr("editBannerSignedIn") : tr("editBannerSignedOut");
+  const statusEl = $("#syncStatus");
+  statusEl.classList.toggle("error", state.syncStatus === "error");
+  statusEl.textContent = state.syncStatus === "syncing" ? tr("syncingLabel")
+    : state.syncStatus === "error" ? tr("syncErrorLabel") : "";
   renderNotice();
   renderChips();
   renderGrid("agency");
@@ -1206,17 +1216,23 @@ async function seedAgencyIfMissing(){
         agency: state.base.agency, boards: state.base.boards, cards: state.base.cards
       });
     }
-  }catch(e){ /* not signed in with write access yet — fine, try again next sign-in */ }
+  }catch(e){ console.error("[hub] seed failed — check Firestore rules are published:", e.code, e.message); }
 }
 
 async function pushOrgUpdate(){
   if(applyingRemote || !currentUser) return; // agency editing UI is hidden unless signed in — nothing to push
+  state.syncStatus = "syncing"; render();
   try{
     await setDoc(AGENCY_DOC, {
       meta: state.config.meta, notice: state.config.notice, categories: state.config.categories,
       agency: state.config.agency, boards: state.config.boards, cards: state.config.cards
     });
-  }catch(e){ toast(tr("toastSyncFail")); }
+    state.syncStatus = "idle"; render();
+  }catch(e){
+    console.error("[hub] Firestore write failed — check security rules are published and match your account's auth claims:", e.code, e.message);
+    state.syncStatus = "error"; render();
+    toast(tr("toastSyncFail"));
+  }
 }
 window.addEventListener("nl-agency-change", pushOrgUpdate);
 
@@ -1234,7 +1250,8 @@ function listenPersonal(uid){
 function stopPersonalSync(){ if(personalUnsub){ personalUnsub(); personalUnsub = null; } }
 async function pushPersonalUpdate(){
   if(applyingRemote || !currentUser) return;
-  try{ await setDoc(personalDocRef(currentUser.uid), { items: state.personal }); }catch(e){ /* offline — localStorage already has it */ }
+  try{ await setDoc(personalDocRef(currentUser.uid), { items: state.personal }); }
+  catch(e){ console.error("[hub] personal sync write failed:", e.code, e.message); }
 }
 window.addEventListener("nl-personal-change", pushPersonalUpdate);
 
