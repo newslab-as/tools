@@ -204,10 +204,10 @@ body.can-edit .pill.agency-only{display:inline-flex}
 .tile:hover{border-color:var(--ink)}
 .tile .row1{display:flex;align-items:center;gap:9px}
 .tile .code{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.04em}
+.tile .row1 .favicon{flex:0 0 auto;width:16px;height:16px;border-radius:var(--radius-sm);object-fit:contain}
 .tile .cat{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;font-size:10px;color:var(--muted)}
 .tile .cat .cdot{width:7px;height:7px}
 .tile .title{font-size:17px;font-weight:500;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
-.tile .title .favicon{flex:0 0 auto;width:16px;height:16px;border-radius:var(--radius-sm);object-fit:contain}
 .tile .title .ext{color:var(--faint);font-size:13px;opacity:0;transition:opacity .14s}
 .tile:hover .title .ext{opacity:1}
 .tile .body{font-size:13px;color:var(--muted);line-height:1.42}
@@ -715,7 +715,22 @@ function catById(id){ return state.config.categories.find(c=>c.id===id); }
 function catColor(id){ return (catById(id)||{}).color || "var(--faint)"; }
 function catLabel(id){ return (catById(id)||{}).label || "—"; }
 function safeUrl(u){ if(!u) return ""; return /^https?:\/\//i.test(u) ? u : "https://"+u; }
+// Domain-only favicon lookups can't tell Sheets/Docs/Slides/Forms apart — they
+// all live under docs.google.com. Override those (and a few other common
+// Google apps) with their real icons; everything else falls back to the
+// generic per-domain favicon service.
+const KNOWN_ICONS = [
+  { test: u => /^https?:\/\/docs\.google\.com\/spreadsheets/i.test(u), icon: "https://ssl.gstatic.com/docs/spreadsheets/favicon3.ico" },
+  { test: u => /^https?:\/\/docs\.google\.com\/document/i.test(u), icon: "https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico" },
+  { test: u => /^https?:\/\/docs\.google\.com\/presentation/i.test(u), icon: "https://ssl.gstatic.com/docs/presentations/images/favicon5.ico" },
+  { test: u => /^https?:\/\/docs\.google\.com\/forms/i.test(u), icon: "https://ssl.gstatic.com/docs/forms/device_home/android_192.png" },
+  { test: u => /^https?:\/\/drive\.google\.com/i.test(u), icon: "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png" },
+  { test: u => /^https?:\/\/mail\.google\.com/i.test(u), icon: "https://ssl.gstatic.com/images/branding/product/1x/gmail_2020q4_32dp.png" },
+  { test: u => /^https?:\/\/calendar\.google\.com/i.test(u), icon: "https://calendar.google.com/googlecalendar/images/favicons_2020q4/calendar_31.ico" }
+];
 function faviconUrl(url){
+  const known = KNOWN_ICONS.find(k => k.test(url));
+  if(known) return known.icon;
   try{ return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).hostname)}&sz=32`; }
   catch(e){ return ""; }
 }
@@ -849,10 +864,10 @@ function tileHTML(t, scope, idx, canEdit){
       <button class="del" title="${esc(tr("btnDelete"))}" data-act="del"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
     </div>
     <div class="row1">
-      <span class="code">${code}</span>
+      ${disabled?`<span class="code">${code}</span>`:`<img class="favicon" src="${esc(faviconUrl(url))}" alt="" width="16" height="16" loading="lazy">`}
       <span class="cat"><span class="cdot" style="background:${catColor(t.cat)}"></span>${esc(catLabel(t.cat))}</span>
     </div>
-    <div class="title">${disabled?'':`<img class="favicon" src="${esc(faviconUrl(url))}" alt="" width="16" height="16" loading="lazy">`}${esc(t.name)}${!disabled?'<span class="ext">↗</span>':''}</div>
+    <div class="title">${esc(t.name)}${!disabled?'<span class="ext">↗</span>':''}</div>
     <div class="body">${esc(t.desc)}</div>
     ${badge}
   </${tag}>`;
