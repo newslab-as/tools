@@ -1195,7 +1195,7 @@ boot();
      =========================================================================== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import { getFirestore, doc, onSnapshot, setDoc, getDoc }
   from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -1214,6 +1214,21 @@ const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ hd: "newslab.no" });
+
+// Cloudflare Access already gates this whole subdomain behind Google sign-in.
+// If a Cloudflare Worker bridge is deployed at /api/firebase-token (see repo docs),
+// exchange that session for a Firebase sign-in silently — no second prompt needed.
+// If it's unavailable (404, local dev with no Cloudflare in front, etc.) this just
+// fails quietly and the manual "Sign in with Google" flow below still works.
+(async () => {
+  try{
+    const res = await fetch("/api/firebase-token", { credentials: "same-origin" });
+    if(res.ok){
+      const data = await res.json();
+      if(data.token) await signInWithCustomToken(auth, data.token);
+    }
+  }catch(e){ /* no Cloudflare Access bridge available — fall back to manual sign-in */ }
+})();
 
 const AGENCY_DOC = doc(db, "agency", "shared_state");
 const personalDocRef = uid => doc(db, "users", uid);
