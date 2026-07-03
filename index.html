@@ -130,7 +130,8 @@ input,textarea,select{font-family:var(--sans);color:inherit}
 .authbtn.signed-in{color:var(--ink)}
 
 /* ---------- language toggle ---------- */
-.lang-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--faint)}
+.lang-toggle{display:none;align-items:center;gap:7px;cursor:pointer;user-select:none;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--faint)}
+body.editing .lang-toggle{display:flex}
 .lang-toggle .lang-en,.lang-toggle .lang-no{transition:color .15s}
 .lang-toggle[data-lang="en"] .lang-en{color:var(--ink)}
 .lang-toggle[data-lang="no"] .lang-no{color:var(--ink)}
@@ -716,11 +717,12 @@ function safeUrl(u){ if(!u) return ""; return /^https?:\/\//i.test(u) ? u : "htt
 
 /* ---------- load ---------- */
 async function boot(){
-  // theme
+  // theme — defaults: light mode, Norwegian. Overridden below once a signed-in
+  // user's synced prefs (Firestore users/{uid}.prefs) load, if they've set one.
   const prefs = JSON.parse(store.get(K.prefs) || "{}");
-  state.dark = prefs.dark ?? window.matchMedia("(prefers-color-scheme: dark)").matches;
+  state.dark = prefs.dark ?? false;
   state.kanbanOpen = prefs.kanbanOpen ?? false;
-  state.lang = prefs.lang === "no" ? "no" : "en";
+  state.lang = prefs.lang === "en" ? "en" : "no";
   applyI18n();
   applyTheme();
 
@@ -774,7 +776,10 @@ function savePersonal(){
 function syncAgency(){
   window.dispatchEvent(new CustomEvent("nl-agency-change"));
 }
-function savePrefs(){ store.set(K.prefs, JSON.stringify({dark:state.dark, kanbanOpen:state.kanbanOpen, lang:state.lang})); }
+function savePrefs(){
+  store.set(K.prefs, JSON.stringify({dark:state.dark, kanbanOpen:state.kanbanOpen, lang:state.lang}));
+  window.dispatchEvent(new CustomEvent("nl-personal-change"));
+}
 function saveUsage(){ store.set(K.usage, JSON.stringify(state.usage)); }
 
 /* ---------- rendering ---------- */
@@ -1291,22 +1296,40 @@ async function pushOrgUpdate(){
 }
 window.addEventListener("nl-agency-change", pushOrgUpdate);
 
-/* ---------- personal pins sync — only while signed in ---------- */
+/* ---------- personal pins + prefs sync — only while signed in ---------- */
 function listenPersonal(uid){
   stopPersonalSync();
   personalUnsub = onSnapshot(personalDocRef(uid), snap => {
     applyingRemote = true;
-    if(snap.exists()){ state.personal = snap.data().items || []; }
-    else { setDoc(personalDocRef(uid), { items: state.personal }).catch(()=>{}); }
-    render();
+    if(snap.exists()){
+      const data = snap.data();
+      state.personal = data.items || [];
+      if(data.prefs){
+        state.dark = !!data.prefs.dark;
+        state.lang = data.prefs.lang === "en" ? "en" : "no";
+        state.kanbanOpen = !!data.prefs.kanbanOpen;
+      }
+    } else {
+      setDoc(personalDocRef(uid), {
+        items: state.personal,
+        prefs: { dark: state.dark, lang: state.lang, kanbanOpen: state.kanbanOpen }
+      }).catch(()=>{});
+    }
+    applyTheme();
+    setKanbanOpen(state.kanbanOpen);
+    applyI18n(); // also calls render()
     applyingRemote = false;
   }, err => console.warn("[hub] personal sync unavailable:", err.message));
 }
 function stopPersonalSync(){ if(personalUnsub){ personalUnsub(); personalUnsub = null; } }
 async function pushPersonalUpdate(){
   if(applyingRemote || !currentUser) return;
-  try{ await setDoc(personalDocRef(currentUser.uid), { items: state.personal }); }
-  catch(e){ console.error("[hub] personal sync write failed:", e.code, e.message); }
+  try{
+    await setDoc(personalDocRef(currentUser.uid), {
+      items: state.personal,
+      prefs: { dark: state.dark, lang: state.lang, kanbanOpen: state.kanbanOpen }
+    });
+  }catch(e){ console.error("[hub] personal sync write failed:", e.code, e.message); }
 }
 window.addEventListener("nl-personal-change", pushPersonalUpdate);
 
