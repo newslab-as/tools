@@ -1223,11 +1223,11 @@ provider.setCustomParameters({ hd: "newslab.no" });
 (async () => {
   try{
     const res = await fetch("/api/firebase-token", { credentials: "same-origin" });
-    if(res.ok){
-      const data = await res.json();
-      if(data.token) await signInWithCustomToken(auth, data.token);
-    }
-  }catch(e){ /* no Cloudflare Access bridge available — fall back to manual sign-in */ }
+    if(!res.ok){ console.warn("[hub] Cloudflare Access bridge responded", res.status, await res.text().catch(()=>"")); return; }
+    const data = await res.json();
+    if(data.token) await signInWithCustomToken(auth, data.token);
+    else console.warn("[hub] Cloudflare Access bridge returned no token:", data);
+  }catch(e){ console.warn("[hub] Cloudflare Access bridge unavailable, falling back to manual sign-in:", e.message); }
 })();
 
 const AGENCY_DOC = doc(db, "agency", "shared_state");
