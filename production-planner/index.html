@@ -608,6 +608,7 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
 
 let tokenClient; let gapiInited = false; let gisInited = false;
 let currentDriveFileId = localStorage.getItem('newslab-current-drive-file') || null;
+let lastKnownRevisionId = localStorage.getItem('newslab-drive-file-revision') || null;
 
 window.onload = function() {
   updateCloudStatus('Disconnected');
@@ -827,10 +828,14 @@ document.getElementById('driveFileSelect')?.addEventListener('change', async (e)
   const fileId = e.target.value; if (!fileId) return;
   try {
     updateCloudStatus('Downloading...');
-    const response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media', supportsAllDrives: true });
+    const [meta, response] = await Promise.all([
+      gapi.client.drive.files.get({ fileId: fileId, fields: 'headRevisionId', supportsAllDrives: true }),
+      gapi.client.drive.files.get({ fileId: fileId, alt: 'media', supportsAllDrives: true })
+    ]);
     const driveState = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
     if (driveState && driveState.events) {
       state = migrateData(driveState); currentDriveFileId = fileId; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
+      lastKnownRevisionId = meta.result.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId);
       if (state.lang) setLanguage(state.lang); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render(); updateCloudStatus('Connected'); document.getElementById('settingsMenu').classList.remove('open');
     }
   } catch(err) { updateCloudStatus('Error'); customAlert("Could not load file from Drive.", "Error"); }
@@ -856,16 +861,68 @@ document.getElementById('btnNewDriveFile')?.addEventListener('click', async () =
 });
 
 let autoSaveTimeout = null;
+
+// Drive's headRevisionId changes exactly when a file's content changes, so
+// it's used here as a cheap optimistic-concurrency check: before writing,
+// confirm the revision this browser last saw still matches what's actually
+// on Drive. If someone else saved in between, stop and ask instead of
+// silently overwriting their changes. `force` skips the check (used when
+// the user explicitly chooses to overwrite from the conflict prompt).
+async function performDriveSave(force = false) {
+  if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.getToken() || !currentDriveFileId || window.__isReadOnly) return;
+  try {
+    if (!force) {
+      const meta = await gapi.client.drive.files.get({ fileId: currentDriveFileId, fields: 'headRevisionId', supportsAllDrives: true });
+      if (lastKnownRevisionId && meta.result.headRevisionId && meta.result.headRevisionId !== lastKnownRevisionId) {
+        updateCloudStatus('Conflict');
+        showSaveConflictPrompt();
+        return;
+      }
+    }
+    state.lang = currentLang; const fileContent = JSON.stringify(state);
+    const resp = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true&fields=headRevisionId`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
+    const json = await resp.json();
+    lastKnownRevisionId = json.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId);
+    updateCloudStatus('Saved');
+  } catch(err) { updateCloudStatus('Save Failed'); }
+}
 function triggerAutoSave() {
   if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.getToken() || !currentDriveFileId || window.__isReadOnly) return;
   updateCloudStatus('Saving...'); clearTimeout(autoSaveTimeout);
-  autoSaveTimeout = setTimeout(async () => {
-    try {
-      state.lang = currentLang; const fileContent = JSON.stringify(state);
-      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
-      updateCloudStatus('Saved');
-    } catch(err) { updateCloudStatus('Save Failed'); }
-  }, 1500); 
+  autoSaveTimeout = setTimeout(() => performDriveSave(false), 1500);
+}
+
+function showSaveConflictPrompt() {
+  if (window.__conflictPromptOpen) return; // don't stack repeat autosave attempts
+  window.__conflictPromptOpen = true;
+  document.getElementById('dialogTitle').textContent = 'Plan changed elsewhere';
+  document.getElementById('dialogMessage').textContent = 'This plan was updated by someone else since you opened it. Reload their version (your changes since then will be lost), or keep editing and overwrite theirs?';
+  document.getElementById('dialogInput').style.display = 'none';
+  document.getElementById('dialogCancel').style.display = 'inline-flex';
+  document.getElementById('dialogCancel').textContent = 'Keep mine';
+  document.getElementById('dialogOk').textContent = 'Reload theirs';
+  document.getElementById('dialogModal').classList.add('open');
+  dialogCallback = async (v) => {
+    document.getElementById('dialogOk').textContent = 'OK';
+    document.getElementById('dialogCancel').textContent = 'Cancel';
+    window.__conflictPromptOpen = false;
+    if (v === true) {
+      try {
+        const [meta, content] = await Promise.all([
+          gapi.client.drive.files.get({ fileId: currentDriveFileId, fields: 'headRevisionId', supportsAllDrives: true }),
+          gapi.client.drive.files.get({ fileId: currentDriveFileId, alt: 'media', supportsAllDrives: true })
+        ]);
+        const driveState = typeof content.body === 'string' ? JSON.parse(content.body) : content.body;
+        state = migrateData(driveState);
+        lastKnownRevisionId = meta.result.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId);
+        if (state.lang) setLanguage(state.lang);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render();
+        updateCloudStatus('Connected');
+      } catch (err) { updateCloudStatus('Error'); customAlert('Could not reload the latest version.', 'Error'); }
+    } else {
+      performDriveSave(true); // keep mine — force-overwrite, skipping the revision check
+    }
+  };
 }
 
 function updateCloudStatus(msg) {
@@ -935,6 +992,7 @@ function loadState() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(sharedState));
         if (sharedState.lang) { currentLang = sharedState.lang; localStorage.setItem('newslab-planner-lang', currentLang); }
         currentDriveFileId = null; localStorage.removeItem('newslab-current-drive-file');
+        lastKnownRevisionId = null; localStorage.removeItem('newslab-drive-file-revision');
         return sharedState;
       } catch(e) {}
     }
@@ -2301,6 +2359,8 @@ document.getElementById('importUrlBtn')?.addEventListener('click', () => {
          // Disconnect from any active Drive file
          currentDriveFileId = null;
          localStorage.removeItem('newslab-current-drive-file');
+         lastKnownRevisionId = null;
+         localStorage.removeItem('newslab-drive-file-revision');
          updateCloudStatus('Disconnected');
          
          if (state.lang) setLanguage(state.lang);
