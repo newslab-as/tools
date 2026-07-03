@@ -289,11 +289,20 @@ body.can-edit .tile.add{display:flex}
 .btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,transparent)}
 .btn.danger:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
 
-.scrim.auth-gate{z-index:90}
+.scrim.auth-gate{z-index:90;background:rgba(20,19,15,.6);backdrop-filter:blur(10px) saturate(120%);align-items:center}
 .auth-gate-modal{text-align:center}
 .auth-gate-modal .mh-sub{text-transform:none;letter-spacing:0;font-size:13px;line-height:1.5;color:var(--muted)}
 .auth-gate-btn{width:100%;justify-content:center;display:inline-flex;align-items:center;gap:9px;margin-top:6px}
 body.auth-locked{overflow:hidden}
+.auth-gate-loading{display:none}
+.scrim.auth-gate.loading .auth-gate-loading{display:flex;align-items:center;justify-content:center}
+.scrim.auth-gate.loading .auth-gate-modal{display:none}
+.spinner{
+  width:36px;height:36px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;
+  border-radius:50%;animation:nl-spin .8s linear infinite;
+}
+@keyframes nl-spin{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce){ .spinner{animation:none;border-top-color:rgba(255,255,255,.25)} }
 
 .io-area{width:100%;min-height:150px;font-family:var(--mono);font-size:12px;line-height:1.55;border:1px solid var(--line-strong);border-radius:var(--radius);padding:12px;background:var(--surface-2);resize:vertical;outline:none}
 
@@ -522,7 +531,8 @@ body.can-edit .kanban-add-board{display:flex}
 
 <!-- Auth gate — blocks the whole page until signed in with @newslab.no. No close
      control by design: the module script below hides it once sign-in succeeds. -->
-<div class="scrim open auth-gate" id="authGateScrim">
+<div class="scrim open auth-gate loading" id="authGateScrim">
+  <div class="auth-gate-loading"><div class="spinner"></div></div>
   <div class="modal auth-gate-modal">
     <h3 id="authGateTitle">Sign in to sync</h3>
     <p class="mh-sub" id="authGateBody">Sign in with your @newslab.no Google account to view and use the tools hub.</p>
@@ -1218,8 +1228,10 @@ provider.setCustomParameters({ hd: "newslab.no" });
 // Cloudflare Access already gates this whole subdomain behind Google sign-in.
 // If a Cloudflare Worker bridge is deployed at /api/firebase-token (see repo docs),
 // exchange that session for a Firebase sign-in silently — no second prompt needed.
-// If it's unavailable (404, local dev with no Cloudflare in front, etc.) this just
-// fails quietly and the manual "Sign in with Google" flow below still works.
+// While this is in flight the gate shows a plain loading spinner; the manual
+// "Sign in with Google" button only appears once we know the bridge didn't work
+// (404, local dev with no Cloudflare in front, etc.) and a real prompt is needed.
+let bridgeAttempted = false;
 (async () => {
   try{
     const res = await fetch("/api/firebase-token", { credentials: "same-origin" });
@@ -1228,6 +1240,7 @@ provider.setCustomParameters({ hd: "newslab.no" });
     if(data.token) await signInWithCustomToken(auth, data.token);
     else console.warn("[hub] Cloudflare Access bridge returned no token:", data);
   }catch(e){ console.warn("[hub] Cloudflare Access bridge unavailable, falling back to manual sign-in:", e.message); }
+  finally{ bridgeAttempted = true; updateGateVisibility(); }
 })();
 
 const AGENCY_DOC = doc(db, "agency", "shared_state");
@@ -1324,11 +1337,24 @@ function updateAuthUI(user, email){
 }
 window.updateAuthUIStrings = () => updateAuthUI(currentUser, currentEmail);
 
-// Blocks the entire page (viewing and editing) until signed in with @newslab.no —
-// no close control on the modal itself; it only ever closes from here.
-function setAuthGate(locked){
-  $("#authGateScrim").classList.toggle("open", locked);
-  document.body.classList.toggle("auth-locked", locked);
+// Blocks the entire page (viewing and editing) until signed in with @newslab.no.
+// Three states: "hidden" (signed in), "loading" (still waiting on the Cloudflare
+// Access bridge — plain spinner, no button), "prompt" (bridge didn't work, show
+// the manual sign-in button). No close control in any state but "hidden" — it
+// only ever clears from here.
+function setGateState(mode){
+  const scrim = $("#authGateScrim");
+  if(mode === "hidden"){
+    scrim.classList.remove("open");
+    document.body.classList.remove("auth-locked");
+    return;
+  }
+  scrim.classList.add("open");
+  document.body.classList.add("auth-locked");
+  scrim.classList.toggle("loading", mode === "loading");
+}
+function updateGateVisibility(){
+  setGateState(currentUser ? "hidden" : (bridgeAttempted ? "prompt" : "loading"));
 }
 
 async function doSignIn(){
@@ -1343,7 +1369,7 @@ onAuthStateChanged(auth, async user => {
   if(user && !currentUser){ toast(tr("toastWrongDomain")); signOut(auth); return; }
   state.signedIn = !!currentUser;
   updateAuthUI(currentUser, currentEmail);
-  setAuthGate(!currentUser);
+  updateGateVisibility();
   if(currentUser){ seedAgencyIfMissing(); listenPersonal(currentUser.uid); }
   else { stopPersonalSync(); }
   render();
