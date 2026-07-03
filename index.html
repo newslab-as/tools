@@ -14,10 +14,13 @@
    Warm paper · ABC Diatype + JetBrains Mono · squared corners · hairline rules.
 
    HOW EDITING WORKS
-   - "Your tools" (personal) saves to this browser only (localStorage).
-   - "Agency tools" is the shared directory. Editing it stages a local draft;
-     use Export in edit mode to download config.json and commit it to the repo.
-   - If a config.json sits next to this file, it overrides the defaults below.
+   - "Your tools" (personal) saves to this browser only, or syncs per-account
+     via Firestore once signed in with a @newslab.no Google account.
+   - "Agency tools" and the Kanban roadmap are the shared, org-wide state.
+     Editing them requires signing in with @newslab.no; changes sync live to
+     Firestore for everyone. Read access is open to all visitors.
+   - If Firestore is unreachable, config.json (checked in at repo root) is
+     the read-only fallback baseline.
 
    To change the seed content without the UI, edit DEFAULT_CONFIG far below.
 ---------------------------------------------------------------------------- */
@@ -152,6 +155,8 @@ body.editing .editbar{display:flex}
 .pill:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
 .pill.warn{color:var(--edit);border-color:color-mix(in srgb,var(--edit) 45%,transparent)}
 .pill.warn:hover{background:var(--edit);color:#fff;border-color:var(--edit)}
+.pill.agency-only{display:none}
+body.agency-editable .pill.agency-only{display:inline-flex}
 
 /* ---------- notice ---------- */
 .notice{
@@ -212,17 +217,19 @@ body.editing .editbar{display:flex}
 
 /* edit controls on tiles */
 .tile .ctrls{position:absolute;top:10px;right:10px;display:none;gap:5px}
-body.editing .tile .ctrls{display:flex}
+body.editing #personalGrid .tile .ctrls{display:flex}
+body.agency-editable #agencyGrid .tile .ctrls{display:flex}
 .tile .ctrls button{
   width:27px;height:27px;border-radius:var(--radius);border:1px solid var(--line-strong);
   background:var(--surface);display:inline-flex;align-items:center;justify-content:center;color:var(--muted);
 }
 .tile .ctrls button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
 .tile .ctrls .del:hover{color:#fff;background:var(--danger);border-color:var(--danger)}
-body.editing .tile[draggable="true"]{cursor:grab}
+.tile[draggable="true"]{cursor:grab}
 .tile.dragging{opacity:.35}
 .tile.dragover{border-color:var(--ink);border-style:dashed}
-body.editing .tile .cat{margin-right:66px}
+body.editing #personalGrid .tile .cat{margin-right:66px}
+body.agency-editable #agencyGrid .tile .cat{margin-right:66px}
 
 /* add tile */
 .tile.add{
@@ -230,7 +237,8 @@ body.editing .tile .cat{margin-right:66px}
   border:1px dashed var(--line-strong);background:transparent;color:var(--muted);min-height:116px;
   font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:11px;gap:8px;
 }
-body.editing .tile.add{display:flex}
+body.editing #personalGrid .tile.add{display:flex}
+body.agency-editable #agencyGrid .tile.add{display:flex}
 .tile.add:hover{border-color:var(--ink);color:var(--ink)}
 
 /* empty state */
@@ -303,7 +311,7 @@ body.editing .tile.add{display:flex}
 .kboard-name{font-size:15px;font-weight:500;letter-spacing:-.02em;flex:1 1 auto;outline:none}
 .kboard-name[contenteditable="true"]{border-bottom:1px dashed var(--line-strong)}
 .kctrls{display:none;gap:5px;flex:0 0 auto}
-body.editing .kctrls{display:flex}
+body.agency-editable .kctrls{display:flex}
 .kctrls button{width:22px;height:22px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
 .kctrls button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
 .kctrls .del:hover{color:#fff;background:var(--danger);border-color:var(--danger)}
@@ -314,8 +322,9 @@ body.editing .kctrls{display:flex}
 .kcol-list.dragover{outline:1px dashed var(--line-strong);outline-offset:2px}
 .kcard{
   border:1px solid var(--line);background:var(--surface-2);border-radius:var(--radius);
-  padding:8px 9px;font-size:13px;line-height:1.35;display:flex;align-items:flex-start;gap:6px;cursor:grab;
+  padding:8px 9px;font-size:13px;line-height:1.35;display:flex;align-items:flex-start;gap:6px;
 }
+.kcard[draggable="true"]{cursor:grab}
 .kcard.dragging{opacity:.35}
 .kcard-text{flex:1 1 auto;word-break:break-word}
 .kcard-del{flex:0 0 auto;background:none;border:none;color:var(--faint);font-size:15px;line-height:1;padding:0 2px}
@@ -332,7 +341,7 @@ body.editing .kctrls{display:flex}
 }
 .kcol-add button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
 .kanban-add-board{display:none;margin-top:4px}
-body.editing .kanban-add-board{display:flex}
+body.agency-editable .kanban-add-board{display:flex}
 
 /* ---------- feedback button ---------- */
 .feedback-btn{
@@ -352,6 +361,13 @@ body.editing .kanban-add-board{display:flex}
   .section-head .desc{display:none}
   .section-head h2{font-size:19px}
   .feedback-btn{right:14px;bottom:14px;width:40px;height:40px}
+  .topbar-inner{flex-wrap:wrap;height:auto;padding:10px 0;row-gap:8px}
+  .topbar .spacer{display:none}
+  .search{order:10;flex:1 1 100%;max-width:none}
+  .lang-toggle .lang-en,.lang-toggle .lang-no{display:none}
+  .authbtn span{display:none}
+  .authbtn{padding:0 10px}
+  .editbtn:not(.authbtn){padding:0 12px}
 }
 
 </style>
@@ -396,12 +412,10 @@ body.editing .kanban-add-board{display:flex}
 <main class="wrap" id="app">
   <!-- edit-mode banner -->
   <div class="editbar">
-    <span><b>Editing.</b> Personal changes save to this browser. Agency changes are a local draft until you export &amp; commit.</span>
+    <span><b>Editing.</b> Personal changes save to this browser. Agency changes sync live for the whole team.</span>
     <span class="grow"></span>
-    <button class="pill" id="editNoticeBtn">Notice</button>
-    <button class="pill" id="catBtn">Categories</button>
-    <button class="pill warn" id="exportBtn">Export agency config</button>
-    <button class="pill" id="importBtn">Import</button>
+    <button class="pill agency-only" id="editNoticeBtn">Notice</button>
+    <button class="pill agency-only" id="catBtn">Categories</button>
   </div>
 
   <div id="noticeSlot"></div>
@@ -444,7 +458,6 @@ body.editing .kanban-add-board{display:flex}
   <footer class="foot">
     <span id="footMeta"></span>
     <span class="grow"></span>
-    <a id="discardDraft" style="display:none;cursor:pointer">discard agency draft</a>
     <span>tools.newslab.no</span>
   </footer>
 </main>
@@ -488,20 +501,6 @@ body.editing .kanban-add-board{display:flex}
   </div>
 </div>
 
-<!-- Import / export modal -->
-<div class="scrim" id="ioScrim">
-  <div class="modal">
-    <h3 id="ioTitle">Agency config</h3>
-    <p class="mh-sub" id="ioSub"></p>
-    <textarea class="io-area" id="ioArea" spellcheck="false"></textarea>
-    <div class="modal-actions">
-      <span class="grow"></span>
-      <button class="btn" id="ioClose">Close</button>
-      <button class="btn primary" id="ioAction">Copy</button>
-    </div>
-  </div>
-</div>
-
 <!-- Categories modal -->
 <div class="scrim" id="catScrim">
   <div class="modal">
@@ -520,8 +519,9 @@ body.editing .kanban-add-board{display:flex}
 
 <script>
 /* ===========================================================================
-   DEFAULT_CONFIG — the seed agency directory.
-   Edit here to change what ships in the file, or use edit mode + Export.
+   DEFAULT_CONFIG — the seed agency directory. Only used as a fallback when
+   both Firestore and config.json are unreachable (e.g. first-ever load
+   before either is seeded). Edit here to change that fallback baseline.
    =========================================================================== */
 const DEFAULT_CONFIG = {
   meta: { agencyName: "NewsLab", tagline: "tools", version: 1 },
@@ -563,7 +563,7 @@ const store = (() => {
     del(k){ try { ok ? localStorage.removeItem(k) : delete mem[k]; } catch(e){ delete mem[k]; } }
   };
 })();
-const K = { personal:"nl_hub_personal", draft:"nl_hub_agency_draft", prefs:"nl_hub_prefs", usage:"nl_hub_usage" };
+const K = { personal:"nl_hub_personal", prefs:"nl_hub_prefs", usage:"nl_hub_usage" };
 
 /* ---------- state ---------- */
 const state = {
@@ -574,10 +574,10 @@ const state = {
   edit: false,
   query: "",
   activeCat: null,
-  agencyDirty: false,
   dark: false,
   kanbanOpen: false,
-  lang: "en"
+  lang: "en",
+  signedIn: false
 };
 
 /* ---------- i18n ---------- */
@@ -586,20 +586,22 @@ const STRINGS = {
     searchPlaceholder:"Search tools…", toggleTheme:"Toggle theme",
     signIn:"Sign in", signInTitle:"Sign in with Google", signOutTitle:"Sign out",
     editLabelEdit:"Edit", editLabelDone:"Done",
-    editBannerHTML:"<b>Editing.</b> Personal changes save to this browser. Agency changes are a local draft until you export &amp; commit.",
-    noticeBtn:"Notice", categoriesBtn:"Categories", exportBtn:"Export agency config", importBtn:"Import",
+    editBannerSignedIn:"<b>Editing.</b> Personal changes save to this browser. Agency changes sync live for the whole team.",
+    editBannerSignedOut:"<b>Editing personal tools.</b> Sign in with your @newslab.no account to edit the shared agency directory and roadmap.",
+    noticeBtn:"Notice", categoriesBtn:"Categories",
     noticePlaceholder:"Add a notice for the team — deadlines, downtime, a heads-up…",
     agencyTitle:"Agency tools", agencyDesc:"Shared across the team",
     personalTitle:"Your tools", personalDesc:"Only on this device",
     kanbanTitle:"Tool Roadmap & Requests", kanbanDesc:"Ideas → In progress → Done",
     chipAll:"All", addTool:"＋ Add tool", addBoard:"＋ Add board",
     emptyAgencyTitle:"No agency tools yet", emptyAgencyBody:"Turn on Edit to add the team's shared links.",
+    emptyAgencySignedOut:"Sign in with @newslab.no to add the team's shared links.",
     emptyPersonalTitle:"Nothing pinned yet", emptyPersonalBody:"Turn on Edit to add the tools you reach for most.",
     noMatches:"No matches.",
     emptyBoardsTitle:"No boards yet", emptyBoardsBody:"Turn on Edit to start a board for tool ideas and requests.",
+    emptyBoardsSignedOut:"Sign in with @newslab.no to start a board for tool ideas and requests.",
     colIdeas:"Ideas", colProgress:"In Progress", colDone:"Done",
     addCardPlaceholder:"Add a card…", addCardAria:"Add a card to ",
-    footerDraft:"agency draft · unpublished", discardDraft:"discard agency draft",
     feedbackTitle:"Send feedback",
     addToolTitle:"Add tool", editToolTitle:"Edit tool",
     subAgency:"Shared agency directory", subPersonal:"Saved to this browser only",
@@ -608,18 +610,13 @@ const STRINGS = {
     hintUrl:"Leave blank for a placeholder tile (shows as “coming soon”).",
     phName:"Production Planner", phUrl:"https://…", phDesc:"What it's for, in a few words", phBadge:"Soon, Beta, New…",
     btnDelete:"Delete", btnCancel:"Cancel", btnSave:"Save",
-    ioTitleAgency:"Agency config", ioTitleExport:"Export agency config", ioTitleImport:"Import agency config",
-    ioSubExport:"Save this as <b>config.json</b> next to index.html and commit it. Everyone sees the update on next load.",
-    ioSubImport:"Paste a config.json to replace the current agency draft.",
-    btnClose:"Close", btnCopy:"Copy", btnImport:"Import",
     catTitle:"Categories",
     catSubHTML:'Grouping labels for the agency directory. One per line as <span style="font-family:var(--mono)">label</span> or <span style="font-family:var(--mono)">label #hexcolour</span>.',
     toastGiveName:"Give it a name", toastSaved:"Saved", toastAdded:"Added", toastRemoved:"Removed",
-    toastCopied:"Copied — also downloading config.json", toastInvalidJson:"That's not valid JSON",
-    toastImported:"Imported as draft", toastKeepCat:"Keep at least one category",
-    toastCatUpdated:"Categories updated", toastReverted:"Reverted to published", toastBoardRemoved:"Board removed",
+    toastKeepCat:"Keep at least one category",
+    toastCatUpdated:"Categories updated", toastBoardRemoved:"Board removed",
     toastWrongDomain:"Please sign in with your @newslab.no account", toastSignedOut:"Signed out",
-    toastSyncFail:"Sign in with @newslab.no to sync — saved locally for now", toastSignInFail:"Sign-in failed",
+    toastSyncFail:"Couldn't sync — check your connection and try again", toastSignInFail:"Sign-in failed",
     tileBadgeSoon:"Soon", btnEditTitle:"Edit",
     newBoard:"New board", untitledBoard:"Untitled board", deleteBoardTitle:"Delete board", removeCardTitle:"Remove", addCardTitle:"Add card"
   },
@@ -627,20 +624,22 @@ const STRINGS = {
     searchPlaceholder:"Søk i verktøy…", toggleTheme:"Bytt tema",
     signIn:"Logg inn", signInTitle:"Logg inn med Google", signOutTitle:"Logg ut",
     editLabelEdit:"Rediger", editLabelDone:"Ferdig",
-    editBannerHTML:"<b>Redigerer.</b> Personlige endringer lagres i denne nettleseren. Byråendringer er et lokalt utkast til du eksporterer og committer.",
-    noticeBtn:"Melding", categoriesBtn:"Kategorier", exportBtn:"Eksporter byråkonfig", importBtn:"Importer",
+    editBannerSignedIn:"<b>Redigerer.</b> Personlige endringer lagres i denne nettleseren. Byråendringer synkroniseres live for hele teamet.",
+    editBannerSignedOut:"<b>Redigerer personlige verktøy.</b> Logg inn med din @newslab.no-konto for å redigere den delte byråkatalogen og veikartet.",
+    noticeBtn:"Melding", categoriesBtn:"Kategorier",
     noticePlaceholder:"Legg til en melding til teamet — frister, nedetid, en heads-up…",
     agencyTitle:"Byråverktøy", agencyDesc:"Delt med hele teamet",
     personalTitle:"Dine verktøy", personalDesc:"Kun på denne enheten",
     kanbanTitle:"Verktøyveikart og forespørsler", kanbanDesc:"Idéer → Pågår → Ferdig",
     chipAll:"Alle", addTool:"＋ Legg til verktøy", addBoard:"＋ Legg til tavle",
     emptyAgencyTitle:"Ingen byråverktøy ennå", emptyAgencyBody:"Slå på Rediger for å legge til teamets delte lenker.",
+    emptyAgencySignedOut:"Logg inn med @newslab.no for å legge til teamets delte lenker.",
     emptyPersonalTitle:"Ingenting festet ennå", emptyPersonalBody:"Slå på Rediger for å legge til verktøyene du bruker mest.",
     noMatches:"Ingen treff.",
     emptyBoardsTitle:"Ingen tavler ennå", emptyBoardsBody:"Slå på Rediger for å starte en tavle for verktøyidéer og forespørsler.",
+    emptyBoardsSignedOut:"Logg inn med @newslab.no for å starte en tavle for verktøyidéer og forespørsler.",
     colIdeas:"Idéer", colProgress:"Pågår", colDone:"Ferdig",
     addCardPlaceholder:"Legg til et kort…", addCardAria:"Legg til et kort i ",
-    footerDraft:"byråutkast · ikke publisert", discardDraft:"forkast byråutkast",
     feedbackTitle:"Send tilbakemelding",
     addToolTitle:"Legg til verktøy", editToolTitle:"Rediger verktøy",
     subAgency:"Delt byråkatalog", subPersonal:"Lagres kun i denne nettleseren",
@@ -649,18 +648,13 @@ const STRINGS = {
     hintUrl:"La stå tom for en plassholder-flis (vises som «kommer snart»).",
     phName:"Production Planner", phUrl:"https://…", phDesc:"Hva det brukes til, i korte trekk", phBadge:"Snart, Beta, Ny…",
     btnDelete:"Slett", btnCancel:"Avbryt", btnSave:"Lagre",
-    ioTitleAgency:"Byråkonfig", ioTitleExport:"Eksporter byråkonfig", ioTitleImport:"Importer byråkonfig",
-    ioSubExport:"Lagre denne som <b>config.json</b> ved siden av index.html og committ den. Alle ser oppdateringen neste gang de laster siden.",
-    ioSubImport:"Lim inn en config.json for å erstatte gjeldende byråutkast.",
-    btnClose:"Lukk", btnCopy:"Kopier", btnImport:"Importer",
     catTitle:"Kategorier",
     catSubHTML:'Grupperingsetiketter for byråkatalogen. Én per linje som <span style="font-family:var(--mono)">etikett</span> eller <span style="font-family:var(--mono)">etikett #hexfarge</span>.',
     toastGiveName:"Gi den et navn", toastSaved:"Lagret", toastAdded:"Lagt til", toastRemoved:"Fjernet",
-    toastCopied:"Kopiert — laster også ned config.json", toastInvalidJson:"Det er ikke gyldig JSON",
-    toastImported:"Importert som utkast", toastKeepCat:"Behold minst én kategori",
-    toastCatUpdated:"Kategorier oppdatert", toastReverted:"Tilbakestilt til publisert", toastBoardRemoved:"Tavle fjernet",
+    toastKeepCat:"Behold minst én kategori",
+    toastCatUpdated:"Kategorier oppdatert", toastBoardRemoved:"Tavle fjernet",
     toastWrongDomain:"Vennligst logg inn med din @newslab.no-konto", toastSignedOut:"Logget ut",
-    toastSyncFail:"Logg inn med @newslab.no for å synkronisere — lagret lokalt foreløpig", toastSignInFail:"Innlogging mislyktes",
+    toastSyncFail:"Kunne ikke synkronisere — sjekk tilkoblingen og prøv igjen", toastSignInFail:"Innlogging mislyktes",
     tileBadgeSoon:"Snart", btnEditTitle:"Rediger",
     newBoard:"Ny tavle", untitledBoard:"Uten navn", deleteBoardTitle:"Slett tavle", removeCardTitle:"Fjern", addCardTitle:"Legg til kort"
   }
@@ -688,7 +682,14 @@ async function boot(){
   applyI18n();
   applyTheme();
 
-  // agency baseline: external config.json overrides embedded default
+  // one-time local cleanup: the old local-draft/export feature is gone, retired in
+  // favour of live Firestore sync — purge any lingering draft from that era so it
+  // can't shadow incoming Firestore/config.json state.
+  store.del("nl_hub_agency_draft");
+
+  // agency baseline: external config.json overrides embedded default.
+  // This is the fallback shown until (or unless) Firestore's live listener
+  // in the module script below reports back with the synced org state.
   try{
     const res = await fetch("config.json", {cache:"no-store"});
     if(res.ok){
@@ -696,17 +697,7 @@ async function boot(){
       state.base = normaliseConfig(cfg);
     }
   }catch(e){ /* no config.json — fine, use embedded default */ }
-
-  // apply agency draft if present
-  const draft = store.get(K.draft);
-  if(draft){
-    try{
-      state.config = normaliseConfig(JSON.parse(draft));
-      state.agencyDirty = true;
-    }catch(e){ state.config = JSON.parse(JSON.stringify(state.base)); }
-  } else {
-    state.config = JSON.parse(JSON.stringify(state.base));
-  }
+  state.config = JSON.parse(JSON.stringify(state.base));
 
   // personal + usage
   try{ state.personal = JSON.parse(store.get(K.personal) || "[]"); }catch(e){ state.personal = []; }
@@ -738,10 +729,7 @@ function savePersonal(){
   store.set(K.personal, JSON.stringify(state.personal));
   window.dispatchEvent(new CustomEvent("nl-personal-change"));
 }
-function saveDraft(){
-  state.agencyDirty = JSON.stringify(state.config) !== JSON.stringify(state.base);
-  if(state.agencyDirty) store.set(K.draft, JSON.stringify(state.config));
-  else store.del(K.draft);
+function syncAgency(){
   window.dispatchEvent(new CustomEvent("nl-agency-change"));
 }
 function savePrefs(){ store.set(K.prefs, JSON.stringify({dark:state.dark, kanbanOpen:state.kanbanOpen, lang:state.lang})); }
@@ -749,6 +737,8 @@ function saveUsage(){ store.set(K.usage, JSON.stringify(state.usage)); }
 
 /* ---------- rendering ---------- */
 function render(){
+  document.body.classList.toggle("agency-editable", state.edit && state.signedIn);
+  $(".editbar span").innerHTML = state.signedIn ? tr("editBannerSignedIn") : tr("editBannerSignedOut");
   renderNotice();
   renderChips();
   renderGrid("agency");
@@ -757,8 +747,7 @@ function render(){
   $("#agencyCount").textContent = state.config.agency.length ? String(state.config.agency.length).padStart(2,"0") : "00";
   $("#personalCount").textContent = String(state.personal.length).padStart(2,"0");
   const v = state.config.meta.version || 1;
-  $("#footMeta").textContent = state.agencyDirty ? tr("footerDraft") : ("v"+v);
-  $("#discardDraft").style.display = state.agencyDirty ? "inline" : "none";
+  $("#footMeta").textContent = "v"+v;
 }
 
 function matchQuery(t){
@@ -770,9 +759,9 @@ function matchQuery(t){
 function renderNotice(){
   const slot = $("#noticeSlot");
   const n = state.config.notice || "";
-  if(state.edit){
+  if(state.edit && state.signedIn){
     slot.innerHTML = `<div class="notice-edit"><textarea id="noticeInput" placeholder="${esc(tr("noticePlaceholder"))}">${esc(n)}</textarea></div>`;
-    $("#noticeInput").addEventListener("input", e=>{ state.config.notice = e.target.value; saveDraft(); render(); });
+    $("#noticeInput").addEventListener("input", e=>{ state.config.notice = e.target.value; syncAgency(); render(); });
   } else if(n){
     slot.innerHTML = `<div class="notice"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:0 0 auto;margin-top:1px;color:var(--accent)"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg><span>${esc(n)}</span></div>`;
   } else {
@@ -790,14 +779,14 @@ function renderChips(){
   $$(".chip", wrap).forEach(b=>b.addEventListener("click",()=>{ state.activeCat = b.dataset.cat || null; renderChips(); renderGrid("agency"); }));
 }
 
-function tileHTML(t, scope, idx){
+function tileHTML(t, scope, idx, canEdit){
   const url = safeUrl(t.url);
   const disabled = !url;
   const code = (scope==="agency"?"A":"P") + "·" + String(idx+1).padStart(2,"0");
   const badge = t.badge ? `<span class="badge">${esc(t.badge)}</span>` : (disabled && scope==="agency" ? `<span class="badge">${esc(tr("tileBadgeSoon"))}</span>` : "");
   const tag = disabled ? "div" : "a";
   const attrs = disabled ? "" : `href="${esc(url)}" target="_blank" rel="noopener" data-track="${esc(t.id)}"`;
-  return `<${tag} class="tile ${disabled?'disabled':''}" ${attrs} data-scope="${scope}" data-id="${esc(t.id)}" ${state.edit?'draggable="true"':''}>
+  return `<${tag} class="tile ${disabled?'disabled':''}" ${attrs} data-scope="${scope}" data-id="${esc(t.id)}" ${canEdit?'draggable="true"':''}>
     <div class="ctrls">
       <button class="edit" title="${esc(tr("btnEditTitle"))}" data-act="edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
       <button class="del" title="${esc(tr("btnDelete"))}" data-act="del"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
@@ -816,20 +805,23 @@ function renderGrid(scope){
   const isAgency = scope==="agency";
   const grid = $(isAgency ? "#agencyGrid" : "#personalGrid");
   let items = isAgency ? state.config.agency : state.personal;
+  // Agency editing requires being signed in with @newslab.no (writes sync live to
+  // Firestore); personal tools always stay editable, local-only when signed out.
+  const canEditThis = isAgency ? (state.edit && state.signedIn) : state.edit;
   const filtered = items.filter(t => matchQuery(t) && (!isAgency || !state.activeCat || t.cat===state.activeCat));
 
-  let html = filtered.map((t)=> tileHTML(t, scope, items.indexOf(t))).join("");
+  let html = filtered.map((t)=> tileHTML(t, scope, items.indexOf(t), canEditThis)).join("");
 
-  // add tile (edit mode)
+  // add tile (edit mode; visibility further gated by CSS for agency sign-in)
   html += `<button class="tile add" data-add="${scope}">${tr("addTool")}</button>`;
 
   // empty states (not while filtering/searching)
   const filtering = state.query.trim() || (isAgency && state.activeCat);
-  if(items.length===0 && !state.edit){
+  if(items.length===0 && !canEditThis){
     html = isAgency
-      ? `<div class="empty" style="grid-column:1/-1"><b>${esc(tr("emptyAgencyTitle"))}</b>${esc(tr("emptyAgencyBody"))}</div>`
+      ? `<div class="empty" style="grid-column:1/-1"><b>${esc(tr("emptyAgencyTitle"))}</b>${esc(state.signedIn ? tr("emptyAgencyBody") : tr("emptyAgencySignedOut"))}</div>`
       : `<div class="empty" style="grid-column:1/-1"><b>${esc(tr("emptyPersonalTitle"))}</b>${esc(tr("emptyPersonalBody"))}</div>`;
-  } else if(filtered.length===0 && filtering && !state.edit){
+  } else if(filtered.length===0 && filtering && !canEditThis){
     html = `<div class="empty" style="grid-column:1/-1">${esc(tr("noMatches"))}</div>`;
   }
 
@@ -849,7 +841,7 @@ function renderGrid(scope){
     const id = a.dataset.track; state.usage[id] = (state.usage[id]||0)+1; saveUsage();
   }));
 
-  if(state.edit) enableDrag(grid, scope);
+  if(canEditThis) enableDrag(grid, scope);
 }
 
 /* ---------- drag reorder ---------- */
@@ -868,7 +860,7 @@ function enableDrag(grid, scope){
       const to   = arr.findIndex(x=>x.id===tile.dataset.id);
       if(from<0||to<0) return;
       arr.splice(to,0, arr.splice(from,1)[0]);
-      if(scope==="agency") saveDraft(); else savePersonal();
+      if(scope==="agency") syncAgency(); else savePersonal();
       render();
     });
   });
@@ -887,10 +879,12 @@ function boardCards(boardId, col){ return state.config.cards.filter(c=>c.boardId
 function renderKanban(){
   const wrap = $("#kanbanBoards");
   const boards = state.config.boards;
+  // Kanban is agency-scoped shared state — same sign-in requirement to edit as Agency tools.
+  const canEdit = state.edit && state.signedIn;
   $("#kanbanCount").textContent = boards.length ? String(boards.length).padStart(2,"0") : "00";
   wrap.innerHTML = boards.length
-    ? boards.map(boardHTML).join("")
-    : (state.edit ? "" : `<div class="empty"><b>${esc(tr("emptyBoardsTitle"))}</b>${esc(tr("emptyBoardsBody"))}</div>`);
+    ? boards.map(b=>boardHTML(b, canEdit)).join("")
+    : (canEdit ? "" : `<div class="empty"><b>${esc(tr("emptyBoardsTitle"))}</b>${esc(state.signedIn ? tr("emptyBoardsBody") : tr("emptyBoardsSignedOut"))}</div>`);
 
   $$(".kanban-board", wrap).forEach(el=>{
     const boardId = el.dataset.board;
@@ -899,11 +893,11 @@ function renderKanban(){
       if(btn.dataset.kact==="delete") deleteBoard(boardId);
     }));
     const nameEl = $(".kboard-name", el);
-    if(state.edit){
+    if(canEdit){
       nameEl.contentEditable = "true";
       nameEl.addEventListener("blur", ()=>{
         const b = state.config.boards.find(x=>x.id===boardId);
-        if(b){ b.name = nameEl.textContent.trim() || tr("untitledBoard"); saveDraft(); }
+        if(b){ b.name = nameEl.textContent.trim() || tr("untitledBoard"); syncAgency(); }
       });
       nameEl.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); nameEl.blur(); } });
     }
@@ -916,11 +910,11 @@ function renderKanban(){
     $$("[data-kcarddel]", el).forEach(btn=>btn.addEventListener("click", e=>{
       e.stopPropagation(); deleteCard(btn.dataset.kcarddel);
     }));
-    enableCardDrag(el, boardId);
+    if(canEdit) enableCardDrag(el, boardId);
   });
 }
 
-function boardHTML(b){
+function boardHTML(b, canEdit){
   return `<div class="kanban-board" data-board="${esc(b.id)}">
     <div class="kboard-head">
       <span class="kboard-name">${esc(b.name)}</span>
@@ -928,34 +922,34 @@ function boardHTML(b){
         <button data-kact="delete" class="del" title="${esc(tr("deleteBoardTitle"))}" aria-label="${esc(tr("deleteBoardTitle"))}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
       </span>
     </div>
-    <div class="kcols">${KANBAN_COLS.map(col=>kanbanColHTML(b.id, col)).join("")}</div>
+    <div class="kcols">${KANBAN_COLS.map(col=>kanbanColHTML(b.id, col, canEdit)).join("")}</div>
   </div>`;
 }
 
-function kanbanColHTML(boardId, col){
+function kanbanColHTML(boardId, col, canEdit){
   const cards = boardCards(boardId, col.id);
   const label = tr(col.labelKey);
   return `<div class="kcol" data-col="${col.id}">
     <div class="kcol-head mono-label">${esc(label)}<span class="kcol-count">${cards.length}</span></div>
-    <div class="kcol-list" data-dropcol="${col.id}">${cards.map(kanbanCardHTML).join("")}</div>
-    <form class="kcol-add" data-col="${col.id}">
+    <div class="kcol-list" data-dropcol="${col.id}">${cards.map(c=>kanbanCardHTML(c, canEdit)).join("")}</div>
+    ${canEdit ? `<form class="kcol-add" data-col="${col.id}">
       <input type="text" placeholder="${esc(tr("addCardPlaceholder"))}" maxlength="140" aria-label="${esc(tr("addCardAria"))}${esc(label)}" />
       <button type="submit" aria-label="${esc(tr("addCardTitle"))}">＋</button>
-    </form>
+    </form>` : ""}
   </div>`;
 }
 
-function kanbanCardHTML(c){
-  return `<div class="kcard" draggable="true" data-card="${esc(c.id)}">
+function kanbanCardHTML(c, canEdit){
+  return `<div class="kcard" ${canEdit?'draggable="true"':''} data-card="${esc(c.id)}">
     <span class="kcard-text">${esc(c.text)}</span>
-    <button class="kcard-del" data-kcarddel="${esc(c.id)}" title="${esc(tr("removeCardTitle"))}" aria-label="${esc(tr("removeCardTitle"))}">×</button>
+    ${canEdit ? `<button class="kcard-del" data-kcarddel="${esc(c.id)}" title="${esc(tr("removeCardTitle"))}" aria-label="${esc(tr("removeCardTitle"))}">×</button>` : ""}
   </div>`;
 }
 
 function addBoard(){
   const b = { id: uid(), name: tr("newBoard") };
   state.config.boards.push(b);
-  saveDraft(); renderKanban();
+  syncAgency(); renderKanban();
   requestAnimationFrame(()=>{
     const el = $(`.kanban-board[data-board="${b.id}"] .kboard-name`);
     if(!el) return;
@@ -967,17 +961,17 @@ function addBoard(){
 function deleteBoard(boardId){
   state.config.boards = state.config.boards.filter(b=>b.id!==boardId);
   state.config.cards = state.config.cards.filter(c=>c.boardId!==boardId);
-  saveDraft(); renderKanban(); toast(tr("toastBoardRemoved"));
+  syncAgency(); renderKanban(); toast(tr("toastBoardRemoved"));
 }
 function addCard(boardId, col, text){
   const t = (text||"").trim();
   if(!t) return;
   state.config.cards.push({ id: uid(), boardId, col, text: t, createdAt: Date.now() });
-  saveDraft(); renderKanban();
+  syncAgency(); renderKanban();
 }
 function deleteCard(id){
   state.config.cards = state.config.cards.filter(c=>c.id!==id);
-  saveDraft(); renderKanban();
+  syncAgency(); renderKanban();
 }
 function enableCardDrag(boardEl, boardId){
   let dragId = null;
@@ -1003,7 +997,7 @@ function enableCardDrag(boardEl, boardId){
         if(state.config.cards[i].boardId===boardId && state.config.cards[i].col===targetCol){ insertAt = i+1; break; }
       }
       state.config.cards.splice(insertAt, 0, card);
-      saveDraft(); renderKanban();
+      syncAgency(); renderKanban();
     });
   });
 }
@@ -1032,47 +1026,15 @@ function saveTile(){
   const arr = modalCtx.scope==="agency" ? state.config.agency : state.personal;
   if(modalCtx.id){ const t=arr.find(x=>x.id===modalCtx.id); Object.assign(t,rec); }
   else { arr.push(Object.assign({id:uid()}, rec)); }
-  (modalCtx.scope==="agency" ? saveDraft : savePersonal)();
+  (modalCtx.scope==="agency" ? syncAgency : savePersonal)();
   closeScrim("#tileScrim"); render(); toast(modalCtx.id?tr("toastSaved"):tr("toastAdded"));
 }
 function deleteTile(scope, id){
   const arr = scope==="agency" ? state.config.agency : state.personal;
   const i = arr.findIndex(x=>x.id===id); if(i<0) return;
   arr.splice(i,1);
-  (scope==="agency" ? saveDraft : savePersonal)();
+  (scope==="agency" ? syncAgency : savePersonal)();
   render(); toast(tr("toastRemoved"));
-}
-
-/* ---------- import / export ---------- */
-function openExport(){
-  const cfg = { meta:state.config.meta, notice:state.config.notice, categories:state.config.categories, agency:state.config.agency, boards:state.config.boards, cards:state.config.cards };
-  $("#ioTitle").textContent = tr("ioTitleExport");
-  $("#ioSub").innerHTML = tr("ioSubExport");
-  $("#ioArea").value = JSON.stringify(cfg, null, 2);
-  $("#ioAction").textContent = tr("btnCopy");
-  $("#ioAction").dataset.mode = "copy";
-  openScrim("#ioScrim");
-}
-function openImport(){
-  $("#ioTitle").textContent = tr("ioTitleImport");
-  $("#ioSub").textContent = tr("ioSubImport");
-  $("#ioArea").value = "";
-  $("#ioAction").textContent = tr("btnImport");
-  $("#ioAction").dataset.mode = "import";
-  openScrim("#ioScrim");
-}
-function ioAction(){
-  const mode = $("#ioAction").dataset.mode;
-  if(mode==="copy"){
-    const dl = () => { const b=new Blob([$("#ioArea").value],{type:"application/json"}); const u=URL.createObjectURL(b); const a=document.createElement("a"); a.href=u; a.download="config.json"; a.click(); URL.revokeObjectURL(u); };
-    if(navigator.clipboard){ navigator.clipboard.writeText($("#ioArea").value).then(()=>toast(tr("toastCopied"))); }
-    dl(); closeScrim("#ioScrim");
-  } else {
-    try{
-      const cfg = normaliseConfig(JSON.parse($("#ioArea").value));
-      state.config = cfg; saveDraft(); closeScrim("#ioScrim"); render(); toast(tr("toastImported"));
-    }catch(e){ toast(tr("toastInvalidJson")); }
-  }
 }
 
 /* ---------- categories modal ---------- */
@@ -1093,7 +1055,7 @@ function saveCats(){
   const ids = new Set(cats.map(c=>c.id));
   state.config.agency.forEach(t=>{ if(!ids.has(t.cat)) t.cat = cats[0].id; });
   state.config.categories = cats;
-  saveDraft(); closeScrim("#catScrim"); render(); toast(tr("toastCatUpdated"));
+  syncAgency(); closeScrim("#catScrim"); render(); toast(tr("toastCatUpdated"));
 }
 
 /* ---------- scrims ---------- */
@@ -1117,11 +1079,8 @@ function applyI18n(){
   $("#q").placeholder = tr("searchPlaceholder");
   $("#themeBtn").title = tr("toggleTheme"); $("#themeBtn").setAttribute("aria-label", tr("toggleTheme"));
   $("#editLabel").textContent = state.edit ? tr("editLabelDone") : tr("editLabelEdit");
-  $(".editbar span").innerHTML = tr("editBannerHTML");
   $("#editNoticeBtn").textContent = tr("noticeBtn");
   $("#catBtn").textContent = tr("categoriesBtn");
-  $("#exportBtn").textContent = tr("exportBtn");
-  $("#importBtn").textContent = tr("importBtn");
   $("#agencySection h2").textContent = tr("agencyTitle");
   $("#agencySection .desc").textContent = tr("agencyDesc");
   $("#personalSection h2").textContent = tr("personalTitle");
@@ -1129,7 +1088,6 @@ function applyI18n(){
   $("#kanbanToggle h2").textContent = tr("kanbanTitle");
   $("#kanbanToggle .desc").textContent = tr("kanbanDesc");
   $("#addBoardBtn").textContent = tr("addBoard");
-  $("#discardDraft").textContent = tr("discardDraft");
   $(".feedback-btn").title = tr("feedbackTitle"); $(".feedback-btn").setAttribute("aria-label", tr("feedbackTitle"));
   $("#fName").placeholder = tr("phName"); $("label[for=fName]").textContent = tr("labelName");
   $("#fUrl").placeholder = tr("phUrl"); $("label[for=fUrl]").textContent = tr("labelLink");
@@ -1141,7 +1099,6 @@ function applyI18n(){
   $("#tileDelete").textContent = tr("btnDelete");
   $("#tileCancel").textContent = tr("btnCancel");
   $("#tileSave").textContent = tr("btnSave");
-  $("#ioClose").textContent = tr("btnClose");
   $("#catScrim h3").textContent = tr("catTitle");
   $("#catScrim .mh-sub").innerHTML = tr("catSubHTML");
   $("#catCancel").textContent = tr("btnCancel");
@@ -1169,18 +1126,13 @@ function setEdit(on){
 $("#editBtn").addEventListener("click", ()=> setEdit(!state.edit));
 $("#themeBtn").addEventListener("click", ()=>{ state.dark=!state.dark; applyTheme(); savePrefs(); });
 $("#q").addEventListener("input", e=>{ state.query=e.target.value; renderGrid("agency"); renderGrid("personal"); });
-$("#exportBtn").addEventListener("click", openExport);
-$("#importBtn").addEventListener("click", openImport);
 $("#editNoticeBtn").addEventListener("click", ()=>{ $("#noticeSlot").scrollIntoView({behavior:"smooth",block:"center"}); const i=$("#noticeInput"); if(i) i.focus(); });
 $("#catBtn").addEventListener("click", openCats);
 $("#tileSave").addEventListener("click", saveTile);
 $("#tileCancel").addEventListener("click", ()=>closeScrim("#tileScrim"));
 $("#tileDelete").addEventListener("click", ()=>{ if(modalCtx.id){ deleteTile(modalCtx.scope, modalCtx.id); closeScrim("#tileScrim"); } });
-$("#ioAction").addEventListener("click", ioAction);
-$("#ioClose").addEventListener("click", ()=>closeScrim("#ioScrim"));
 $("#catSave").addEventListener("click", saveCats);
 $("#catCancel").addEventListener("click", ()=>closeScrim("#catScrim"));
-$("#discardDraft").addEventListener("click", ()=>{ state.config=JSON.parse(JSON.stringify(state.base)); store.del(K.draft); state.agencyDirty=false; render(); toast(tr("toastReverted")); });
 $("#kanbanToggle").addEventListener("click", ()=> setKanbanOpen(!state.kanbanOpen));
 $("#kanbanToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setKanbanOpen(!state.kanbanOpen); } });
 $("#addBoardBtn").addEventListener("click", addBoard);
@@ -1239,7 +1191,7 @@ onSnapshot(AGENCY_DOC, snap => {
   applyingRemote = true;
   const cfg = normaliseConfig(snap.data());
   state.base = cfg;
-  if(!state.agencyDirty){ state.config = JSON.parse(JSON.stringify(cfg)); }
+  state.config = JSON.parse(JSON.stringify(cfg));
   $("#tagline").textContent = state.config.meta.tagline || "tools";
   render();
   applyingRemote = false;
@@ -1258,13 +1210,12 @@ async function seedAgencyIfMissing(){
 }
 
 async function pushOrgUpdate(){
-  if(applyingRemote || !currentUser) return; // not signed in → stays local-only draft, same as before
+  if(applyingRemote || !currentUser) return; // agency editing UI is hidden unless signed in — nothing to push
   try{
     await setDoc(AGENCY_DOC, {
       meta: state.config.meta, notice: state.config.notice, categories: state.config.categories,
       agency: state.config.agency, boards: state.config.boards, cards: state.config.cards
     });
-    store.del(K.draft); state.agencyDirty = false; render();
   }catch(e){ toast(tr("toastSyncFail")); }
 }
 window.addEventListener("nl-agency-change", pushOrgUpdate);
@@ -1304,9 +1255,11 @@ window.updateAuthUIStrings = () => updateAuthUI(currentUser);
 onAuthStateChanged(auth, user => {
   currentUser = user && user.email && user.email.endsWith("@newslab.no") ? user : null;
   if(user && !currentUser){ toast(tr("toastWrongDomain")); signOut(auth); return; }
+  state.signedIn = !!currentUser;
   updateAuthUI(currentUser);
   if(currentUser){ seedAgencyIfMissing(); listenPersonal(currentUser.uid); }
   else { stopPersonalSync(); }
+  render();
 });
 
 $("#authBtn").addEventListener("click", async () => {
