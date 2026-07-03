@@ -124,6 +124,8 @@ input,textarea,select{font-family:var(--sans);color:inherit}
 }
 .editbtn:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
 .editbtn.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.authbtn img{width:18px;height:18px;border-radius:50%;display:block}
+.authbtn.signed-in{color:var(--ink)}
 
 /* ---------- edit-mode banner ---------- */
 .editbar{
@@ -359,6 +361,15 @@ body.editing .kanban-add-board{display:flex}
       <span class="kbd">/</span>
     </div>
     <div class="spacer"></div>
+    <button class="editbtn authbtn" id="authBtn" title="Sign in with Google" aria-label="Sign in with Google">
+      <svg id="authIcon" width="15" height="15" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0 0 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.09V7.06H2.18A11 11 0 0 0 1 12c0 1.78.43 3.46 1.18 4.94z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.06l3.66 2.85C6.71 7.31 9.14 5.38 12 5.38z"/>
+      </svg>
+      <span id="authLabel">Sign in</span>
+    </button>
     <button class="iconbtn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
       <svg id="themeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"></svg>
     </button>
@@ -620,11 +631,15 @@ function normaliseConfig(cfg){
 }
 
 /* ---------- persistence ---------- */
-function savePersonal(){ store.set(K.personal, JSON.stringify(state.personal)); }
+function savePersonal(){
+  store.set(K.personal, JSON.stringify(state.personal));
+  window.dispatchEvent(new CustomEvent("nl-personal-change"));
+}
 function saveDraft(){
   state.agencyDirty = JSON.stringify(state.config) !== JSON.stringify(state.base);
   if(state.agencyDirty) store.set(K.draft, JSON.stringify(state.config));
   else store.del(K.draft);
+  window.dispatchEvent(new CustomEvent("nl-agency-change"));
 }
 function savePrefs(){ store.set(K.prefs, JSON.stringify({dark:state.dark, kanbanOpen:state.kanbanOpen})); }
 function saveUsage(){ store.set(K.usage, JSON.stringify(state.usage)); }
@@ -1030,6 +1045,125 @@ document.addEventListener("keydown", e=>{
 });
 
 boot();
+</script>
+
+<!-- ===========================================================================
+     Firebase — Google Sign-in (restricted to @newslab.no) + realtime sync.
+     Reads (agency/kanban) are open to everyone via Firestore rules; only
+     writes require an authenticated @newslab.no account. config.json /
+     localStorage remain the fallback path if Firebase is unreachable.
+     =========================================================================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import { getFirestore, doc, onSnapshot, setDoc, getDoc }
+  from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD51arF7fCOJ6ywRX38G4grfcwEsZwcXaQ",
+  authDomain: "newslab-tools.firebaseapp.com",
+  projectId: "newslab-tools",
+  storageBucket: "newslab-tools.firebasestorage.app",
+  messagingSenderId: "187419248176",
+  appId: "1:187419248176:web:fb13f049e289cc64bb8ff5"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ hd: "newslab.no" });
+
+const AGENCY_DOC = doc(db, "agency", "shared_state");
+const personalDocRef = uid => doc(db, "users", uid);
+
+let currentUser = null;
+let personalUnsub = null;
+let applyingRemote = false; // guards against re-broadcasting a snapshot we just applied
+
+/* ---------- org (agency + kanban) sync — open to everyone, no sign-in needed to read ---------- */
+onSnapshot(AGENCY_DOC, snap => {
+  if(!snap.exists()) return; // Firestore not seeded yet — keep showing config.json
+  applyingRemote = true;
+  const cfg = normaliseConfig(snap.data());
+  state.base = cfg;
+  if(!state.agencyDirty){ state.config = JSON.parse(JSON.stringify(cfg)); }
+  $("#tagline").textContent = state.config.meta.tagline || "tools";
+  render();
+  applyingRemote = false;
+}, err => console.warn("[hub] agency sync unavailable, using config.json fallback:", err.message));
+
+async function seedAgencyIfMissing(){
+  try{
+    const snap = await getDoc(AGENCY_DOC);
+    if(!snap.exists()){
+      await setDoc(AGENCY_DOC, {
+        meta: state.base.meta, notice: state.base.notice, categories: state.base.categories,
+        agency: state.base.agency, boards: state.base.boards, cards: state.base.cards
+      });
+    }
+  }catch(e){ /* not signed in with write access yet — fine, try again next sign-in */ }
+}
+
+async function pushOrgUpdate(){
+  if(applyingRemote || !currentUser) return; // not signed in → stays local-only draft, same as before
+  try{
+    await setDoc(AGENCY_DOC, {
+      meta: state.config.meta, notice: state.config.notice, categories: state.config.categories,
+      agency: state.config.agency, boards: state.config.boards, cards: state.config.cards
+    });
+    store.del(K.draft); state.agencyDirty = false; render();
+  }catch(e){ toast("Sign in with @newslab.no to sync — saved locally for now"); }
+}
+window.addEventListener("nl-agency-change", pushOrgUpdate);
+
+/* ---------- personal pins sync — only while signed in ---------- */
+function listenPersonal(uid){
+  stopPersonalSync();
+  personalUnsub = onSnapshot(personalDocRef(uid), snap => {
+    applyingRemote = true;
+    if(snap.exists()){ state.personal = snap.data().items || []; }
+    else { setDoc(personalDocRef(uid), { items: state.personal }).catch(()=>{}); }
+    render();
+    applyingRemote = false;
+  }, err => console.warn("[hub] personal sync unavailable:", err.message));
+}
+function stopPersonalSync(){ if(personalUnsub){ personalUnsub(); personalUnsub = null; } }
+async function pushPersonalUpdate(){
+  if(applyingRemote || !currentUser) return;
+  try{ await setDoc(personalDocRef(currentUser.uid), { items: state.personal }); }catch(e){ /* offline — localStorage already has it */ }
+}
+window.addEventListener("nl-personal-change", pushPersonalUpdate);
+
+/* ---------- auth ---------- */
+function updateAuthUI(user){
+  const btn = $("#authBtn"), label = $("#authLabel");
+  btn.classList.toggle("signed-in", !!user);
+  if(user){
+    label.textContent = (user.displayName || user.email || "Signed in").split(" ")[0];
+    btn.title = "Sign out (" + user.email + ")";
+  } else {
+    label.textContent = "Sign in";
+    btn.title = "Sign in with Google";
+  }
+}
+
+onAuthStateChanged(auth, user => {
+  currentUser = user && user.email && user.email.endsWith("@newslab.no") ? user : null;
+  if(user && !currentUser){ toast("Please sign in with your @newslab.no account"); signOut(auth); return; }
+  updateAuthUI(currentUser);
+  if(currentUser){ seedAgencyIfMissing(); listenPersonal(currentUser.uid); }
+  else { stopPersonalSync(); }
+});
+
+$("#authBtn").addEventListener("click", async () => {
+  if(currentUser){ await signOut(auth); toast("Signed out"); }
+  else {
+    try{ await signInWithPopup(auth, provider); }
+    catch(e){ if(e.code !== "auth/popup-closed-by-user") toast("Sign-in failed"); }
+  }
+});
 </script>
 </body>
 </html>
