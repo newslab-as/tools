@@ -359,17 +359,17 @@ body.agency-editable .kanban-add-board{display:flex}
 @media (max-width:700px){ .kcols{grid-template-columns:1fr} }
 @media (max-width:560px){
   .brand .sub{display:none}
+  .brand .mark{font-size:17px}
   .search .kbd{display:none}
   .section-head .desc{display:none}
   .section-head h2{font-size:19px}
   .feedback-btn{right:14px;bottom:14px;width:40px;height:40px}
-  .topbar-inner{flex-wrap:wrap;height:auto;padding:10px 0;row-gap:8px}
+  .topbar-inner{flex-wrap:wrap;height:auto;padding:10px 0;gap:8px}
   .topbar .spacer{display:none}
   .search{order:10;flex:1 1 100%;max-width:none}
   .lang-toggle .lang-en,.lang-toggle .lang-no{display:none}
-  .authbtn span{display:none}
-  .authbtn{padding:0 10px}
-  .editbtn:not(.authbtn){padding:0 12px}
+  .authbtn span,.editbtn:not(.authbtn) span{display:none}
+  .authbtn,.editbtn:not(.authbtn){padding:0 10px}
 }
 
 </style>
@@ -417,7 +417,6 @@ body.agency-editable .kanban-add-board{display:flex}
     <span><b>Editing.</b> Personal changes save to this browser. Agency changes sync live for the whole team.</span>
     <span class="sync-status" id="syncStatus"></span>
     <span class="grow"></span>
-    <button class="pill agency-only" id="editNoticeBtn">Notice</button>
     <button class="pill agency-only" id="catBtn">Categories</button>
   </div>
 
@@ -590,12 +589,12 @@ const STRINGS = {
     searchPlaceholder:"Search tools…", toggleTheme:"Toggle theme",
     signIn:"Sign in", signInTitle:"Sign in with Google", signOutTitle:"Sign out",
     editLabelEdit:"Edit", editLabelDone:"Done",
-    editBannerSignedIn:"<b>Editing.</b> Personal changes save to this browser. Agency changes sync live for the whole team.",
+    editBannerSignedIn:"<b>Editing.</b> Personal changes save to your personal account. Agency changes sync live for the whole team.",
     editBannerSignedOut:"<b>Editing personal tools.</b> Sign in with your @newslab.no account to edit the shared agency directory and roadmap.",
-    noticeBtn:"Notice", categoriesBtn:"Categories",
+    categoriesBtn:"Categories",
     noticePlaceholder:"Add a notice for the team — deadlines, downtime, a heads-up…",
     agencyTitle:"Agency tools", agencyDesc:"Shared across the team",
-    personalTitle:"Your tools", personalDesc:"Only on this device",
+    personalTitle:"Your tools", personalDesc:"Only on this device", personalDescSignedIn:"Only on this account",
     kanbanTitle:"Tool Roadmap & Requests", kanbanDesc:"Ideas → In progress → Done",
     chipAll:"All", addTool:"＋ Add tool", addBoard:"＋ Add board",
     emptyAgencyTitle:"No agency tools yet", emptyAgencyBody:"Turn on Edit to add the team's shared links.",
@@ -629,12 +628,12 @@ const STRINGS = {
     searchPlaceholder:"Søk i verktøy…", toggleTheme:"Bytt tema",
     signIn:"Logg inn", signInTitle:"Logg inn med Google", signOutTitle:"Logg ut",
     editLabelEdit:"Rediger", editLabelDone:"Ferdig",
-    editBannerSignedIn:"<b>Redigerer.</b> Personlige endringer lagres i denne nettleseren. Byråendringer synkroniseres live for hele teamet.",
+    editBannerSignedIn:"<b>Redigerer.</b> Personlige endringer lagres på din personlige konto. Byråendringer synkroniseres live for hele teamet.",
     editBannerSignedOut:"<b>Redigerer personlige verktøy.</b> Logg inn med din @newslab.no-konto for å redigere den delte byråkatalogen og veikartet.",
-    noticeBtn:"Melding", categoriesBtn:"Kategorier",
+    categoriesBtn:"Kategorier",
     noticePlaceholder:"Legg til en melding til teamet — frister, nedetid, en heads-up…",
     agencyTitle:"Byråverktøy", agencyDesc:"Delt med hele teamet",
-    personalTitle:"Dine verktøy", personalDesc:"Kun på denne enheten",
+    personalTitle:"Dine verktøy", personalDesc:"Kun på denne enheten", personalDescSignedIn:"Kun på denne kontoen",
     kanbanTitle:"Verktøyveikart og forespørsler", kanbanDesc:"Idéer → Pågår → Ferdig",
     chipAll:"Alle", addTool:"＋ Legg til verktøy", addBoard:"＋ Legg til tavle",
     emptyAgencyTitle:"Ingen byråverktøy ennå", emptyAgencyBody:"Slå på Rediger for å legge til teamets delte lenker.",
@@ -745,6 +744,7 @@ function saveUsage(){ store.set(K.usage, JSON.stringify(state.usage)); }
 function render(){
   document.body.classList.toggle("agency-editable", state.edit && state.signedIn);
   $(".editbar span").innerHTML = state.signedIn ? tr("editBannerSignedIn") : tr("editBannerSignedOut");
+  $("#personalSection .desc").textContent = state.signedIn ? tr("personalDescSignedIn") : tr("personalDesc");
   const statusEl = $("#syncStatus");
   statusEl.classList.toggle("error", state.syncStatus === "error");
   statusEl.textContent = state.syncStatus === "syncing" ? tr("syncingLabel")
@@ -1089,12 +1089,10 @@ function applyI18n(){
   $("#q").placeholder = tr("searchPlaceholder");
   $("#themeBtn").title = tr("toggleTheme"); $("#themeBtn").setAttribute("aria-label", tr("toggleTheme"));
   $("#editLabel").textContent = state.edit ? tr("editLabelDone") : tr("editLabelEdit");
-  $("#editNoticeBtn").textContent = tr("noticeBtn");
   $("#catBtn").textContent = tr("categoriesBtn");
   $("#agencySection h2").textContent = tr("agencyTitle");
   $("#agencySection .desc").textContent = tr("agencyDesc");
   $("#personalSection h2").textContent = tr("personalTitle");
-  $("#personalSection .desc").textContent = tr("personalDesc");
   $("#kanbanToggle h2").textContent = tr("kanbanTitle");
   $("#kanbanToggle .desc").textContent = tr("kanbanDesc");
   $("#addBoardBtn").textContent = tr("addBoard");
@@ -1136,7 +1134,6 @@ function setEdit(on){
 $("#editBtn").addEventListener("click", ()=> setEdit(!state.edit));
 $("#themeBtn").addEventListener("click", ()=>{ state.dark=!state.dark; applyTheme(); savePrefs(); });
 $("#q").addEventListener("input", e=>{ state.query=e.target.value; renderGrid("agency"); renderGrid("personal"); });
-$("#editNoticeBtn").addEventListener("click", ()=>{ $("#noticeSlot").scrollIntoView({behavior:"smooth",block:"center"}); const i=$("#noticeInput"); if(i) i.focus(); });
 $("#catBtn").addEventListener("click", openCats);
 $("#tileSave").addEventListener("click", saveTile);
 $("#tileCancel").addEventListener("click", ()=>closeScrim("#tileScrim"));
