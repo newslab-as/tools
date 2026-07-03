@@ -11,7 +11,7 @@
 <style>
   :root { --bg: #f2f1ed; --bg-card: #faf9f6; --ink: #14130f; --ink-soft: #6b6963; --ink-faint: #b8b5ac; --line: #e2dfd6; --line-soft: #ebe8df; --danger: #b8463a; --sticky-h: 0px; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: var(--bg); color: var(--ink); font-family: 'ABC Diatype', Arial, sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-anchor: none; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'ABC Diatype', Arial, sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; min-height: 100dvh; -webkit-font-smoothing: antialiased; overflow-anchor: none; overscroll-behavior-y: none; }
   .app { max-width: 1600px; margin: 0 auto; padding: 0 56px 80px; }
   /* Header collapse: --c (0=open, 1=collapsed) is driven by JS in
      setupStickyHeader() via scroll-gated wheel/touch interception, at all
@@ -32,8 +32,8 @@
   .project-title { font-weight: 400; font-size: calc(var(--title-fs-open) - (var(--title-fs-open) - 24px) * var(--c)); line-height: 1.15; letter-spacing: -0.035em; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; padding: 0; font-family: inherit; resize: none; overflow: hidden; overflow-wrap: break-word; display: block; }
   .sticky-zone.snapping .project-title { transition: font-size 0.25s ease; }
   .project-title::placeholder { color: var(--ink-faint); }
-  .project-desc { font-size: 17px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; opacity: calc(1 - var(--c)); min-height: calc(100px * (1 - var(--c))); max-height: calc(500px * (1 - var(--c))); overflow: hidden; }
-  .sticky-zone.snapping .project-desc { transition: opacity 0.2s ease, max-height 0.25s ease, min-height 0.25s ease; }
+  .project-desc { font-size: 17px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; opacity: calc(1 - var(--c)); max-height: calc(500px * (1 - var(--c))); overflow: hidden; }
+  .sticky-zone.snapping .project-desc { transition: opacity 0.2s ease, max-height 0.25s ease; }
   .project-desc::placeholder { color: var(--ink-faint); }
   .controls { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); gap: 14px; flex-wrap: wrap; }
   .controls-left, .controls-right { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
@@ -349,7 +349,12 @@
     .week-range { margin-left: 0; }
     /* month-label and .controls spacing collapse with the header on mobile
        (desktop never had a month-label collapse — mobile-only declutter). */
-    .month-label { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; opacity: calc(1 - var(--c)); max-height: calc(60px * (1 - var(--c))); overflow: hidden; }
+    .controls-left { row-gap: 0; }
+    /* margin-bottom here + .controls's own padding-top must sum to exactly
+       header.top's padding-bottom formula (20px - 10px*c) at every point of
+       the scroll-collapse, so the gap-to-line matches on both sides:
+       (12px - 2px*c) + (8px - 8px*c) = 20px - 10px*c. */
+    .month-label { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex-basis: 100%; margin-bottom: calc(8px - 8px * var(--c)); opacity: calc(1 - var(--c)); max-height: calc(60px * (1 - var(--c))); overflow: hidden; }
     .controls { padding-top: calc(12px - 2px * var(--c)); }
     .sticky-zone.snapping .month-label, .sticky-zone.snapping .controls { transition: all 0.25s ease; }
 
@@ -1024,6 +1029,12 @@ function autoResizeTitle() {
   ti.style.height = 'auto';
   ti.style.height = `${ti.scrollHeight}px`;
 }
+function autoResizeDesc() {
+  const de = document.getElementById('projectDesc');
+  if (!de) return;
+  de.style.height = 'auto';
+  de.style.height = `${de.scrollHeight}px`;
+}
 function isCoarsePointer() { return window.matchMedia('(pointer: coarse)').matches; }
 
 function setupMobileLayout() {
@@ -1078,7 +1089,7 @@ function render(preserveScroll = true) {
     document.getElementById('nextWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
 
     document.getElementById('projectTitle').value = state.title; document.getElementById('projectDesc').value = state.desc; document.getElementById('projectStart').value = state.start || ''; document.getElementById('projectEnd').value = state.end || '';
-    autoResizeTitle();
+    autoResizeTitle(); autoResizeDesc();
     document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
 
     if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); }
@@ -1839,7 +1850,7 @@ document.addEventListener('mouseup', (e) => {
 
 function setupStickyHeader() {
   const zone = document.getElementById('stickyZone');
-  const syncHeight = () => { autoResizeTitle(); document.documentElement.style.setProperty('--sticky-h', `${zone.getBoundingClientRect().height}px`); };
+  const syncHeight = () => { autoResizeTitle(); autoResizeDesc(); document.documentElement.style.setProperty('--sticky-h', `${zone.getBoundingClientRect().height}px`); };
   if (!window.__stickyResizeObs) { window.__stickyResizeObs = new ResizeObserver(syncHeight); }
   window.__stickyResizeObs.disconnect();
   window.__stickyResizeObs.observe(zone);
@@ -1888,11 +1899,23 @@ function setupStickyHeader() {
     setC(c + e.deltaY / BAND, false);
     scheduleSettle();
   };
-  let touchY = null;
-  const onTouchStart = (e) => { touchY = e.touches[0].clientY; };
+  // Tap-vs-drag disambiguation: a plain tap on a button/day-cell always has
+  // a few px of natural finger wobble. Without this guard, that wobble was
+  // being treated as a scroll gesture and preventDefault-ed on every touch
+  // while c<1 (the default at page load) — which suppresses the browser's
+  // synthetic click event entirely, breaking every tap-to-open interaction
+  // (Add Event, day cells, etc.) until the header happened to be fully
+  // collapsed. Only commit to intercepting once movement exceeds TAP_SLOP.
+  const TAP_SLOP = 10;
+  let touchStartY = null, touchY = null, touchCommitted = false;
+  const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; touchY = touchStartY; touchCommitted = false; };
   const onTouchMove = (e) => {
     if (touchY === null) return;
     const y = e.touches[0].clientY;
+    if (!touchCommitted) {
+      if (Math.abs(touchStartY - y) < TAP_SLOP) return; // still could be a tap — don't touch the event
+      touchCommitted = true;
+    }
     const deltaDown = touchY - y; // finger moving up = scrolling down
     if (wantsIntercept(deltaDown)) {
       e.preventDefault();
@@ -1901,7 +1924,7 @@ function setupStickyHeader() {
     }
     touchY = y;
   };
-  const onTouchEnd = () => { touchY = null; scheduleSettle(); };
+  const onTouchEnd = () => { touchY = null; touchStartY = null; touchCommitted = false; scheduleSettle(); };
 
   if (window.__stickyWheel) window.removeEventListener('wheel', window.__stickyWheel);
   if (window.__stickyTouchStart) window.removeEventListener('touchstart', window.__stickyTouchStart);
@@ -2144,7 +2167,7 @@ document.getElementById('prevWeekBtn')?.addEventListener('click', () => { state.
 document.getElementById('nextWeekBtn')?.addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), 7)); saveState(false); render(false); });
 
 document.getElementById('projectTitle')?.addEventListener('input', (e) => { if (window.__isReadOnly) return; state.title = e.target.value; saveState(); autoResizeTitle(); });
-document.getElementById('projectDesc')?.addEventListener('input', (e) => { if (window.__isReadOnly) return; state.desc = e.target.value; saveState(); });
+document.getElementById('projectDesc')?.addEventListener('input', (e) => { if (window.__isReadOnly) return; state.desc = e.target.value; saveState(); autoResizeDesc(); });
 document.getElementById('projectStart')?.addEventListener('change', (e) => { if (window.__isReadOnly) return; state.start = e.target.value; saveState(); render(); });
 document.getElementById('projectEnd')?.addEventListener('change', (e) => { if (window.__isReadOnly) return; state.end = e.target.value; saveState(); render(); });
 
