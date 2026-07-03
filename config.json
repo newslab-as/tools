@@ -21,5 +21,7 @@
       "desc": "Shared agency drive", "cat": "files" },
     { "id": "mercell", "name": "Mercell", "url": "https://www.mercell.com",
       "desc": "Tender and procurement portal", "cat": "admin" }
-  ]
+  ],
+  "boards": [],
+  "cards": []
 }

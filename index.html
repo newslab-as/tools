@@ -283,12 +283,65 @@ body.editing .tile.add{display:flex}
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ---------- kanban ---------- */
+.kanban-head{cursor:pointer;user-select:none}
+.kanban-head .chev{margin-left:8px;color:var(--faint);transition:transform .18s ease;flex:0 0 auto}
+.kanban-body{margin-top:4px}
+.kanban-boards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-bottom:16px}
+.kanban-board{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:14px}
+.kboard-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.kboard-name{font-size:15px;font-weight:500;letter-spacing:-.02em;flex:1 1 auto;outline:none}
+.kboard-name[contenteditable="true"]{border-bottom:1px dashed var(--line-strong)}
+.kctrls{display:none;gap:5px;flex:0 0 auto}
+body.editing .kctrls{display:flex}
+.kctrls button{width:22px;height:22px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+.kctrls button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
+.kctrls .del:hover{color:#fff;background:var(--danger);border-color:var(--danger)}
+.kcols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kcol-head{display:flex;justify-content:space-between;color:var(--muted);margin-bottom:8px}
+.kcol-count{color:var(--faint)}
+.kcol-list{display:flex;flex-direction:column;gap:6px;min-height:24px;margin-bottom:8px}
+.kcol-list.dragover{outline:1px dashed var(--line-strong);outline-offset:2px}
+.kcard{
+  border:1px solid var(--line);background:var(--surface-2);border-radius:var(--radius);
+  padding:8px 9px;font-size:13px;line-height:1.35;display:flex;align-items:flex-start;gap:6px;cursor:grab;
+}
+.kcard.dragging{opacity:.35}
+.kcard-text{flex:1 1 auto;word-break:break-word}
+.kcard-del{flex:0 0 auto;background:none;border:none;color:var(--faint);font-size:15px;line-height:1;padding:0 2px}
+.kcard-del:hover{color:var(--danger)}
+.kcol-add{display:flex;gap:6px}
+.kcol-add input{
+  flex:1 1 auto;border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--radius);
+  padding:6px 8px;font-size:12px;outline:none;
+}
+.kcol-add input:focus{border-color:var(--ink)}
+.kcol-add button{
+  width:28px;border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--radius);
+  color:var(--muted);
+}
+.kcol-add button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
+.kanban-add-board{display:none;margin-top:4px}
+body.editing .kanban-add-board{display:flex}
+
+/* ---------- feedback button ---------- */
+.feedback-btn{
+  position:fixed;right:20px;bottom:20px;z-index:70;
+  width:44px;height:44px;border:1px solid var(--line-strong);border-radius:var(--radius);
+  background:var(--surface);display:inline-flex;align-items:center;justify-content:center;
+  color:var(--muted);box-shadow:var(--shadow);
+  transition:background .15s,border-color .15s,color .15s;
+}
+.feedback-btn:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:700px){ .kcols{grid-template-columns:1fr} }
 @media (max-width:560px){
   .brand .sub{display:none}
   .search .kbd{display:none}
   .section-head .desc{display:none}
   .section-head h2{font-size:19px}
+  .feedback-btn{right:14px;bottom:14px;width:40px;height:40px}
 }
 
 </style>
@@ -350,6 +403,20 @@ body.editing .tile.add{display:flex}
     <div class="grid" id="personalGrid"></div>
   </section>
 
+  <!-- KANBAN -->
+  <section class="section kanban" id="kanbanSection">
+    <div class="section-head kanban-head" id="kanbanToggle" role="button" tabindex="0" aria-expanded="false">
+      <h2>Tool Roadmap &amp; Requests</h2>
+      <span class="count" id="kanbanCount"></span>
+      <span class="desc">Ideas → In progress → Done</span>
+      <svg class="chev" id="kanbanChev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div class="kanban-body" id="kanbanBody" hidden>
+      <div class="kanban-boards" id="kanbanBoards"></div>
+      <button class="tile add kanban-add-board" id="addBoardBtn">＋ Add board</button>
+    </div>
+  </section>
+
   <footer class="foot">
     <span id="footMeta"></span>
     <span class="grow"></span>
@@ -357,6 +424,10 @@ body.editing .tile.add{display:flex}
     <span>tools.newslab.no</span>
   </footer>
 </main>
+
+<a class="feedback-btn" href="mailto:tools@newslab.no?subject=Agency%20Hub%20Feedback" title="Send feedback" aria-label="Send feedback">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</a>
 
 <!-- Add / edit tile modal -->
 <div class="scrim" id="tileScrim">
@@ -451,7 +522,9 @@ const DEFAULT_CONFIG = {
       desc:"Shared agency drive", cat:"files" },
     { id:"mercell", name:"Mercell", url:"https://www.mercell.com",
       desc:"Tender and procurement portal", cat:"admin" }
-  ]
+  ],
+  boards: [],
+  cards: []
 };
 
 /* ---------- safe storage (degrades to memory if unavailable) ---------- */
@@ -478,7 +551,8 @@ const state = {
   query: "",
   activeCat: null,
   agencyDirty: false,
-  dark: false
+  dark: false,
+  kanbanOpen: false
 };
 
 /* ---------- helpers ---------- */
@@ -497,6 +571,7 @@ async function boot(){
   // theme
   const prefs = JSON.parse(store.get(K.prefs) || "{}");
   state.dark = prefs.dark ?? window.matchMedia("(prefers-color-scheme: dark)").matches;
+  state.kanbanOpen = prefs.kanbanOpen ?? false;
   applyTheme();
 
   // agency baseline: external config.json overrides embedded default
@@ -525,13 +600,22 @@ async function boot(){
 
   $("#tagline").textContent = state.config.meta.tagline || "tools";
   render();
+  setKanbanOpen(state.kanbanOpen);
 }
 
+const KANBAN_COLS = [ {id:"ideas", label:"Ideas"}, {id:"progress", label:"In Progress"}, {id:"done", label:"Done"} ];
+
 function normaliseConfig(cfg){
-  const c = Object.assign({meta:{},categories:[],agency:[],notice:""}, cfg||{});
+  const c = Object.assign({meta:{},categories:[],agency:[],notice:"",boards:[],cards:[]}, cfg||{});
   c.meta = Object.assign({agencyName:"NewsLab",tagline:"tools",version:1}, c.meta||{});
   c.categories = Array.isArray(c.categories)&&c.categories.length ? c.categories : DEFAULT_CONFIG.categories;
   c.agency = (Array.isArray(c.agency)?c.agency:[]).map(t=>({id:t.id||uid(),name:t.name||"Untitled",url:t.url||"",desc:t.desc||"",cat:t.cat||c.categories[0].id,badge:t.badge||""}));
+  c.boards = (Array.isArray(c.boards)?c.boards:[]).map(b=>({id:b.id||uid(), name:b.name||"Untitled board"}));
+  const boardIds = new Set(c.boards.map(b=>b.id));
+  const validCols = new Set(KANBAN_COLS.map(k=>k.id));
+  c.cards = (Array.isArray(c.cards)?c.cards:[])
+    .filter(card=>boardIds.has(card.boardId))
+    .map(card=>({id:card.id||uid(), boardId:card.boardId, col:validCols.has(card.col)?card.col:"ideas", text:card.text||"", createdAt:card.createdAt||0}));
   return c;
 }
 
@@ -542,7 +626,7 @@ function saveDraft(){
   if(state.agencyDirty) store.set(K.draft, JSON.stringify(state.config));
   else store.del(K.draft);
 }
-function savePrefs(){ store.set(K.prefs, JSON.stringify({dark:state.dark})); }
+function savePrefs(){ store.set(K.prefs, JSON.stringify({dark:state.dark, kanbanOpen:state.kanbanOpen})); }
 function saveUsage(){ store.set(K.usage, JSON.stringify(state.usage)); }
 
 /* ---------- rendering ---------- */
@@ -551,6 +635,7 @@ function render(){
   renderChips();
   renderGrid("agency");
   renderGrid("personal");
+  renderKanban();
   $("#agencyCount").textContent = state.config.agency.length ? String(state.config.agency.length).padStart(2,"0") : "00";
   $("#personalCount").textContent = String(state.personal.length).padStart(2,"0");
   const v = state.config.meta.version || 1;
@@ -671,6 +756,139 @@ function enableDrag(grid, scope){
   });
 }
 
+/* ---------- kanban ---------- */
+function setKanbanOpen(open){
+  state.kanbanOpen = open;
+  $("#kanbanBody").hidden = !open;
+  $("#kanbanToggle").setAttribute("aria-expanded", String(open));
+  $("#kanbanChev").style.transform = open ? "rotate(180deg)" : "";
+  savePrefs();
+}
+function boardCards(boardId, col){ return state.config.cards.filter(c=>c.boardId===boardId && c.col===col); }
+
+function renderKanban(){
+  const wrap = $("#kanbanBoards");
+  const boards = state.config.boards;
+  $("#kanbanCount").textContent = boards.length ? String(boards.length).padStart(2,"0") : "00";
+  wrap.innerHTML = boards.length
+    ? boards.map(boardHTML).join("")
+    : (state.edit ? "" : `<div class="empty"><b>No boards yet</b>Turn on Edit to start a board for tool ideas and requests.</div>`);
+
+  $$(".kanban-board", wrap).forEach(el=>{
+    const boardId = el.dataset.board;
+    $$("[data-kact]", el).forEach(btn=>btn.addEventListener("click", e=>{
+      e.stopPropagation();
+      if(btn.dataset.kact==="delete") deleteBoard(boardId);
+    }));
+    const nameEl = $(".kboard-name", el);
+    if(state.edit){
+      nameEl.contentEditable = "true";
+      nameEl.addEventListener("blur", ()=>{
+        const b = state.config.boards.find(x=>x.id===boardId);
+        if(b){ b.name = nameEl.textContent.trim() || "Untitled board"; saveDraft(); }
+      });
+      nameEl.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); nameEl.blur(); } });
+    }
+    $$(".kcol-add", el).forEach(form=>form.addEventListener("submit", e=>{
+      e.preventDefault();
+      const input = $("input", form);
+      addCard(boardId, form.dataset.col, input.value);
+      input.value = "";
+    }));
+    $$("[data-kcarddel]", el).forEach(btn=>btn.addEventListener("click", e=>{
+      e.stopPropagation(); deleteCard(btn.dataset.kcarddel);
+    }));
+    enableCardDrag(el, boardId);
+  });
+}
+
+function boardHTML(b){
+  return `<div class="kanban-board" data-board="${esc(b.id)}">
+    <div class="kboard-head">
+      <span class="kboard-name">${esc(b.name)}</span>
+      <span class="kctrls">
+        <button data-kact="delete" class="del" title="Delete board" aria-label="Delete board"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+      </span>
+    </div>
+    <div class="kcols">${KANBAN_COLS.map(col=>kanbanColHTML(b.id, col)).join("")}</div>
+  </div>`;
+}
+
+function kanbanColHTML(boardId, col){
+  const cards = boardCards(boardId, col.id);
+  return `<div class="kcol" data-col="${col.id}">
+    <div class="kcol-head mono-label">${col.label}<span class="kcol-count">${cards.length}</span></div>
+    <div class="kcol-list" data-dropcol="${col.id}">${cards.map(kanbanCardHTML).join("")}</div>
+    <form class="kcol-add" data-col="${col.id}">
+      <input type="text" placeholder="Add a card…" maxlength="140" aria-label="Add a card to ${esc(col.label)}" />
+      <button type="submit" aria-label="Add card">＋</button>
+    </form>
+  </div>`;
+}
+
+function kanbanCardHTML(c){
+  return `<div class="kcard" draggable="true" data-card="${esc(c.id)}">
+    <span class="kcard-text">${esc(c.text)}</span>
+    <button class="kcard-del" data-kcarddel="${esc(c.id)}" title="Remove" aria-label="Remove card">×</button>
+  </div>`;
+}
+
+function addBoard(){
+  const b = { id: uid(), name: "New board" };
+  state.config.boards.push(b);
+  saveDraft(); renderKanban();
+  requestAnimationFrame(()=>{
+    const el = $(`.kanban-board[data-board="${b.id}"] .kboard-name`);
+    if(!el) return;
+    el.focus();
+    const range = document.createRange(); range.selectNodeContents(el);
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  });
+}
+function deleteBoard(boardId){
+  state.config.boards = state.config.boards.filter(b=>b.id!==boardId);
+  state.config.cards = state.config.cards.filter(c=>c.boardId!==boardId);
+  saveDraft(); renderKanban(); toast("Board removed");
+}
+function addCard(boardId, col, text){
+  const t = (text||"").trim();
+  if(!t) return;
+  state.config.cards.push({ id: uid(), boardId, col, text: t, createdAt: Date.now() });
+  saveDraft(); renderKanban();
+}
+function deleteCard(id){
+  state.config.cards = state.config.cards.filter(c=>c.id!==id);
+  saveDraft(); renderKanban();
+}
+function enableCardDrag(boardEl, boardId){
+  let dragId = null;
+  $$(".kcard[draggable]", boardEl).forEach(card=>{
+    card.addEventListener("dragstart", e=>{ dragId = card.dataset.card; card.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    card.addEventListener("dragend", ()=> card.classList.remove("dragging"));
+  });
+  $$(".kcol-list", boardEl).forEach(list=>{
+    list.addEventListener("dragover", e=>{ e.preventDefault(); list.classList.add("dragover"); });
+    list.addEventListener("dragleave", ()=> list.classList.remove("dragover"));
+    list.addEventListener("drop", e=>{
+      e.preventDefault(); list.classList.remove("dragover");
+      if(!dragId) return;
+      const card = state.config.cards.find(c=>c.id===dragId);
+      dragId = null;
+      if(!card) return;
+      const targetCol = list.dataset.dropcol;
+      const idx = state.config.cards.indexOf(card);
+      state.config.cards.splice(idx, 1);
+      card.col = targetCol; card.boardId = boardId;
+      let insertAt = state.config.cards.length;
+      for(let i=state.config.cards.length-1;i>=0;i--){
+        if(state.config.cards[i].boardId===boardId && state.config.cards[i].col===targetCol){ insertAt = i+1; break; }
+      }
+      state.config.cards.splice(insertAt, 0, card);
+      saveDraft(); renderKanban();
+    });
+  });
+}
+
 /* ---------- tile modal ---------- */
 let modalCtx = { scope:null, id:null };
 function fillCatSelect(sel, current){
@@ -708,7 +926,7 @@ function deleteTile(scope, id){
 
 /* ---------- import / export ---------- */
 function openExport(){
-  const cfg = { meta:state.config.meta, notice:state.config.notice, categories:state.config.categories, agency:state.config.agency };
+  const cfg = { meta:state.config.meta, notice:state.config.notice, categories:state.config.categories, agency:state.config.agency, boards:state.config.boards, cards:state.config.cards };
   $("#ioTitle").textContent = "Export agency config";
   $("#ioSub").innerHTML = "Save this as <b>config.json</b> next to index.html and commit it. Everyone sees the update on next load.";
   $("#ioArea").value = JSON.stringify(cfg, null, 2);
@@ -799,6 +1017,9 @@ $("#ioClose").addEventListener("click", ()=>closeScrim("#ioScrim"));
 $("#catSave").addEventListener("click", saveCats);
 $("#catCancel").addEventListener("click", ()=>closeScrim("#catScrim"));
 $("#discardDraft").addEventListener("click", ()=>{ state.config=JSON.parse(JSON.stringify(state.base)); store.del(K.draft); state.agencyDirty=false; render(); toast("Reverted to published"); });
+$("#kanbanToggle").addEventListener("click", ()=> setKanbanOpen(!state.kanbanOpen));
+$("#kanbanToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setKanbanOpen(!state.kanbanOpen); } });
+$("#addBoardBtn").addEventListener("click", addBoard);
 
 document.addEventListener("keydown", e=>{
   if(e.key==="Escape"){ $$(".scrim.open").forEach(s=>s.classList.remove("open")); }
