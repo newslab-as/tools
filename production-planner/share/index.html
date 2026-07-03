@@ -13,21 +13,28 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: var(--bg); color: var(--ink); font-family: 'ABC Diatype', Arial, sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-anchor: none; }
   .app { max-width: 1600px; margin: 0 auto; padding: 0 56px 80px; }
-  .sticky-zone { position: sticky; top: 0; z-index: 50; background: var(--bg); padding-top: 40px; transition: padding 0.25s ease; }
-  .sticky-zone.compact { padding-top: 14px; }
-  header.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--line); transition: margin 0.25s ease, padding 0.25s ease; }
-  .sticky-zone.compact header.top { margin-bottom: 14px; padding-bottom: 10px; }
+  /* Header collapse: --c (0=open, 1=collapsed) is driven by JS in
+     setupStickyHeader() via scroll-gated wheel/touch interception, at all
+     viewport widths. --*-open custom props hold the "open" endpoint value
+     and are re-tiered per breakpoint below (@1100), so one calc() formula
+     per property works everywhere. No transition by default (so scrubbing
+     tracks input 1:1); .snapping re-enables a transition for the settle
+     spring animation only (see setC() in JS). */
+  .sticky-zone { --c: 0; --sticky-pt-open: 40px; --title-gap-open: 64px; --title-fs-open: 64px; position: sticky; top: 0; z-index: 50; background: var(--bg); padding-top: calc(var(--sticky-pt-open) - (var(--sticky-pt-open) - 14px) * var(--c)); }
+  .sticky-zone.snapping { transition: padding 0.25s ease; }
+  header.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: calc(36px - 22px * var(--c)); padding-bottom: calc(20px - 10px * var(--c)); border-bottom: 1px solid var(--line); }
+  .sticky-zone.snapping header.top { transition: margin 0.25s ease, padding 0.25s ease; }
   .brand { font-size: 13px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
   .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-soft); letter-spacing: 0.04em; }
-  .header-meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
-  .title-row { display: grid; grid-template-columns: auto 1fr; gap: 64px; margin-bottom: 32px; align-items: start; transition: gap 0.25s ease, margin 0.25s ease; }
-  .sticky-zone.compact .title-row { grid-template-columns: 1fr; gap: 0; margin-bottom: 16px; }
-  .project-title { font-weight: 400; font-size: 64px; line-height: 1; letter-spacing: -0.035em; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; padding: 0; transition: font-size 0.25s ease; }
-  .sticky-zone.compact .project-title { font-size: 24px; letter-spacing: -0.025em; }
+  .header-meta { display: flex; align-items: center; gap: 12px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+  .title-row { display: grid; grid-template-columns: auto 1fr; gap: calc(var(--title-gap-open) * (1 - var(--c))); margin-bottom: calc(32px - 16px * var(--c)); align-items: start; }
+  .sticky-zone.snapping .title-row { transition: gap 0.25s ease, margin 0.25s ease; }
+  .project-title { font-weight: 400; font-size: calc(var(--title-fs-open) - (var(--title-fs-open) - 24px) * var(--c)); line-height: 1.15; letter-spacing: -0.035em; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; padding: 0; font-family: inherit; resize: none; overflow: hidden; overflow-wrap: break-word; display: block; }
+  .sticky-zone.snapping .project-title { transition: font-size 0.25s ease; }
   .project-title::placeholder { color: var(--ink-faint); }
-  .project-desc { font-size: 17px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; min-height: 100px; transition: opacity 0.2s ease, max-height 0.25s ease, min-height 0.25s ease; }
+  .project-desc { font-size: 17px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; opacity: calc(1 - var(--c)); min-height: calc(100px * (1 - var(--c))); max-height: calc(500px * (1 - var(--c))); overflow: hidden; }
+  .sticky-zone.snapping .project-desc { transition: opacity 0.2s ease, max-height 0.25s ease, min-height 0.25s ease; }
   .project-desc::placeholder { color: var(--ink-faint); }
-  .sticky-zone.compact .project-desc { opacity: 0; max-height: 0; min-height: 0; overflow: hidden; pointer-events: none; margin: 0; }
   .controls { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); gap: 14px; flex-wrap: wrap; }
   .controls-left, .controls-right { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
   .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
@@ -313,10 +320,46 @@
 
   @media (max-width: 1100px) {
     .app { padding: 0 24px 60px; }
-    .sticky-zone { padding-top: 24px; }
-    .title-row { grid-template-columns: 1fr; gap: 16px; }
-    .project-title { font-size: 44px; }
+    .sticky-zone { --sticky-pt-open: 24px; --title-gap-open: 16px; --title-fs-open: 44px; }
+    .title-row { grid-template-columns: 1fr; }
     .controls { gap: 10px; }
+  }
+
+  /* ===== Mobile: Vertical view only, fitted week grid, reflowed header ===== */
+  @media (max-width: 700px) {
+    .view-toggle-wrapper { display: none; }
+    .weekday-row, .week-row { grid-template-columns: 26px repeat(7, 1fr); }
+    .weekday-row.hide-weekends, .week-row.hide-weekends { grid-template-columns: 26px repeat(5, 1fr); }
+    .month-divider { grid-template-columns: 26px 1fr; }
+    .weekday-row > div { padding: 8px 2px; font-size: 10px; letter-spacing: 0.04em; }
+    .day-num { font-size: 11px; left: 4px; }
+    body[data-view="vertical"] .phase-layer, body[data-view="vertical"] .time-off-layer { left: 26px; }
+    .event-bar { padding: 0 5px; font-size: 10px; letter-spacing: 0.02em; }
+    .uke-cell { padding: 4px 2px; }
+    .uke-cell .uke-word { display: none; }
+
+    header.top { flex-direction: column; align-items: stretch; gap: 10px; }
+    .brand-group { display: flex; justify-content: space-between; align-items: baseline; }
+    .header-meta { flex-wrap: wrap; justify-content: flex-start; text-align: left; gap: 8px; }
+    .header-meta #topSignInBtn, .header-meta #topCopyLinkBtn, .header-meta .settings-dropdown-wrap { flex: 1; }
+    .header-meta #topCopyLinkBtn, .header-meta #settingsBtn { width: 100%; box-sizing: border-box; padding: 6px 12px; font-size: 11px; }
+    #todayBtn, #addEventBtn { padding: 6px 12px; font-size: 11px; }
+    .settings-menu .ctl { padding: 10px 16px; border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; justify-content: space-between; }
+
+    .week-range { margin-left: 0; }
+    /* month-label and .controls spacing collapse with the header on mobile
+       (desktop never had a month-label collapse — mobile-only declutter). */
+    .month-label { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; opacity: calc(1 - var(--c)); max-height: calc(60px * (1 - var(--c))); overflow: hidden; }
+    .controls { padding-top: calc(12px - 2px * var(--c)); }
+    .sticky-zone.snapping .month-label, .sticky-zone.snapping .controls { transition: all 0.25s ease; }
+
+    .modal-backdrop { padding: 12px; }
+  }
+
+  @media (max-width: 520px) {
+    .modal { padding: 18px; }
+    .field-row { grid-template-columns: 1fr; }
+    .settings-menu { min-width: 0; width: min(260px, calc(100vw - 32px)); }
   }
 
   /* ===== Print ===== */
@@ -344,11 +387,11 @@
 <div class="app">
   <div class="sticky-zone" id="stickyZone">
     <header class="top">
-      <div>
+      <div class="brand-group">
         <div class="brand">NewsLab</div>
         <div class="brand-mark" data-i18n="brand_mark">PRODUCTION PLANNER</div>
       </div>
-      <div class="header-meta" style="display:flex; align-items:center; gap: 12px;">
+      <div class="header-meta">
         <button class="action-btn ghost-danger" id="topSignInBtn" data-i18n="sign_in_drive" style="display: none; background: #fbeae9; color: var(--danger); font-weight: 500; font-size: 11px; padding: 6px 12px; border-radius: 0;">Sign in</button>
         <div class="cloud-status" id="cloudStatus" style="display: none;"></div>
         <button class="action-btn" id="topCopyLinkBtn" data-i18n="copy_client_link" style="font-weight: 500;">Copy Client Link</button>
@@ -422,7 +465,7 @@
     </header>
 
     <div class="title-row">
-      <input class="project-title" id="projectTitle" data-i18n-placeholder="title_placeholder" placeholder="Title" value="" />
+      <textarea class="project-title" id="projectTitle" data-i18n-placeholder="title_placeholder" placeholder="Title" rows="1"></textarea>
       <textarea class="project-desc" id="projectDesc" data-i18n-placeholder="desc_placeholder" placeholder="Project description, scope notes, context…"></textarea>
     </div>
 
@@ -446,7 +489,7 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 4px;">
+        <div id="todayNavGroup" style="display: flex; gap: 4px;">
           <button class="nav-btn" id="prevWeekBtn" style="display: none;">&larr;</button>
           <button class="nav-btn" id="todayBtn" data-i18n="today">Today</button>
           <button class="nav-btn" id="nextWeekBtn" style="display: none;">&rarr;</button>
@@ -837,13 +880,13 @@ function updateCloudStatus(msg) {
 
 // ============ I18N ============
 const i18n = {
-  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', import_url: 'Load from URL', import_url_prompt: 'Paste the shared timeline URL here:', import_error: 'Invalid URL or corrupted data.', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)', view_tooltip: 'Switch views for more detail', copy_client_link: 'Copy Client Link', sign_in_drive: 'Sign In' },
-  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', import_url: 'Åpne fra lenke', import_url_prompt: 'Lim inn delt tidslinje-lenke her:', import_error: 'Ugyldig lenke eller korrupt data.', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag', view_tooltip: 'Bytt visning for flere detaljer', copy_client_link: 'Kopier klientlenke', sign_in_drive: 'Logg inn' }
+  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', import_url: 'Load from URL', import_url_prompt: 'Paste the shared timeline URL here:', import_error: 'Invalid URL or corrupted data.', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)', view_tooltip: 'Switch views for more detail', copy_client_link: 'Copy Client Link', copy_client_link_short: 'Share', sign_in_drive: 'Sign In' },
+  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', import_url: 'Åpne fra lenke', import_url_prompt: 'Lim inn delt tidslinje-lenke her:', import_error: 'Ugyldig lenke eller korrupt data.', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag', view_tooltip: 'Bytt visning for flere detaljer', copy_client_link: 'Kopier klientlenke', copy_client_link_short: 'Del', sign_in_drive: 'Logg inn' }
 };
 
 let currentLang = localStorage.getItem('newslab-planner-lang') || 'en';
 function t(key, ...args) { const dict = i18n[currentLang] || i18n.en; const val = dict[key] ?? i18n.en[key] ?? key; return typeof val === 'function' ? val(...args) : val; }
-function applyStaticTranslations() { document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder)); }); }
+function applyStaticTranslations() { document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder)); }); if (isMobileViewport()) { const copyLinkBtn = document.getElementById('topCopyLinkBtn'); if (copyLinkBtn) copyLinkBtn.textContent = t('copy_client_link_short'); } }
 function updateLangToggle() { const toggle = document.getElementById('langToggleBtn'); if (currentLang === 'nb') { toggle.classList.add('on', 'is-nb'); } else { toggle.classList.remove('on', 'is-nb'); } }
 function setLanguage(lang) { if (!i18n[lang]) return; currentLang = lang; localStorage.setItem('newslab-planner-lang', lang); document.documentElement.lang = lang === 'nb' ? 'no' : 'en'; applyStaticTranslations(); updateLangToggle(); render(false); }
 
@@ -942,7 +985,7 @@ function bindDayCellEvents(cell, day) {
 }
 
 function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
-  if (!window.__isReadOnly && state.viewMode !== 'overview') {
+  if (!window.__isReadOnly && state.viewMode !== 'overview' && !isCoarsePointer()) {
     const rLeft = document.createElement('div'); rLeft.className = 'resize-handle left'; const rRight = document.createElement('div'); rRight.className = 'resize-handle right';
     bar.appendChild(rLeft); bar.appendChild(rRight);
     const startResize = (e, edge) => {
@@ -952,7 +995,7 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
     rLeft.addEventListener('mousedown', (e) => startResize(e, 'left')); rRight.addEventListener('mousedown', (e) => startResize(e, 'right'));
   }
   bar.addEventListener('click', (e) => { if(window.__isDraggingOrResizing) return; e.stopPropagation(); openEventModal(ev); });
-  if (!window.__isReadOnly && state.viewMode !== 'overview') {
+  if (!window.__isReadOnly && state.viewMode !== 'overview' && !isCoarsePointer()) {
     bar.addEventListener('dragstart', (e) => {
       window.__isDraggingOrResizing = true; 
       document.body.classList.add('is-dragging');
@@ -973,6 +1016,43 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
 }
 
 // ============ RENDERERS ============
+function isMobileViewport() { return window.matchMedia('(max-width: 700px)').matches; }
+
+function autoResizeTitle() {
+  const ti = document.getElementById('projectTitle');
+  if (!ti) return;
+  ti.style.height = 'auto';
+  ti.style.height = `${ti.scrollHeight}px`;
+}
+function isCoarsePointer() { return window.matchMedia('(pointer: coarse)').matches; }
+
+function setupMobileLayout() {
+  const mq = window.matchMedia('(max-width: 700px)');
+  const startCtl = document.getElementById('projectStart').closest('.ctl');
+  const endCtl = document.getElementById('projectEnd').closest('.ctl');
+  const addEventBtn = document.getElementById('addEventBtn');
+  const toolbarParent = addEventBtn.parentElement;
+  const settingsMenu = document.getElementById('settingsMenu');
+  const menuAnchor = settingsMenu.querySelector('.settings-menu-divider');
+  function apply(e) {
+    // Re-fetch on every call: the share module (loaded after this script)
+    // clones/replaces #topCopyLinkBtn, so a reference captured once here
+    // would go stale the moment that happens.
+    const copyLinkBtn = document.getElementById('topCopyLinkBtn');
+    if (e.matches) {
+      settingsMenu.insertBefore(startCtl, menuAnchor);
+      settingsMenu.insertBefore(endCtl, menuAnchor);
+      if (copyLinkBtn) copyLinkBtn.textContent = t('copy_client_link_short');
+    } else {
+      toolbarParent.insertBefore(startCtl, addEventBtn);
+      toolbarParent.insertBefore(endCtl, addEventBtn);
+      if (copyLinkBtn) copyLinkBtn.textContent = t('copy_client_link');
+    }
+  }
+  mq.addEventListener('change', apply);
+  apply(mq);
+}
+
 function render(preserveScroll = true) {
   const scrollX = window.scrollX;
   const scrollY = window.scrollY;
@@ -980,38 +1060,51 @@ function render(preserveScroll = true) {
   const hzContainer = document.querySelector('.hz-layout');
   if (hzContainer) hzScrollLeft = hzContainer.scrollLeft;
 
-  document.body.setAttribute('data-view', state.viewMode);
-  document.getElementById('viewOverviewBtn').classList.toggle('active', state.viewMode === 'overview');
-  document.getElementById('viewHorizontalBtn').classList.toggle('active', state.viewMode === 'horizontal');
-  document.getElementById('viewVerticalBtn').classList.toggle('active', state.viewMode === 'vertical');
-  document.getElementById('viewSingleBtn').classList.toggle('active', state.viewMode === 'single_week');
-  
-  document.getElementById('prevWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
-  document.getElementById('nextWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
-
-  document.getElementById('projectTitle').value = state.title; document.getElementById('projectDesc').value = state.desc; document.getElementById('projectStart').value = state.start || ''; document.getElementById('projectEnd').value = state.end || '';
-  document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
-  
-  if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); } 
-  else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
-  else { renderVerticalCalendar(); }
-  
-  if (preserveScroll) {
-      const newHzContainer = document.querySelector('.hz-layout');
-      if (newHzContainer && state.viewMode === 'horizontal') {
-        newHzContainer.scrollLeft = hzScrollLeft;
-        setTimeout(() => newHzContainer.scrollLeft = hzScrollLeft, 0);
-      }
-      window.scrollTo(scrollX, scrollY);
-      setTimeout(() => window.scrollTo(scrollX, scrollY), 0);
+  // On narrow screens, only Vertical fits — render as Vertical for this pass
+  // only. The user's actual saved preference (state.viewMode) is restored
+  // below so desktop/wide-screen behavior and the saved plan are untouched.
+  const _realViewMode = state.viewMode;
+  if (isMobileViewport() && state.viewMode !== 'vertical') {
+    state.viewMode = 'vertical';
   }
-  
-  setupScrollAnchor(); setupStickyHeader();
+  try {
+    document.body.setAttribute('data-view', state.viewMode);
+    document.getElementById('viewOverviewBtn').classList.toggle('active', state.viewMode === 'overview');
+    document.getElementById('viewHorizontalBtn').classList.toggle('active', state.viewMode === 'horizontal');
+    document.getElementById('viewVerticalBtn').classList.toggle('active', state.viewMode === 'vertical');
+    document.getElementById('viewSingleBtn').classList.toggle('active', state.viewMode === 'single_week');
+
+    document.getElementById('prevWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
+    document.getElementById('nextWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
+
+    document.getElementById('projectTitle').value = state.title; document.getElementById('projectDesc').value = state.desc; document.getElementById('projectStart').value = state.start || ''; document.getElementById('projectEnd').value = state.end || '';
+    autoResizeTitle();
+    document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
+
+    if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); }
+    else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
+    else { renderVerticalCalendar(); }
+
+    if (preserveScroll) {
+        const newHzContainer = document.querySelector('.hz-layout');
+        if (newHzContainer && state.viewMode === 'horizontal') {
+          newHzContainer.scrollLeft = hzScrollLeft;
+          setTimeout(() => newHzContainer.scrollLeft = hzScrollLeft, 0);
+        }
+        window.scrollTo(scrollX, scrollY);
+        setTimeout(() => window.scrollTo(scrollX, scrollY), 0);
+    }
+
+    setupScrollAnchor(); setupStickyHeader();
+  } finally {
+    state.viewMode = _realViewMode;
+  }
 }
 
 function renderVerticalCalendar() {
   const cal = document.getElementById('calendar'); cal.innerHTML = '';
-  
+  const sidebarW = isMobileViewport() ? 26 : 70; // must match .weekday-row/.week-row's first grid column
+
   const projectSpanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const projectSpanEnd = state.end ? fromISO(state.end) : addDays(projectSpanStart, 70);
   const projStartLabel = `${getMonthNames()[projectSpanStart.getMonth()]} ${projectSpanStart.getFullYear()}`;
@@ -1074,7 +1167,7 @@ function renderVerticalCalendar() {
     }
     const row = document.createElement('div'); row.className = 'week-row' + (state.showWeekends ? '' : ' hide-weekends'); row.dataset.weekStart = toISO(weekStart);
     if (w === 0) row.dataset.isFirstWeek = 'true';
-    const ukeCell = document.createElement('div'); ukeCell.className = 'uke-cell'; ukeCell.innerHTML = `<span class="uke-num">${t('uke')} ${weekNum}</span>`; row.appendChild(ukeCell);
+    const ukeCell = document.createElement('div'); ukeCell.className = 'uke-cell'; ukeCell.innerHTML = `<span class="uke-num"><span class="uke-word">${t('uke')}</span> ${weekNum}</span>`; row.appendChild(ukeCell);
 
     for (let i = 0; i < daysToShow; i++) {
       const day = addDays(weekStart, i); const cell = document.createElement('div'); cell.className = 'day-cell vertical-cell'; cell.dataset.date = toISO(day);
@@ -1147,7 +1240,7 @@ function renderVerticalCalendar() {
       
       const startCol = Math.floor((segStart - weekStart) / 86400000); const endCol = Math.floor((segEnd - weekStart) / 86400000); const span = endCol - startCol + 1;
       const bar = document.createElement('div'); bar.className = 'event-bar';
-      bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
+      bar.draggable = !window.__isReadOnly && !isCoarsePointer() && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
       if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
       
       bar.style.top = `${32 + evLocalTrack * trackSpacing}px`; 
@@ -1214,7 +1307,7 @@ function renderVerticalCalendar() {
 
       const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
       
-      const rectWidth = (cal.clientWidth - 70) * (span / daysToShow);
+      const rectWidth = (cal.clientWidth - sidebarW) * (span / daysToShow);
       bindEventBarEvents(bar, ev, rectWidth / span, segStart);
       layer.appendChild(bar);
     });
@@ -1223,7 +1316,7 @@ function renderVerticalCalendar() {
         const guideLayer = document.createElement('div');
         guideLayer.className = 'hz-guidelines-layer';
         guideLayer.style.position = 'absolute';
-        guideLayer.style.left = '70px'; 
+        guideLayer.style.left = `${sidebarW}px`; 
         guideLayer.style.right = '0';
         guideLayer.style.top = '0';
         guideLayer.style.bottom = '0';
@@ -1420,7 +1513,7 @@ function renderHorizontalCalendar() {
     const isSingle = ev.start === ev.end;
     
     const bar = document.createElement('div'); bar.className = 'event-bar' + (isSingle ? ' hz-single-day' : ' hz-phase');
-    bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
+    bar.draggable = !window.__isReadOnly && !isCoarsePointer() && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
     if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
     
     const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
@@ -1746,10 +1839,79 @@ document.addEventListener('mouseup', (e) => {
 
 function setupStickyHeader() {
   const zone = document.getElementById('stickyZone');
-  const syncHeight = () => { document.documentElement.style.setProperty('--sticky-h', `${zone.getBoundingClientRect().height}px`); };
-  new ResizeObserver(syncHeight).observe(zone); let isCompact = zone.classList.contains('compact');
-  const handleScroll = () => { const y = window.scrollY; if (!isCompact && y > 150) { isCompact = true; zone.classList.add('compact'); } else if (isCompact && y < 20) { isCompact = false; zone.classList.remove('compact'); } };
-  if (window.__stickyScroll) window.removeEventListener('scroll', window.__stickyScroll); window.__stickyScroll = handleScroll; window.addEventListener('scroll', handleScroll, { passive: true });
+  const syncHeight = () => { autoResizeTitle(); document.documentElement.style.setProperty('--sticky-h', `${zone.getBoundingClientRect().height}px`); };
+  if (!window.__stickyResizeObs) { window.__stickyResizeObs = new ResizeObserver(syncHeight); }
+  window.__stickyResizeObs.disconnect();
+  window.__stickyResizeObs.observe(zone);
+
+  // Scroll-GATED header collapse (all viewport widths). While the header
+  // hasn't fully collapsed, scrolling down is intercepted (preventDefault)
+  // and drives only the --c progress variable — the page itself does not
+  // move yet. Once --c reaches 1, scroll input is released and the page
+  // scrolls normally. Scrolling up past the very top of the page
+  // (scrollY <= 0) reverses this symmetrically, expanding the header back
+  // out. --c writes during active scrubbing are batched via
+  // requestAnimationFrame so rapid wheel/touch input doesn't force a
+  // layout recalculation on every single event (this function is called on
+  // every render(), so these listeners must also be de-duped on re-setup —
+  // see the __stickyXxx cache-and-remove calls below — otherwise repeated
+  // renders stack independent listeners, each with its own stale `c`,
+  // fighting over the same --c property and tanking scroll performance).
+  const BAND = 180; // px of scroll/drag input needed to fully collapse
+  const SETTLE_DELAY = 90, SPRING_MS = 280;
+  let c = 0; // 0 = fully open, 1 = fully collapsed
+  let settleTimer = null, rafId = null, pendingC = null;
+  const setC = (v, withTransition) => {
+    c = Math.min(1, Math.max(0, v));
+    if (withTransition) {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      zone.classList.add('snapping');
+      zone.style.setProperty('--c', c.toFixed(3));
+      setTimeout(() => zone.classList.remove('snapping'), SPRING_MS);
+    } else {
+      pendingC = c;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(() => { rafId = null; zone.style.setProperty('--c', pendingC.toFixed(3)); });
+      }
+    }
+  };
+  const scheduleSettle = () => {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      if (c > 0 && c < 1) setC(c >= 0.5 ? 1 : 0, true);
+    }, SETTLE_DELAY);
+  };
+  const wantsIntercept = (deltaDown) => (deltaDown > 0 && c < 1) || (deltaDown < 0 && c > 0 && window.scrollY <= 0);
+  const onWheel = (e) => {
+    if (!wantsIntercept(e.deltaY)) return;
+    e.preventDefault();
+    setC(c + e.deltaY / BAND, false);
+    scheduleSettle();
+  };
+  let touchY = null;
+  const onTouchStart = (e) => { touchY = e.touches[0].clientY; };
+  const onTouchMove = (e) => {
+    if (touchY === null) return;
+    const y = e.touches[0].clientY;
+    const deltaDown = touchY - y; // finger moving up = scrolling down
+    if (wantsIntercept(deltaDown)) {
+      e.preventDefault();
+      setC(c + deltaDown / BAND, false);
+      scheduleSettle();
+    }
+    touchY = y;
+  };
+  const onTouchEnd = () => { touchY = null; scheduleSettle(); };
+
+  if (window.__stickyWheel) window.removeEventListener('wheel', window.__stickyWheel);
+  if (window.__stickyTouchStart) window.removeEventListener('touchstart', window.__stickyTouchStart);
+  if (window.__stickyTouchMove) window.removeEventListener('touchmove', window.__stickyTouchMove);
+  if (window.__stickyTouchEnd) window.removeEventListener('touchend', window.__stickyTouchEnd);
+  window.__stickyWheel = onWheel; window.__stickyTouchStart = onTouchStart; window.__stickyTouchMove = onTouchMove; window.__stickyTouchEnd = onTouchEnd;
+  window.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('touchstart', onTouchStart, { passive: true });
+  window.addEventListener('touchmove', onTouchMove, { passive: false });
+  window.addEventListener('touchend', onTouchEnd, { passive: true });
 }
 
 function updateVisibleEventLabels() {
@@ -1981,7 +2143,7 @@ document.getElementById('viewOverviewBtn')?.addEventListener('click', () => swit
 document.getElementById('prevWeekBtn')?.addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), -7)); saveState(false); render(false); });
 document.getElementById('nextWeekBtn')?.addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), 7)); saveState(false); render(false); });
 
-document.getElementById('projectTitle')?.addEventListener('input', (e) => { if (window.__isReadOnly) return; state.title = e.target.value; saveState(); });
+document.getElementById('projectTitle')?.addEventListener('input', (e) => { if (window.__isReadOnly) return; state.title = e.target.value; saveState(); autoResizeTitle(); });
 document.getElementById('projectDesc')?.addEventListener('input', (e) => { if (window.__isReadOnly) return; state.desc = e.target.value; saveState(); });
 document.getElementById('projectStart')?.addEventListener('change', (e) => { if (window.__isReadOnly) return; state.start = e.target.value; saveState(); render(); });
 document.getElementById('projectEnd')?.addEventListener('change', (e) => { if (window.__isReadOnly) return; state.end = e.target.value; saveState(); render(); });
@@ -2134,7 +2296,8 @@ document.getElementById('importUrlBtn')?.addEventListener('click', () => {
 });
 
 if (window.__isReadOnly) document.querySelectorAll('#projectTitle, #projectDesc, #projectStart, #projectEnd').forEach(el => el.disabled = true);
-applyStaticTranslations(); updateLangToggle(); document.documentElement.lang = currentLang === 'nb' ? 'no' : 'en'; 
+applyStaticTranslations(); updateLangToggle(); document.documentElement.lang = currentLang === 'nb' ? 'no' : 'en';
+setupMobileLayout();
 
 let initialLoad = true;
 render();

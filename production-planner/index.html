@@ -13,21 +13,28 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: var(--bg); color: var(--ink); font-family: 'ABC Diatype', Arial, sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-anchor: none; }
   .app { max-width: 1600px; margin: 0 auto; padding: 0 56px 80px; }
-  .sticky-zone { position: sticky; top: 0; z-index: 50; background: var(--bg); padding-top: 40px; transition: padding 0.25s ease; }
-  .sticky-zone.compact { padding-top: 14px; }
-  header.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--line); transition: margin 0.25s ease, padding 0.25s ease; }
-  .sticky-zone.compact header.top { margin-bottom: 14px; padding-bottom: 10px; }
+  /* Header collapse: --c (0=open, 1=collapsed) is driven by JS in
+     setupStickyHeader() via scroll-gated wheel/touch interception, at all
+     viewport widths. --*-open custom props hold the "open" endpoint value
+     and are re-tiered per breakpoint below (@1100), so one calc() formula
+     per property works everywhere. No transition by default (so scrubbing
+     tracks input 1:1); .snapping re-enables a transition for the settle
+     spring animation only (see setC() in JS). */
+  .sticky-zone { --c: 0; --sticky-pt-open: 40px; --title-gap-open: 64px; --title-fs-open: 64px; position: sticky; top: 0; z-index: 50; background: var(--bg); padding-top: calc(var(--sticky-pt-open) - (var(--sticky-pt-open) - 14px) * var(--c)); }
+  .sticky-zone.snapping { transition: padding 0.25s ease; }
+  header.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: calc(36px - 22px * var(--c)); padding-bottom: calc(20px - 10px * var(--c)); border-bottom: 1px solid var(--line); }
+  .sticky-zone.snapping header.top { transition: margin 0.25s ease, padding 0.25s ease; }
   .brand { font-size: 13px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
   .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-soft); letter-spacing: 0.04em; }
   .header-meta { display: flex; align-items: center; gap: 12px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
-  .title-row { display: grid; grid-template-columns: auto 1fr; gap: 64px; margin-bottom: 32px; align-items: start; transition: gap 0.25s ease, margin 0.25s ease; }
-  .sticky-zone.compact .title-row { grid-template-columns: 1fr; gap: 0; margin-bottom: 16px; }
-  .project-title { font-weight: 400; font-size: 64px; line-height: 1.15; letter-spacing: -0.035em; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; padding: 0; transition: font-size 0.25s ease; font-family: inherit; resize: none; overflow: hidden; overflow-wrap: break-word; display: block; }
-  .sticky-zone.compact .project-title { font-size: 24px; letter-spacing: -0.025em; }
+  .title-row { display: grid; grid-template-columns: auto 1fr; gap: calc(var(--title-gap-open) * (1 - var(--c))); margin-bottom: calc(32px - 16px * var(--c)); align-items: start; }
+  .sticky-zone.snapping .title-row { transition: gap 0.25s ease, margin 0.25s ease; }
+  .project-title { font-weight: 400; font-size: calc(var(--title-fs-open) - (var(--title-fs-open) - 24px) * var(--c)); line-height: 1.15; letter-spacing: -0.035em; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; padding: 0; font-family: inherit; resize: none; overflow: hidden; overflow-wrap: break-word; display: block; }
+  .sticky-zone.snapping .project-title { transition: font-size 0.25s ease; }
   .project-title::placeholder { color: var(--ink-faint); }
-  .project-desc { font-size: 17px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; min-height: 100px; transition: opacity 0.2s ease, max-height 0.25s ease, min-height 0.25s ease; }
+  .project-desc { font-size: 17px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; opacity: calc(1 - var(--c)); min-height: calc(100px * (1 - var(--c))); max-height: calc(500px * (1 - var(--c))); overflow: hidden; }
+  .sticky-zone.snapping .project-desc { transition: opacity 0.2s ease, max-height 0.25s ease, min-height 0.25s ease; }
   .project-desc::placeholder { color: var(--ink-faint); }
-  .sticky-zone.compact .project-desc { opacity: 0; max-height: 0; min-height: 0; overflow: hidden; pointer-events: none; margin: 0; }
   .controls { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); gap: 14px; flex-wrap: wrap; }
   .controls-left, .controls-right { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
   .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
@@ -313,9 +320,8 @@
 
   @media (max-width: 1100px) {
     .app { padding: 0 24px 60px; }
-    .sticky-zone { padding-top: 24px; }
-    .title-row { grid-template-columns: 1fr; gap: 16px; }
-    .project-title { font-size: 44px; }
+    .sticky-zone { --sticky-pt-open: 24px; --title-gap-open: 16px; --title-fs-open: 44px; }
+    .title-row { grid-template-columns: 1fr; }
     .controls { gap: 10px; }
   }
 
@@ -340,11 +346,12 @@
     #todayBtn, #addEventBtn { padding: 6px 12px; font-size: 11px; }
     .settings-menu .ctl { padding: 10px 16px; border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; justify-content: space-between; }
 
-    .month-label { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; transition: opacity 0.2s ease, max-height 0.25s ease; }
     .week-range { margin-left: 0; }
-    .sticky-zone.compact .month-label { display: none; }
-
-    .sticky-zone.compact .controls { padding-top: 10px; }
+    /* month-label and .controls spacing collapse with the header on mobile
+       (desktop never had a month-label collapse — mobile-only declutter). */
+    .month-label { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; opacity: calc(1 - var(--c)); max-height: calc(60px * (1 - var(--c))); overflow: hidden; }
+    .controls { padding-top: calc(12px - 2px * var(--c)); }
+    .sticky-zone.snapping .month-label, .sticky-zone.snapping .controls { transition: all 0.25s ease; }
 
     .modal-backdrop { padding: 12px; }
   }
@@ -1833,33 +1840,78 @@ document.addEventListener('mouseup', (e) => {
 function setupStickyHeader() {
   const zone = document.getElementById('stickyZone');
   const syncHeight = () => { autoResizeTitle(); document.documentElement.style.setProperty('--sticky-h', `${zone.getBoundingClientRect().height}px`); };
-  new ResizeObserver(syncHeight).observe(zone); let isCompact = zone.classList.contains('compact');
-  let springTimer = null;
-  const COMMIT_EXTRA_DOWN = 40; // must travel this much further past 150 to lock in collapse
-  const COMMIT_EXTRA_UP = 10; // expand triggers below y=20, so only ~20px of room exists below it
-  const SPRING_DELAY = 220; // ms window to commit before springing back
-  const handleScroll = () => {
-    if (springTimer) return; // a spring decision is already pending — let it resolve first
-    const y = window.scrollY;
-    if (!isCompact && y > 150) {
-      zone.classList.add('compact'); // start the transition immediately
-      const triggerY = y;
-      springTimer = setTimeout(() => {
-        springTimer = null;
-        if (window.scrollY - triggerY >= COMMIT_EXTRA_DOWN) { isCompact = true; }
-        else { zone.classList.remove('compact'); } // spring back
-      }, SPRING_DELAY);
-    } else if (isCompact && y < 20) {
-      zone.classList.remove('compact');
-      const triggerY = y;
-      springTimer = setTimeout(() => {
-        springTimer = null;
-        if (triggerY - window.scrollY >= COMMIT_EXTRA_UP) { isCompact = false; }
-        else { zone.classList.add('compact'); } // spring back
-      }, SPRING_DELAY);
+  if (!window.__stickyResizeObs) { window.__stickyResizeObs = new ResizeObserver(syncHeight); }
+  window.__stickyResizeObs.disconnect();
+  window.__stickyResizeObs.observe(zone);
+
+  // Scroll-GATED header collapse (all viewport widths). While the header
+  // hasn't fully collapsed, scrolling down is intercepted (preventDefault)
+  // and drives only the --c progress variable — the page itself does not
+  // move yet. Once --c reaches 1, scroll input is released and the page
+  // scrolls normally. Scrolling up past the very top of the page
+  // (scrollY <= 0) reverses this symmetrically, expanding the header back
+  // out. --c writes during active scrubbing are batched via
+  // requestAnimationFrame so rapid wheel/touch input doesn't force a
+  // layout recalculation on every single event (this function is called on
+  // every render(), so these listeners must also be de-duped on re-setup —
+  // see the __stickyXxx cache-and-remove calls below — otherwise repeated
+  // renders stack independent listeners, each with its own stale `c`,
+  // fighting over the same --c property and tanking scroll performance).
+  const BAND = 180; // px of scroll/drag input needed to fully collapse
+  const SETTLE_DELAY = 90, SPRING_MS = 280;
+  let c = 0; // 0 = fully open, 1 = fully collapsed
+  let settleTimer = null, rafId = null, pendingC = null;
+  const setC = (v, withTransition) => {
+    c = Math.min(1, Math.max(0, v));
+    if (withTransition) {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      zone.classList.add('snapping');
+      zone.style.setProperty('--c', c.toFixed(3));
+      setTimeout(() => zone.classList.remove('snapping'), SPRING_MS);
+    } else {
+      pendingC = c;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(() => { rafId = null; zone.style.setProperty('--c', pendingC.toFixed(3)); });
+      }
     }
   };
-  if (window.__stickyScroll) window.removeEventListener('scroll', window.__stickyScroll); window.__stickyScroll = handleScroll; window.addEventListener('scroll', handleScroll, { passive: true });
+  const scheduleSettle = () => {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      if (c > 0 && c < 1) setC(c >= 0.5 ? 1 : 0, true);
+    }, SETTLE_DELAY);
+  };
+  const wantsIntercept = (deltaDown) => (deltaDown > 0 && c < 1) || (deltaDown < 0 && c > 0 && window.scrollY <= 0);
+  const onWheel = (e) => {
+    if (!wantsIntercept(e.deltaY)) return;
+    e.preventDefault();
+    setC(c + e.deltaY / BAND, false);
+    scheduleSettle();
+  };
+  let touchY = null;
+  const onTouchStart = (e) => { touchY = e.touches[0].clientY; };
+  const onTouchMove = (e) => {
+    if (touchY === null) return;
+    const y = e.touches[0].clientY;
+    const deltaDown = touchY - y; // finger moving up = scrolling down
+    if (wantsIntercept(deltaDown)) {
+      e.preventDefault();
+      setC(c + deltaDown / BAND, false);
+      scheduleSettle();
+    }
+    touchY = y;
+  };
+  const onTouchEnd = () => { touchY = null; scheduleSettle(); };
+
+  if (window.__stickyWheel) window.removeEventListener('wheel', window.__stickyWheel);
+  if (window.__stickyTouchStart) window.removeEventListener('touchstart', window.__stickyTouchStart);
+  if (window.__stickyTouchMove) window.removeEventListener('touchmove', window.__stickyTouchMove);
+  if (window.__stickyTouchEnd) window.removeEventListener('touchend', window.__stickyTouchEnd);
+  window.__stickyWheel = onWheel; window.__stickyTouchStart = onTouchStart; window.__stickyTouchMove = onTouchMove; window.__stickyTouchEnd = onTouchEnd;
+  window.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('touchstart', onTouchStart, { passive: true });
+  window.addEventListener('touchmove', onTouchMove, { passive: false });
+  window.addEventListener('touchend', onTouchEnd, { passive: true });
 }
 
 function updateVisibleEventLabels() {
