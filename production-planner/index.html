@@ -62,7 +62,7 @@
   .action-btn.ghost-danger:hover { border-color: var(--danger); background: var(--danger); color: var(--bg); }
   
   .view-toggle-wrapper { position: relative; }
-  .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; opacity: 0; z-index: 100; display: none; align-items: center; gap: 8px; }
+  .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 12px; border-radius: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; opacity: 0; z-index: 100; display: none; align-items: center; gap: 8px; }
   .view-toggle-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 4px; border-style: solid; border-color: var(--ink) transparent transparent transparent; }
   body.read-only .view-toggle-tooltip:not(.dismissed) { display: flex; animation: slideUpFade 0.4s ease forwards 1s; pointer-events: auto; }
   .view-toggle-tooltip-close { background: transparent; border: none; color: var(--bg); font-size: 12px; cursor: pointer; padding: 0 4px; opacity: 0.7; border-radius: 0; }
@@ -280,6 +280,8 @@
   .event-bar.is-preview { opacity: 0.5; border-style: dashed; z-index: 20; pointer-events: none !important; }
   .event-bar.continues-left { border-left: 1px dashed var(--ink); padding-left: 6px; border-top-left-radius: 0; border-bottom-left-radius: 0; }
   .event-bar.continues-right { border-right: 1px dashed var(--ink); border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .event-bar.is-timeoff-overlap { opacity: 0.55; filter: grayscale(50%); }
+  .event-bar.is-selected { outline: 2px solid var(--ink); outline-offset: 2px; }
   .event-label { pointer-events: none; max-width: 100%; }
   .event-notes { display: none; }
   .resize-handle { position: absolute; top: 0; bottom: 0; width: 12px; cursor: ew-resize; z-index: 5; }
@@ -424,7 +426,7 @@
                     <option value="">Select a file...</option>
                   </select>
                 </div>
-                <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Save as New File</button>
+                <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Create New File</button>
               </div>
             </div>
 
@@ -445,7 +447,14 @@
             <button class="settings-menu-item" id="exportBtn" data-i18n="export_pdf">Export PDF</button>
             
             <div class="settings-menu-divider"></div>
-            
+
+            <div class="settings-toggle-row" id="hideSingleDayToggleWrapper">
+              <span data-i18n="hide_single_day">Hide Single-Day Events</span>
+              <div class="toggle-switch ctl" id="hideSingleDayToggle">
+                <div class="toggle-switch-track"></div>
+              </div>
+            </div>
+
             <div class="settings-toggle-row" id="weekendToggleWrapper">
               <span data-i18n="show_weekends">Weekends</span>
               <div class="toggle-switch ctl" id="weekendToggle">
@@ -842,19 +851,19 @@ document.getElementById('driveFileSelect')?.addEventListener('change', async (e)
 });
 
 document.getElementById('btnNewDriveFile')?.addEventListener('click', async () => {
-  const folderId = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M'; 
+  const folderId = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
   if (!folderId) return customAlert('Please select a workspace folder first.');
-  const safeTitle = (state.title || 'Untitled Project').replace(/[^a-z0-9 _-]/gi, '').trim(); 
-  
-  customPrompt("Enter a name for the new file:", safeTitle, async (fileName) => {
+
+  customPrompt("Enter a name for the new file:", "Untitled Project", async (fileName) => {
     if (!fileName) return;
     try {
       updateCloudStatus('Creating...');
       const metadata = { name: fileName + (fileName.endsWith('.json') ? '' : '.json'), mimeType: 'application/json', parents: [folderId] };
       const createRes = await gapi.client.drive.files.create({ resource: metadata, fields: 'id', supportsAllDrives: true });
       currentDriveFileId = createRes.result.id; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
-      state.lang = currentLang; const fileContent = JSON.stringify(state);
+      const blankState = getBlankState(); blankState.lang = currentLang; const fileContent = JSON.stringify(blankState);
       await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
+      state = blankState; saveState(); render();
       await fetchDriveFiles(); updateCloudStatus('Saved');
     } catch(err) { updateCloudStatus('Error'); customAlert("Failed to create file in Drive.", "Error"); }
   });
@@ -943,8 +952,8 @@ function updateCloudStatus(msg) {
 
 // ============ I18N ============
 const i18n = {
-  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', import_url: 'Load from URL', import_url_prompt: 'Paste the shared timeline URL here:', import_error: 'Invalid URL or corrupted data.', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)', view_tooltip: 'Switch views for more detail', copy_client_link: 'Copy Client Link', copy_client_link_short: 'Share', sign_in_drive: 'Sign In' },
-  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', import_url: 'Åpne fra lenke', import_url_prompt: 'Lim inn delt tidslinje-lenke her:', import_error: 'Ugyldig lenke eller korrupt data.', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag', view_tooltip: 'Bytt visning for flere detaljer', copy_client_link: 'Kopier klientlenke', copy_client_link_short: 'Del', sign_in_drive: 'Logg inn' }
+  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', import_url: 'Load from URL', import_url_prompt: 'Paste the shared timeline URL here:', import_error: 'Invalid URL or corrupted data.', show_weekends: 'Weekends', hide_single_day: 'Hide Single-Day Events', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)', view_tooltip: 'Switch views for more detail', copy_client_link: 'Copy Client Link', copy_client_link_short: 'Share', sign_in_drive: 'Sign In' },
+  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', import_url: 'Åpne fra lenke', import_url_prompt: 'Lim inn delt tidslinje-lenke her:', import_error: 'Ugyldig lenke eller korrupt data.', show_weekends: 'Helger', hide_single_day: 'Skjul enkeltdagshendelser', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag', view_tooltip: 'Bytt visning for flere detaljer', copy_client_link: 'Kopier klientlenke', copy_client_link_short: 'Del', sign_in_drive: 'Logg inn' }
 };
 
 let currentLang = localStorage.getItem('newslab-planner-lang') || 'en';
@@ -978,7 +987,13 @@ function migrateData(data) {
   if (!data.events) data.events = [];
   data.events.forEach(e => { if(e.isTimeOff === undefined) e.isTimeOff = false; });
   if (data.showWeekends === undefined) data.showWeekends = true;
+  if (data.hideSingleDayOverview === undefined) data.hideSingleDayOverview = false;
   return data;
+}
+
+function getBlankState() {
+  const today = new Date(); const start = new Date(today.getFullYear(), today.getMonth(), 1); const end = addDays(start, 70);
+  return { title: '', desc: '', start: toISO(start), end: toISO(end), viewMode: 'vertical', currentWeekStart: toISO(startOfWeek(today)), showWeekends: true, hideSingleDayOverview: false, events: [] };
 }
 
 function loadState() {
@@ -1001,8 +1016,7 @@ function loadState() {
     const v2Raw = localStorage.getItem('newslab-planner-v2'); if (v2Raw) return migrateData(JSON.parse(v2Raw));
   } catch(e){}
   
-  const today = new Date(); const start = new Date(today.getFullYear(), today.getMonth(), 1); const end = addDays(start, 70);
-  return { title: '', desc: '', start: toISO(start), end: toISO(end), viewMode: 'vertical', currentWeekStart: toISO(startOfWeek(today)), showWeekends: true, events: [] };
+  return getBlankState();
 }
 
 let state = loadState();
@@ -1027,12 +1041,24 @@ function sameDay(a, b) { return toISO(a) === toISO(b); }
 function isWeekend(d) { const day = d.getDay(); return day === 0 || day === 6; }
 function getISOWeek(d) { const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const dayNum = date.getUTCDay() || 7; date.setUTCDate(date.getUTCDate() + 4 - dayNum); const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1)); return Math.ceil((((date - yearStart) / 86400000) + 1) / 7); }
 function startOfWeek(d) { const x = new Date(d); const day = x.getDay(); x.setDate(x.getDate() + (day === 0 ? -6 : 1 - day)); return x; }
+function rangesOverlap(aStart, aEnd, bStart, bEnd) { return aStart <= bEnd && aEnd >= bStart; }
 
 let anchorDateISO = null;
 function getDefaultDate() { if (anchorDateISO) return anchorDateISO; if (state.start) return state.start; return toISO(new Date()); }
 const getMonthNames = () => t('months'); const getDayShort = () => state.showWeekends ? t('weekdays_full') : t('weekdays_no_weekend');
 
 // ============ UNIVERSAL DOM BINDINGS ============
+window.__selectedEventIds = window.__selectedEventIds || new Set();
+function toggleEventSelection(id, bar) {
+  if (window.__selectedEventIds.has(id)) { window.__selectedEventIds.delete(id); bar.classList.remove('is-selected'); }
+  else { window.__selectedEventIds.add(id); bar.classList.add('is-selected'); }
+}
+function clearEventSelection() {
+  if (!window.__selectedEventIds.size) return;
+  window.__selectedEventIds.clear();
+  document.querySelectorAll('.event-bar.is-selected').forEach(b => b.classList.remove('is-selected'));
+}
+
 function bindDayCellEvents(cell, day) {
   const addBtn = cell.querySelector('.day-add-btn');
   if (addBtn) addBtn.addEventListener('click', (e) => { if(window.__isReadOnly) return; e.stopPropagation(); openEventModal(null, toISO(day), toISO(day)); });
@@ -1041,14 +1067,24 @@ function bindDayCellEvents(cell, day) {
   cell.addEventListener('dragleave', () => cell.classList.remove('drag-hover'));
   cell.addEventListener('drop', (e) => {
     if(window.__isReadOnly) return; e.preventDefault(); cell.classList.remove('drag-hover'); document.body.classList.remove('is-dragging'); const dataStr = e.dataTransfer.getData('application/json'); if (!dataStr) return;
-    try { const data = JSON.parse(dataStr); const ev = state.events.find(i => i.id === data.id); if (!ev) return;
-      const targetDate = cell.dataset.date; const dur = diffDays(ev.start, ev.end); const newStart = toISO(addDays(fromISO(targetDate), -data.offsetDays));
-      ev.start = newStart; ev.end = toISO(addDays(fromISO(newStart), dur)); saveState(); render();
+    try { const data = JSON.parse(dataStr); const anchorEv = state.events.find(i => i.id === data.anchorId); if (!anchorEv) return;
+      const targetDate = cell.dataset.date; const newStart = toISO(addDays(fromISO(targetDate), -data.offsetDays));
+      const deltaDays = diffDays(anchorEv.start, newStart);
+      (data.ids || [data.anchorId]).forEach(id => {
+        const ev = state.events.find(i => i.id === id); if (!ev) return;
+        ev.start = toISO(addDays(fromISO(ev.start), deltaDays)); ev.end = toISO(addDays(fromISO(ev.end), deltaDays));
+      });
+      saveState(); render();
     } catch (err) {}
   });
 }
 
 function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
+  if (!ev.isTimeOff) {
+    const evS = fromISO(ev.start), evE = fromISO(ev.end);
+    if (state.events.some(o => o.isTimeOff && rangesOverlap(evS, evE, fromISO(o.start), fromISO(o.end)))) bar.classList.add('is-timeoff-overlap');
+  }
+  if (window.__selectedEventIds.has(ev.id)) bar.classList.add('is-selected');
   if (!window.__isReadOnly && state.viewMode !== 'overview' && !isCoarsePointer()) {
     const rLeft = document.createElement('div'); rLeft.className = 'resize-handle left'; const rRight = document.createElement('div'); rRight.className = 'resize-handle right';
     bar.appendChild(rLeft); bar.appendChild(rRight);
@@ -1058,23 +1094,29 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
     };
     rLeft.addEventListener('mousedown', (e) => startResize(e, 'left')); rRight.addEventListener('mousedown', (e) => startResize(e, 'right'));
   }
-  bar.addEventListener('click', (e) => { if(window.__isDraggingOrResizing) return; e.stopPropagation(); openEventModal(ev); });
+  bar.addEventListener('click', (e) => {
+    if(window.__isDraggingOrResizing) return; e.stopPropagation();
+    if (e.shiftKey || e.metaKey || e.ctrlKey) { toggleEventSelection(ev.id, bar); return; }
+    if (window.__selectedEventIds.size) clearEventSelection();
+    openEventModal(ev);
+  });
   if (!window.__isReadOnly && state.viewMode !== 'overview' && !isCoarsePointer()) {
     bar.addEventListener('dragstart', (e) => {
-      window.__isDraggingOrResizing = true; 
+      window.__isDraggingOrResizing = true;
       document.body.classList.add('is-dragging');
-      const rect = bar.getBoundingClientRect(); let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay); 
+      const rect = bar.getBoundingClientRect(); let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay);
       const maxSpan = Math.round(rect.width / pxPerDay); offsetDaysInSeg = Math.max(0, Math.min(offsetDaysInSeg, maxSpan - 1));
       const totalOffsetDays = diffDays(ev.start, toISO(segStart)) + offsetDaysInSeg;
-      e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('application/json', JSON.stringify({ id: ev.id, offsetDays: totalOffsetDays })); 
-      setTimeout(() => { 
-          bar.style.opacity = '0.3'; 
+      const ids = (window.__selectedEventIds.has(ev.id) && window.__selectedEventIds.size > 1) ? [...window.__selectedEventIds] : [ev.id];
+      e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('application/json', JSON.stringify({ ids, anchorId: ev.id, offsetDays: totalOffsetDays }));
+      setTimeout(() => {
+          bar.style.opacity = '0.3';
       }, 1);
     });
-    bar.addEventListener('dragend', () => { 
-      bar.style.opacity = ''; 
+    bar.addEventListener('dragend', () => {
+      bar.style.opacity = '';
       document.body.classList.remove('is-dragging');
-      setTimeout(() => window.__isDraggingOrResizing = false, 100); 
+      setTimeout(() => window.__isDraggingOrResizing = false, 100);
     });
   }
 }
@@ -1150,6 +1192,7 @@ function render(preserveScroll = true) {
     document.getElementById('projectTitle').value = state.title; document.getElementById('projectDesc').value = state.desc; document.getElementById('projectStart').value = state.start || ''; document.getElementById('projectEnd').value = state.end || '';
     autoResizeTitle(); autoResizeDesc();
     document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
+    document.getElementById('hideSingleDayToggle').classList.toggle('on', !!state.hideSingleDayOverview);
 
     if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); }
     else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
@@ -1382,33 +1425,6 @@ function renderVerticalCalendar() {
       layer.appendChild(bar);
     });
     
-    if (weekMaxTrack >= 0) {
-        const guideLayer = document.createElement('div');
-        guideLayer.className = 'hz-guidelines-layer';
-        guideLayer.style.position = 'absolute';
-        guideLayer.style.left = `${sidebarW}px`; 
-        guideLayer.style.right = '0';
-        guideLayer.style.top = '0';
-        guideLayer.style.bottom = '0';
-        guideLayer.style.pointerEvents = 'none';
-        guideLayer.style.zIndex = '1';
-
-        const lineOffset = 4;
-        for (let i = 0; i <= weekMaxTrack; i++) {
-            if (localGroupBoundaries.has(i)) {
-                const line = document.createElement('div');
-                line.style.position = 'absolute';
-                line.style.left = '0';
-                line.style.right = '0';
-                line.style.top = `${32 + (i + 1) * trackSpacing - lineOffset}px`;
-                line.style.height = '1px';
-                line.style.backgroundColor = 'var(--line-soft)';
-                guideLayer.appendChild(line);
-            }
-        }
-        row.appendChild(guideLayer);
-    }
-    
     row.appendChild(layer);
     row.querySelectorAll('.day-cell').forEach(c => { c.style.paddingTop = weekMaxTrack >= 0 ? `${40 + (weekMaxTrack + 1) * trackSpacing}px` : '40px'; });
     
@@ -1595,14 +1611,37 @@ function renderHorizontalCalendar() {
         bar.style.top = `${4 + ev._track * trackHeight}px`;
         bar.style.height = '48px';
         bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${dayWidth - 8}px`;
-        const label = document.createElement('span'); 
-        label.className = 'event-label'; 
-        
+        const label = document.createElement('div');
+        label.className = 'event-label';
+
         if (ev.notes) {
-            label.style.display = 'inline-block';
-            label.style.whiteSpace = 'nowrap';
-            label.style.overflow = 'hidden';
-            label.style.textOverflow = 'ellipsis';
+            label.style.display = 'flex';
+            label.style.flexDirection = 'column';
+            label.style.gap = '2px';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.style.whiteSpace = 'nowrap';
+            nameDiv.style.overflow = 'hidden';
+            nameDiv.style.textOverflow = 'ellipsis';
+            nameDiv.textContent = ev.name;
+
+            const notesDiv = document.createElement('div');
+            notesDiv.style.fontSize = '11px';
+            notesDiv.style.opacity = '0.85';
+            notesDiv.style.fontWeight = '500';
+            notesDiv.style.lineHeight = '1.3';
+            notesDiv.style.whiteSpace = 'normal';
+            notesDiv.style.display = '-webkit-box';
+            notesDiv.style.webkitLineClamp = '2';
+            notesDiv.style.webkitBoxOrient = 'vertical';
+            notesDiv.style.overflow = 'hidden';
+            notesDiv.style.textOverflow = 'ellipsis';
+            notesDiv.style.textTransform = 'none';
+            notesDiv.style.letterSpacing = '0';
+            notesDiv.textContent = ev.notes;
+
+            label.appendChild(nameDiv);
+            label.appendChild(notesDiv);
         } else {
             label.style.display = '-webkit-box';
             label.style.webkitLineClamp = '2';
@@ -1610,9 +1649,9 @@ function renderHorizontalCalendar() {
             label.style.whiteSpace = 'normal';
             label.style.overflow = 'hidden';
             label.style.lineHeight = '1.2';
+            label.textContent = ev.name;
         }
-        label.textContent = ev.name; 
-        
+
         // Calculate max width for collision with next event
         const trackEvents = eventsToRender.filter(e => e._track === ev._track).sort((a,b) => fromISO(a.start) - fromISO(b.start));
         const myIdx = trackEvents.findIndex(e => e.id === ev.id);
@@ -1739,6 +1778,7 @@ function renderOverviewCalendar() {
   
   const events = [...state.events]
     .filter(ev => !ev.isTimeOff)
+    .filter(ev => !(state.hideSingleDayOverview && ev.start === ev.end))
     .sort((a, b) => fromISO(a.start) - fromISO(b.start) || (fromISO(b.end) - fromISO(a.start)) - (fromISO(a.end) - fromISO(a.start)));
 
   const groupedEvents = new Map();
@@ -1792,8 +1832,9 @@ function renderOverviewCalendar() {
             const startOffset = diffDays(toISO(spanStart), toISO(eStart));
 
             const isSingle = ev.start === ev.end;
-            const bar = document.createElement('div'); 
+            const bar = document.createElement('div');
             bar.className = 'event-bar ov-phase' + (isSingle ? ' ov-single-day' : '');
+            if (timeOffEvents.some(to => rangesOverlap(fromISO(ev.start), fromISO(ev.end), fromISO(to.start), fromISO(to.end)))) bar.classList.add('is-timeoff-overlap');
             bar.dataset.id = ev.id; bar.dataset.color = ev.color;
             
             const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
@@ -1915,6 +1956,8 @@ document.addEventListener('mouseup', (e) => {
   if (window.__resizeData) { saveState(); window.__resizeData = null; window.__resizeHoverDate = null; document.body.classList.remove('is-resizing'); render(); setTimeout(() => window.__isDraggingOrResizing = false, 100); }
   document.body.classList.remove('is-dragging');
 });
+
+document.addEventListener('click', (e) => { if (!e.target.closest('.event-bar')) clearEventSelection(); });
 
 function setupStickyHeader() {
   const zone = document.getElementById('stickyZone');
@@ -2138,8 +2181,8 @@ function openClearAllModal() {
   document.getElementById('cancelClear').addEventListener('click', closeModal);
   confirmBtn.addEventListener('click', () => {
     if (confirmBtn.disabled || window.__isReadOnly) return;
-    localStorage.removeItem(STORAGE_KEY); const today = new Date(); const start = new Date(today.getFullYear(), today.getMonth(), 1); const end = addDays(start, 70);
-    state = { title: '', desc: '', start: toISO(start), end: toISO(end), viewMode: 'vertical', currentWeekStart: toISO(startOfWeek(today)), showWeekends: true, events: [] }; saveState(); render(); closeModal();
+    localStorage.removeItem(STORAGE_KEY);
+    state = getBlankState(); saveState(); render(); closeModal();
   });
   modal.classList.add('open'); setTimeout(() => input.focus(), 50);
 }
@@ -2274,6 +2317,7 @@ document.getElementById('clearAllBtn')?.addEventListener('click', (e) => { e.sto
 document.getElementById('settingsBtn')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.toggle('open'); });
 document.getElementById('readOnlyToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('shareReadOnly').classList.toggle('on'); });
 document.getElementById('weekendToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); state.showWeekends = !state.showWeekends; saveState(); render(false); });
+document.getElementById('hideSingleDayToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); state.hideSingleDayOverview = !state.hideSingleDayOverview; saveState(); render(false); });
 document.getElementById('langToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); setLanguage(currentLang === 'en' ? 'nb' : 'en'); });
 document.getElementById('exportBtn')?.addEventListener('click', () => { document.getElementById('settingsMenu').classList.remove('open'); document.querySelectorAll('.day-add-menu.open').forEach(m => m.classList.remove('open')); setTimeout(() => window.print(), 80); });
 document.addEventListener('click', (e) => { if (!e.target.closest('.settings-dropdown-wrap')) { const settingsMenu = document.getElementById('settingsMenu'); if (settingsMenu) settingsMenu.classList.remove('open'); } });
@@ -2284,6 +2328,7 @@ document.addEventListener('keydown', (e) => {
         document.getElementById('dialogCancel').click();
         return;
     }
+    clearEventSelection();
     if (window.__resizeData) {
       const ev = state.events.find(i => i.id === window.__resizeData.id); if (ev) { ev.start = window.__resizeData.origStart; ev.end = window.__resizeData.origEnd; }
       window.__resizeData = null; window.__resizeHoverDate = null; document.body.classList.remove('is-resizing'); window.__isDraggingOrResizing = false; render();
