@@ -280,7 +280,7 @@
   .event-bar.is-preview { opacity: 0.5; border-style: dashed; z-index: 20; pointer-events: none !important; }
   .event-bar.continues-left { border-left: 1px dashed var(--ink); padding-left: 6px; border-top-left-radius: 0; border-bottom-left-radius: 0; }
   .event-bar.continues-right { border-right: 1px dashed var(--ink); border-top-right-radius: 0; border-bottom-right-radius: 0; }
-  .event-bar.is-timeoff-overlap { opacity: 0.55; filter: grayscale(50%); }
+  .timeoff-overlay-mask { position: absolute; top: 0; bottom: 0; background: rgba(255,255,255,0.35); backdrop-filter: grayscale(65%) brightness(0.94); -webkit-backdrop-filter: grayscale(65%) brightness(0.94); pointer-events: none; }
   .event-bar.is-selected { outline: 2px solid var(--ink); outline-offset: 2px; }
   .event-label { pointer-events: none; max-width: 100%; }
   .event-notes { display: none; }
@@ -1042,6 +1042,38 @@ function isWeekend(d) { const day = d.getDay(); return day === 0 || day === 6; }
 function getISOWeek(d) { const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const dayNum = date.getUTCDay() || 7; date.setUTCDate(date.getUTCDate() + 4 - dayNum); const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1)); return Math.ceil((((date - yearStart) / 86400000) + 1) / 7); }
 function startOfWeek(d) { const x = new Date(d); const day = x.getDay(); x.setDate(x.getDate() + (day === 0 ? -6 : 1 - day)); return x; }
 function rangesOverlap(aStart, aEnd, bStart, bEnd) { return aStart <= bEnd && aEnd >= bStart; }
+function getTimeOffOverlapRanges(segStart, segEnd, timeOffEvents) {
+  const ranges = [];
+  timeOffEvents.forEach(to => {
+    const toStart = fromISO(to.start), toEnd = fromISO(to.end);
+    if (!rangesOverlap(segStart, segEnd, toStart, toEnd)) return;
+    ranges.push([toStart < segStart ? segStart : toStart, toEnd > segEnd ? segEnd : toEnd]);
+  });
+  if (!ranges.length) return [];
+  ranges.sort((a, b) => a[0] - b[0]);
+  const merged = [ranges[0]];
+  for (let i = 1; i < ranges.length; i++) {
+    const last = merged[merged.length - 1];
+    if (ranges[i][0] <= addDays(last[1], 1)) { if (ranges[i][1] > last[1]) last[1] = ranges[i][1]; }
+    else merged.push(ranges[i]);
+  }
+  return merged;
+}
+function appendTimeOffOverlays(bar, segStart, span, timeOffEvents) {
+  if (!timeOffEvents.length) return;
+  const segEnd = addDays(segStart, span - 1);
+  getTimeOffOverlapRanges(segStart, segEnd, timeOffEvents).forEach(([s, e]) => {
+    const offsetStart = Math.round((s - segStart) / 86400000);
+    const offsetSpan = Math.round((e - s) / 86400000) + 1;
+    const isLeftEdge = offsetStart === 0, isRightEdge = (offsetStart + offsetSpan) === span;
+    const mask = document.createElement('div');
+    mask.className = 'timeoff-overlay-mask';
+    mask.style.left = `${(offsetStart / span) * 100}%`;
+    mask.style.width = `${(offsetSpan / span) * 100}%`;
+    mask.style.borderRadius = `${isLeftEdge ? 4 : 0}px ${isRightEdge ? 4 : 0}px ${isRightEdge ? 4 : 0}px ${isLeftEdge ? 4 : 0}px`;
+    bar.appendChild(mask);
+  });
+}
 
 let anchorDateISO = null;
 function getDefaultDate() { if (anchorDateISO) return anchorDateISO; if (state.start) return state.start; return toISO(new Date()); }
@@ -1080,10 +1112,6 @@ function bindDayCellEvents(cell, day) {
 }
 
 function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
-  if (!ev.isTimeOff) {
-    const evS = fromISO(ev.start), evE = fromISO(ev.end);
-    if (state.events.some(o => o.isTimeOff && rangesOverlap(evS, evE, fromISO(o.start), fromISO(o.end)))) bar.classList.add('is-timeoff-overlap');
-  }
   if (window.__selectedEventIds.has(ev.id)) bar.classList.add('is-selected');
   if (!window.__isReadOnly && state.viewMode !== 'overview' && !isCoarsePointer()) {
     const rLeft = document.createElement('div'); rLeft.className = 'resize-handle left'; const rRight = document.createElement('div'); rRight.className = 'resize-handle right';
@@ -1419,7 +1447,8 @@ function renderVerticalCalendar() {
       bar.appendChild(labelContainer);
 
       const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
-      
+      appendTimeOffOverlays(bar, segStart, span, timeOffEvents);
+
       const rectWidth = (cal.clientWidth - sidebarW) * (span / daysToShow);
       bindEventBarEvents(bar, ev, rectWidth / span, segStart);
       layer.appendChild(bar);
@@ -1705,7 +1734,8 @@ function renderHorizontalCalendar() {
     if (fromISO(ev.start) < days[0]) bar.classList.add('continues-left'); if (fromISO(ev.end) > days[days.length-1]) bar.classList.add('continues-right');
     
     const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
-    
+    appendTimeOffOverlays(bar, days[startIdx], span, timeOffEvents);
+
     bindEventBarEvents(bar, ev, dayWidth, days[startIdx]);
     layer.appendChild(bar);
   });
@@ -1834,7 +1864,7 @@ function renderOverviewCalendar() {
             const isSingle = ev.start === ev.end;
             const bar = document.createElement('div');
             bar.className = 'event-bar ov-phase' + (isSingle ? ' ov-single-day' : '');
-            if (timeOffEvents.some(to => rangesOverlap(fromISO(ev.start), fromISO(ev.end), fromISO(to.start), fromISO(to.end)))) bar.classList.add('is-timeoff-overlap');
+            appendTimeOffOverlays(bar, eStart, actualSpan, timeOffEvents);
             bar.dataset.id = ev.id; bar.dataset.color = ev.color;
             
             const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
