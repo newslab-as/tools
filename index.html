@@ -359,6 +359,23 @@ body.can-edit .kctrls{display:flex}
 .kanban-add-board{display:none;margin-top:4px}
 body.can-edit .kanban-add-board{display:flex}
 
+/* ---------- Doug's Desk ---------- */
+.dd-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+.dd-col{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:14px}
+.dd-col-head{color:var(--muted);margin-bottom:10px}
+.dd-row{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.dd-row:last-child{border-bottom:none}
+.dd-time{font-family:var(--mono);font-size:11px;color:var(--faint);flex:0 0 auto}
+.dd-text{flex:1 1 auto;line-height:1.4}
+.dd-source{font-family:var(--mono);font-size:10px;color:var(--faint);flex:0 0 auto}
+.dd-empty{font-size:13px;color:var(--faint);padding:4px 0}
+.dd-stale{
+  background:var(--note);border:1px solid var(--note-line);border-radius:var(--radius);
+  padding:8px 12px;margin-bottom:12px;font-size:12px;font-family:var(--mono);
+}
+.dd-foot{margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--faint);text-align:right}
+@media (max-width:700px){ .dd-cols{grid-template-columns:1fr} }
+
 /* ---------- feedback button ---------- */
 .feedback-btn{
   position:fixed;right:20px;bottom:20px;z-index:70;
@@ -435,6 +452,15 @@ body.can-edit .kanban-add-board{display:flex}
   </div>
 
   <div id="noticeSlot"></div>
+
+  <!-- DOUG'S DESK — only ever populated/shown for doug@newslab.no; hidden (not just empty) for everyone else -->
+  <section class="section dd-section" id="dougsDeskSection" hidden>
+    <div class="section-head">
+      <h2 id="ddTitle">Doug's Desk</h2>
+      <span class="desc" id="ddDesc">Today's brief</span>
+    </div>
+    <div id="dougsDeskBody"></div>
+  </section>
 
   <!-- AGENCY -->
   <section class="section" id="agencySection">
@@ -598,7 +624,7 @@ const store = (() => {
     del(k){ try { ok ? localStorage.removeItem(k) : delete mem[k]; } catch(e){ delete mem[k]; } }
   };
 })();
-const K = { personal:"nl_hub_personal", prefs:"nl_hub_prefs", usage:"nl_hub_usage" };
+const K = { personal:"nl_hub_personal", prefs:"nl_hub_prefs", usage:"nl_hub_usage", dougsDesk:"nl_hub_dougs_desk" };
 
 /* ---------- state ---------- */
 const state = {
@@ -613,7 +639,12 @@ const state = {
   kanbanOpen: false,
   lang: "en",
   signedIn: false,
-  syncStatus: "idle" // "idle" | "syncing" | "error" — surfaced so a failed write is never silently lost
+  syncStatus: "idle", // "idle" | "syncing" | "error" — surfaced so a failed write is never silently lost
+  isDoug: false,
+  dougsDeskConfig: null, // { driveFileId } from config.json — static, not part of the synced agency doc
+  dougsDesk: null,       // last-loaded { date, meetings, action_items, needs_reply }
+  dougsDeskFetchedAt: null,
+  dougsDeskStale: false
 };
 
 /* ---------- i18n ---------- */
@@ -658,7 +689,12 @@ const STRINGS = {
     tileBadgeSoon:"Soon", btnEditTitle:"Edit",
     newBoard:"New board", untitledBoard:"Untitled board", deleteBoardTitle:"Delete board", removeCardTitle:"Remove", addCardTitle:"Add card",
     authGateTitle:"Sign in to sync", authGateBody:"Sign in with your @newslab.no Google account to view and use the tools hub.",
-    authGateBtn:"Sign in with Google"
+    authGateBtn:"Sign in with Google",
+    ddTitle:"Doug's Desk", ddDesc:"Today's brief",
+    ddMeetings:"Notable meetings", ddActions:"Action items", ddReplies:"Needs a reply",
+    ddNoMeetings:"Nothing notable today.", ddNoActions:"Nothing outstanding.", ddNoReplies:"All caught up.",
+    ddClientBadge:"Client", ddEmptyTitle:"No brief yet", ddEmptyBody:"The daily brief hasn't run yet.",
+    ddStale:"⚠ Couldn't refresh — showing the last successful brief.", ddLastRefreshed:"Last refreshed"
   },
   no: {
     searchPlaceholder:"Søk i verktøy…", toggleTheme:"Bytt tema",
@@ -700,7 +736,12 @@ const STRINGS = {
     tileBadgeSoon:"Snart", btnEditTitle:"Rediger",
     newBoard:"Ny tavle", untitledBoard:"Uten navn", deleteBoardTitle:"Slett tavle", removeCardTitle:"Fjern", addCardTitle:"Legg til kort",
     authGateTitle:"Logg inn for å synkronisere", authGateBody:"Logg inn med din @newslab.no Google-konto for å se og bruke verktøyhuben.",
-    authGateBtn:"Logg inn med Google"
+    authGateBtn:"Logg inn med Google",
+    ddTitle:"Dougs skrivebord", ddDesc:"Dagens sammendrag",
+    ddMeetings:"Viktige møter", ddActions:"Oppgaver", ddReplies:"Trenger svar",
+    ddNoMeetings:"Ingenting spesielt i dag.", ddNoActions:"Ingenting utestående.", ddNoReplies:"Alt er unnagjort.",
+    ddClientBadge:"Kunde", ddEmptyTitle:"Ingen sammendrag ennå", ddEmptyBody:"Det daglige sammendraget har ikke kjørt ennå.",
+    ddStale:"⚠ Kunne ikke oppdatere — viser siste vellykkede sammendrag.", ddLastRefreshed:"Sist oppdatert"
   }
 };
 function tr(key){ return (STRINGS[state.lang] || STRINGS.en)[key] ?? STRINGS.en[key] ?? key; }
@@ -759,6 +800,7 @@ async function boot(){
     if(res.ok){
       const cfg = await res.json();
       state.base = normaliseConfig(cfg);
+      if(cfg.dougsDesk && cfg.dougsDesk.driveFileId) state.dougsDeskConfig = cfg.dougsDesk;
     }
   }catch(e){ /* no config.json — fine, use embedded default */ }
   state.config = JSON.parse(JSON.stringify(state.base));
@@ -766,6 +808,13 @@ async function boot(){
   // personal + usage
   try{ state.personal = JSON.parse(store.get(K.personal) || "[]"); }catch(e){ state.personal = []; }
   try{ state.usage = JSON.parse(store.get(K.usage) || "{}"); }catch(e){ state.usage = {}; }
+
+  // Doug's Desk: show the last cached brief immediately (if any) while we wait
+  // to know whether the signed-in user is Doug and can fetch a fresh one.
+  try{
+    const cached = JSON.parse(store.get(K.dougsDesk) || "null");
+    if(cached && cached.data){ state.dougsDesk = cached.data; state.dougsDeskFetchedAt = cached.fetchedAt || null; }
+  }catch(e){ /* ignore corrupt cache */ }
 
   $("#tagline").textContent = state.config.meta.tagline || "tools";
   render();
@@ -786,6 +835,71 @@ function normaliseConfig(cfg){
     .filter(card=>boardIds.has(card.boardId))
     .map(card=>({id:card.id||uid(), boardId:card.boardId, col:validCols.has(card.col)?card.col:"ideas", text:card.text||"", createdAt:card.createdAt||0}));
   return c;
+}
+
+/* ---------- Doug's Desk ---------- */
+// Same public read mechanism already shipped in production-planner/index.html:
+// Drive API v3 files.get + alt=media, authenticated by this same public API
+// key (not a new exposure — it's already live in that file today). Requires
+// the target file's sharing to be set to "anyone with the link can view".
+const GOOGLE_API_KEY = 'AIzaSyBrUd4L-IfFrfULoWYo8_d4cQEDIi6ir-I';
+
+async function loadDougsDesk(){
+  if(!state.isDoug || !state.dougsDeskConfig) return;
+  try{
+    const url = 'https://www.googleapis.com/drive/v3/files/' +
+      encodeURIComponent(state.dougsDeskConfig.driveFileId) + '?alt=media&key=' + GOOGLE_API_KEY + '&supportsAllDrives=true';
+    const res = await fetch(url, {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const data = await res.json();
+    state.dougsDesk = data;
+    state.dougsDeskFetchedAt = Date.now();
+    state.dougsDeskStale = false;
+    store.set(K.dougsDesk, JSON.stringify({ data, fetchedAt: state.dougsDeskFetchedAt }));
+  }catch(e){
+    console.warn("[hub] Doug's Desk fetch failed, falling back to cache:", e.message);
+    state.dougsDeskStale = !!state.dougsDesk; // only "stale" if we actually have something cached to show
+  }
+  render();
+}
+
+function dougsDeskHTML(){
+  const d = state.dougsDesk;
+  if(!d){
+    return `<div class="empty"><b>${esc(tr("ddEmptyTitle"))}</b>${esc(tr("ddEmptyBody"))}</div>`;
+  }
+  const meetings = (d.meetings||[]).map(m => `<div class="dd-row">
+      <span class="dd-time">${esc(m.time||"")}</span>
+      <span class="dd-text">${esc(m.title||"")}</span>
+      ${m.client ? `<span class="badge">${esc(tr("ddClientBadge"))}</span>` : ""}
+    </div>`).join("") || `<div class="dd-empty">${esc(tr("ddNoMeetings"))}</div>`;
+  const actions = (d.action_items||[]).map(a => `<div class="dd-row"><span class="dd-text">${esc(a)}</span></div>`).join("")
+    || `<div class="dd-empty">${esc(tr("ddNoActions"))}</div>`;
+  const replies = (d.needs_reply||[]).map(r => `<div class="dd-row">
+      <span class="dd-text"><b>${esc(r.from||"")}</b> — ${esc(r.summary||"")}</span>
+      <span class="dd-source">${esc((r.source||"").toUpperCase())}</span>
+    </div>`).join("") || `<div class="dd-empty">${esc(tr("ddNoReplies"))}</div>`;
+
+  const staleNote = state.dougsDeskStale
+    ? `<div class="dd-stale">${esc(tr("ddStale"))}</div>` : "";
+  const refreshedNote = state.dougsDeskFetchedAt
+    ? `<span class="dd-refreshed">${esc(tr("ddLastRefreshed"))} ${esc(new Date(state.dougsDeskFetchedAt).toLocaleString(state.lang==="no"?"nb-NO":"en-GB",{dateStyle:"short",timeStyle:"short"}))}</span>` : "";
+
+  return `${staleNote}
+    <div class="dd-cols">
+      <div class="dd-col"><div class="dd-col-head mono-label">${esc(tr("ddMeetings"))}</div>${meetings}</div>
+      <div class="dd-col"><div class="dd-col-head mono-label">${esc(tr("ddActions"))}</div>${actions}</div>
+      <div class="dd-col"><div class="dd-col-head mono-label">${esc(tr("ddReplies"))}</div>${replies}</div>
+    </div>
+    <div class="dd-foot">${refreshedNote}</div>`;
+}
+
+function renderDougsDesk(){
+  const section = $("#dougsDeskSection");
+  if(!section) return;
+  if(!state.isDoug){ section.hidden = true; return; }
+  section.hidden = false;
+  $("#dougsDeskBody").innerHTML = dougsDeskHTML();
 }
 
 /* ---------- persistence ---------- */
@@ -811,6 +925,7 @@ function render(){
   statusEl.classList.toggle("error", state.syncStatus === "error");
   statusEl.textContent = state.syncStatus === "syncing" ? tr("syncingLabel")
     : state.syncStatus === "error" ? tr("syncErrorLabel") : "";
+  renderDougsDesk();
   renderNotice();
   renderChips();
   renderGrid("agency");
@@ -1154,6 +1269,8 @@ function applyI18n(){
   $("#catBtn").textContent = tr("categoriesBtn");
   $("#agencySection h2").textContent = tr("agencyTitle");
   $("#agencySection .desc").textContent = tr("agencyDesc");
+  $("#ddTitle").textContent = tr("ddTitle");
+  $("#ddDesc").textContent = tr("ddDesc");
   $("#personalSection h2").textContent = tr("personalTitle");
   $("#kanbanToggle h2").textContent = tr("kanbanTitle");
   $("#kanbanToggle .desc").textContent = tr("kanbanDesc");
@@ -1411,11 +1528,14 @@ onAuthStateChanged(auth, async user => {
   currentEmail = currentUser ? email : null;
   if(user && !currentUser){ toast(tr("toastWrongDomain")); signOut(auth); return; }
   state.signedIn = !!currentUser;
+  const wasDoug = state.isDoug;
+  state.isDoug = !!currentEmail && currentEmail.toLowerCase() === "doug@newslab.no";
   updateAuthUI(currentUser, currentEmail);
   updateGateVisibility();
   if(currentUser){ seedAgencyIfMissing(); listenPersonal(currentUser.uid); }
   else { stopPersonalSync(); }
   render();
+  if(state.isDoug && !wasDoug) loadDougsDesk();
 });
 
 $("#authBtn").addEventListener("click", async () => {
