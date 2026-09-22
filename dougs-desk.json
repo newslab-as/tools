@@ -1,6 +1,16 @@
 {
   "date": "2026-09-22",
-  "meetings": [],
-  "action_items": [],
-  "needs_reply": []
+  "meetings": [
+    { "time": "11:00", "title": "AHO rekrutteringskampanje — Design Review", "client": true }
+  ],
+  "action_items": [
+    "Confirm with Jan Tore that today's UDIR Vetuva shoot at IKB (storebarn group) is going ahead as planned.",
+    "Reply to Lasse at Klink Studio now that you're back from leave.",
+    "Review and respond to Karoline's Figma comment on the Telenor Sikkerhetsrapport 2026 project.",
+    "Check salary info."
+  ],
+  "needs_reply": [
+    { "source": "gmail", "from": "lasse@klinkstudio.no", "summary": "Following up on collaboration now that Doug is back from leave." },
+    { "source": "gmail", "from": "Karoline (via Figma)", "summary": "Tagged Doug in a comment on the Telenor Sikkerhetsrapport 2026 project needing input." }
+  ]
 }
