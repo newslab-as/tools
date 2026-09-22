@@ -641,7 +641,6 @@ const state = {
   signedIn: false,
   syncStatus: "idle", // "idle" | "syncing" | "error" — surfaced so a failed write is never silently lost
   isDoug: false,
-  dougsDeskConfig: null, // { driveFileId } from config.json — static, not part of the synced agency doc
   dougsDesk: null,       // last-loaded { date, meetings, action_items, needs_reply }
   dougsDeskFetchedAt: null,
   dougsDeskStale: false
@@ -800,7 +799,6 @@ async function boot(){
     if(res.ok){
       const cfg = await res.json();
       state.base = normaliseConfig(cfg);
-      if(cfg.dougsDesk && cfg.dougsDesk.driveFileId) state.dougsDeskConfig = cfg.dougsDesk;
     }
   }catch(e){ /* no config.json — fine, use embedded default */ }
   state.config = JSON.parse(JSON.stringify(state.base));
@@ -838,18 +836,13 @@ function normaliseConfig(cfg){
 }
 
 /* ---------- Doug's Desk ---------- */
-// Same public read mechanism already shipped in production-planner/index.html:
-// Drive API v3 files.get + alt=media, authenticated by this same public API
-// key (not a new exposure — it's already live in that file today). Requires
-// the target file's sharing to be set to "anyone with the link can view".
-const GOOGLE_API_KEY = 'AIzaSyBrUd4L-IfFrfULoWYo8_d4cQEDIi6ir-I';
-
+// A Claude Routine pushes dougs-desk.json straight into this repo (see repo
+// README for the routine's prompt) — same-origin fetch, no external API,
+// no sharing permissions to manage. Matches how config.json is loaded.
 async function loadDougsDesk(){
-  if(!state.isDoug || !state.dougsDeskConfig) return;
+  if(!state.isDoug) return;
   try{
-    const url = 'https://www.googleapis.com/drive/v3/files/' +
-      encodeURIComponent(state.dougsDeskConfig.driveFileId) + '?alt=media&key=' + GOOGLE_API_KEY + '&supportsAllDrives=true';
-    const res = await fetch(url, {cache:"no-store"});
+    const res = await fetch("dougs-desk.json", {cache:"no-store"});
     if(!res.ok) throw new Error("HTTP "+res.status);
     const data = await res.json();
     state.dougsDesk = data;
