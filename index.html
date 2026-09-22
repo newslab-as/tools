@@ -376,6 +376,34 @@ body.can-edit .kanban-add-board{display:flex}
 .dd-foot{margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--faint);text-align:right}
 @media (max-width:700px){ .dd-cols{grid-template-columns:1fr} }
 
+/* ---------- split-pane layout (Doug only, wide screens) ---------- */
+.split-container{display:block}
+.split-divider{display:none}
+@media (min-width:1400px){
+  body.has-dd-split main.wrap{max-width:1600px}
+  body.has-dd-split .split-container{
+    display:flex;align-items:flex-start;gap:0;
+    --dd-pane-width:380px;
+  }
+  body.has-dd-split #dougsDeskSection{
+    flex:0 0 clamp(280px, var(--dd-pane-width), 800px);
+    width:clamp(280px, var(--dd-pane-width), 800px);
+    position:sticky;top:84px;max-height:calc(100vh - 104px);overflow:auto;
+  }
+  body.has-dd-split #dougsDeskSection .dd-cols{grid-template-columns:1fr}
+  body.has-dd-split .split-divider{
+    display:block;flex:0 0 auto;width:9px;margin:0 -4px;cursor:col-resize;
+    position:relative;align-self:stretch;
+  }
+  body.has-dd-split .split-divider::after{
+    content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;
+    background:var(--line);transform:translateX(-50%);
+  }
+  body.has-dd-split .split-divider:hover::after,
+  body.has-dd-split .split-divider.dragging::after{background:var(--ink)}
+  body.has-dd-split .right-pane{flex:1 1 auto;min-width:0}
+}
+
 /* ---------- feedback button ---------- */
 .feedback-btn{
   position:fixed;right:20px;bottom:20px;z-index:70;
@@ -443,65 +471,71 @@ body.can-edit .kanban-add-board{display:flex}
 </header>
 
 <main class="wrap" id="app">
-  <!-- edit-mode banner -->
-  <div class="editbar">
-    <span><b>Editing.</b> Personal changes save to this browser. Agency changes sync live for the whole team.</span>
-    <span class="sync-status" id="syncStatus"></span>
-    <span class="grow"></span>
-    <button class="pill agency-only" id="catBtn">Categories</button>
+  <div class="split-container" id="splitContainer">
+    <!-- DOUG'S DESK — only ever populated/shown for doug@newslab.no; hidden (not just empty) for everyone else -->
+    <section class="section dd-section" id="dougsDeskSection" hidden>
+      <div class="section-head">
+        <h2 id="ddTitle">Doug's Desk</h2>
+        <span class="desc" id="ddDesc">Today's brief</span>
+      </div>
+      <div id="dougsDeskBody"></div>
+    </section>
+
+    <div class="split-divider" id="splitDivider" hidden></div>
+
+    <div class="right-pane" id="rightPane">
+      <!-- edit-mode banner -->
+      <div class="editbar">
+        <span><b>Editing.</b> Personal changes save to this browser. Agency changes sync live for the whole team.</span>
+        <span class="sync-status" id="syncStatus"></span>
+        <span class="grow"></span>
+        <button class="pill agency-only" id="catBtn">Categories</button>
+      </div>
+
+      <div id="noticeSlot"></div>
+
+      <!-- AGENCY -->
+      <section class="section" id="agencySection">
+        <div class="section-head">
+          <h2>Agency tools</h2>
+          <span class="count" id="agencyCount"></span>
+          <span class="desc">Shared across the team</span>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div class="grid" id="agencyGrid"></div>
+      </section>
+
+      <!-- PERSONAL -->
+      <section class="section" id="personalSection">
+        <div class="section-head">
+          <h2>Your tools</h2>
+          <span class="count" id="personalCount"></span>
+          <span class="desc">Only on this device</span>
+        </div>
+        <div class="grid" id="personalGrid"></div>
+      </section>
+
+      <!-- KANBAN -->
+      <section class="section kanban" id="kanbanSection">
+        <div class="section-head kanban-head" id="kanbanToggle" role="button" tabindex="0" aria-expanded="false">
+          <h2>Tool Roadmap &amp; Requests</h2>
+          <span class="count" id="kanbanCount"></span>
+          <span class="desc">Ideas → In progress → Done</span>
+          <svg class="chev" id="kanbanChev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div class="kanban-body" id="kanbanBody" hidden>
+          <div class="kanban-boards" id="kanbanBoards"></div>
+          <button class="tile add kanban-add-board" id="addBoardBtn">＋ Add board</button>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span id="footMeta"></span>
+        <span class="grow"></span>
+        <span>tools.newslab.no</span>
+      </footer>
+    </div>
   </div>
-
-  <div id="noticeSlot"></div>
-
-  <!-- DOUG'S DESK — only ever populated/shown for doug@newslab.no; hidden (not just empty) for everyone else -->
-  <section class="section dd-section" id="dougsDeskSection" hidden>
-    <div class="section-head">
-      <h2 id="ddTitle">Doug's Desk</h2>
-      <span class="desc" id="ddDesc">Today's brief</span>
-    </div>
-    <div id="dougsDeskBody"></div>
-  </section>
-
-  <!-- AGENCY -->
-  <section class="section" id="agencySection">
-    <div class="section-head">
-      <h2>Agency tools</h2>
-      <span class="count" id="agencyCount"></span>
-      <span class="desc">Shared across the team</span>
-    </div>
-    <div class="chips" id="chips"></div>
-    <div class="grid" id="agencyGrid"></div>
-  </section>
-
-  <!-- PERSONAL -->
-  <section class="section" id="personalSection">
-    <div class="section-head">
-      <h2>Your tools</h2>
-      <span class="count" id="personalCount"></span>
-      <span class="desc">Only on this device</span>
-    </div>
-    <div class="grid" id="personalGrid"></div>
-  </section>
-
-  <!-- KANBAN -->
-  <section class="section kanban" id="kanbanSection">
-    <div class="section-head kanban-head" id="kanbanToggle" role="button" tabindex="0" aria-expanded="false">
-      <h2>Tool Roadmap &amp; Requests</h2>
-      <span class="count" id="kanbanCount"></span>
-      <span class="desc">Ideas → In progress → Done</span>
-      <svg class="chev" id="kanbanChev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-    </div>
-    <div class="kanban-body" id="kanbanBody" hidden>
-      <div class="kanban-boards" id="kanbanBoards"></div>
-      <button class="tile add kanban-add-board" id="addBoardBtn">＋ Add board</button>
-    </div>
-  </section>
-
-  <footer class="foot">
-    <span id="footMeta"></span>
-    <span class="grow"></span>
-    <span>tools.newslab.no</span>
-  </footer>
 </main>
 
 <a class="feedback-btn" href="mailto:tools@newslab.no?subject=Agency%20Hub%20Feedback" title="Send feedback" aria-label="Send feedback">
@@ -624,7 +658,7 @@ const store = (() => {
     del(k){ try { ok ? localStorage.removeItem(k) : delete mem[k]; } catch(e){ delete mem[k]; } }
   };
 })();
-const K = { personal:"nl_hub_personal", prefs:"nl_hub_prefs", usage:"nl_hub_usage", dougsDesk:"nl_hub_dougs_desk" };
+const K = { personal:"nl_hub_personal", prefs:"nl_hub_prefs", usage:"nl_hub_usage", dougsDesk:"nl_hub_dougs_desk", ddPaneWidth:"nl_hub_dd_pane_width" };
 
 /* ---------- state ---------- */
 const state = {
@@ -890,9 +924,46 @@ function dougsDeskHTML(){
 function renderDougsDesk(){
   const section = $("#dougsDeskSection");
   if(!section) return;
+  document.body.classList.toggle("has-dd-split", state.isDoug);
+  $("#splitDivider").hidden = !state.isDoug;
   if(!state.isDoug){ section.hidden = true; return; }
   section.hidden = false;
   $("#dougsDeskBody").innerHTML = dougsDeskHTML();
+}
+
+/* ---------- split-pane drag-to-resize (Doug only) ---------- */
+function applyDdPaneWidth(px){
+  $("#splitContainer").style.setProperty("--dd-pane-width", px + "px");
+}
+function initSplitDivider(){
+  const saved = parseInt(store.get(K.ddPaneWidth) || "", 10);
+  if(!isNaN(saved)) applyDdPaneWidth(saved);
+
+  const divider = $("#splitDivider");
+  const container = $("#splitContainer");
+  let dragging = false;
+
+  divider.addEventListener("pointerdown", e=>{
+    dragging = true;
+    divider.classList.add("dragging");
+    divider.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  divider.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    const rect = container.getBoundingClientRect();
+    const width = Math.round(Math.min(800, Math.max(280, e.clientX - rect.left)));
+    applyDdPaneWidth(width);
+  });
+  function endDrag(e){
+    if(!dragging) return;
+    dragging = false;
+    divider.classList.remove("dragging");
+    const width = parseInt(getComputedStyle(container).getPropertyValue("--dd-pane-width"), 10);
+    if(!isNaN(width)) store.set(K.ddPaneWidth, String(width));
+  }
+  divider.addEventListener("pointerup", endDrag);
+  divider.addEventListener("pointercancel", endDrag);
 }
 
 /* ---------- persistence ---------- */
@@ -1319,6 +1390,7 @@ $("#kanbanToggle").addEventListener("click", ()=> setKanbanOpen(!state.kanbanOpe
 $("#kanbanToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setKanbanOpen(!state.kanbanOpen); } });
 $("#addBoardBtn").addEventListener("click", addBoard);
 $("#langToggle").addEventListener("click", ()=> setLang(state.lang==="en"?"no":"en"));
+initSplitDivider();
 $("#langToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setLang(state.lang==="en"?"no":"en"); } });
 
 document.addEventListener("keydown", e=>{
