@@ -375,6 +375,11 @@ body.can-edit .kanban-add-board{display:flex}
 }
 .dd-foot{margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--faint);text-align:right}
 @media (max-width:700px){ .dd-cols{grid-template-columns:1fr} }
+.dd-checkable{cursor:pointer;align-items:flex-start}
+.dd-check{
+  flex:0 0 auto;width:14px;height:14px;margin:2px 0 0;accent-color:var(--ink);cursor:pointer;
+}
+.dd-checkable.dd-done{opacity:.55}
 
 /* ---------- split-pane layout (Doug only, wide screens) ---------- */
 .split-container{display:block}
@@ -659,7 +664,7 @@ const store = (() => {
     del(k){ try { ok ? localStorage.removeItem(k) : delete mem[k]; } catch(e){ delete mem[k]; } }
   };
 })();
-const K = { personal:"nl_hub_personal", prefs:"nl_hub_prefs", usage:"nl_hub_usage", dougsDesk:"nl_hub_dougs_desk", ddPaneWidth:"nl_hub_dd_pane_width" };
+const K = { personal:"nl_hub_personal", prefs:"nl_hub_prefs", usage:"nl_hub_usage", dougsDesk:"nl_hub_dougs_desk", ddPaneWidth:"nl_hub_dd_pane_width", ddDone:"nl_hub_dd_done" };
 
 /* ---------- state ---------- */
 const state = {
@@ -678,7 +683,8 @@ const state = {
   isDoug: false,
   dougsDesk: null,       // last-loaded { date, meetings, action_items, needs_reply }
   dougsDeskFetchedAt: null,
-  dougsDeskStale: false
+  dougsDeskStale: false,
+  dougsDeskDone: {}      // { "action:0": true, "reply:2": true, ... } — resets whenever the brief's date changes
 };
 
 /* ---------- i18n ---------- */
@@ -848,6 +854,7 @@ async function boot(){
     const cached = JSON.parse(store.get(K.dougsDesk) || "null");
     if(cached && cached.data){ state.dougsDesk = cached.data; state.dougsDeskFetchedAt = cached.fetchedAt || null; }
   }catch(e){ /* ignore corrupt cache */ }
+  if(state.dougsDesk) state.dougsDeskDone = loadDdDone(state.dougsDesk.date);
 
   $("#tagline").textContent = state.config.meta.tagline || "tools";
   render();
@@ -883,6 +890,7 @@ async function loadDougsDesk(){
     state.dougsDesk = data;
     state.dougsDeskFetchedAt = Date.now();
     state.dougsDeskStale = false;
+    state.dougsDeskDone = loadDdDone(data.date);
     store.set(K.dougsDesk, JSON.stringify({ data, fetchedAt: state.dougsDeskFetchedAt }));
   }catch(e){
     console.warn("[hub] Doug's Desk fetch failed, falling back to cache:", e.message);
@@ -901,12 +909,21 @@ function dougsDeskHTML(){
       <span class="dd-text">${esc(m.title||"")}</span>
       ${m.client ? `<span class="badge">${esc(tr("ddClientBadge"))}</span>` : ""}
     </div>`).join("") || `<div class="dd-empty">${esc(tr("ddNoMeetings"))}</div>`;
-  const actions = (d.action_items||[]).map(a => `<div class="dd-row"><span class="dd-text">${esc(a)}</span></div>`).join("")
-    || `<div class="dd-empty">${esc(tr("ddNoActions"))}</div>`;
-  const replies = (d.needs_reply||[]).map(r => `<div class="dd-row">
+  const actions = (d.action_items||[]).map((a,i) => {
+    const key = `action:${i}`, done = !!state.dougsDeskDone[key];
+    return `<label class="dd-row dd-checkable${done ? " dd-done" : ""}">
+      <input type="checkbox" class="dd-check" data-dd-key="${esc(key)}" ${done ? "checked" : ""}>
+      <span class="dd-text">${esc(a)}</span>
+    </label>`;
+  }).join("") || `<div class="dd-empty">${esc(tr("ddNoActions"))}</div>`;
+  const replies = (d.needs_reply||[]).map((r,i) => {
+    const key = `reply:${i}`, done = !!state.dougsDeskDone[key];
+    return `<label class="dd-row dd-checkable${done ? " dd-done" : ""}">
+      <input type="checkbox" class="dd-check" data-dd-key="${esc(key)}" ${done ? "checked" : ""}>
       <span class="dd-text"><b>${esc(r.from||"")}</b> — ${esc(r.summary||"")}</span>
       <span class="dd-source">${esc((r.source||"").toUpperCase())}</span>
-    </div>`).join("") || `<div class="dd-empty">${esc(tr("ddNoReplies"))}</div>`;
+    </label>`;
+  }).join("") || `<div class="dd-empty">${esc(tr("ddNoReplies"))}</div>`;
 
   const staleNote = state.dougsDeskStale
     ? `<div class="dd-stale">${esc(tr("ddStale"))}</div>` : "";
@@ -922,6 +939,23 @@ function dougsDeskHTML(){
     <div class="dd-foot">${refreshedNote}</div>`;
 }
 
+function loadDdDone(date){
+  try{
+    const saved = JSON.parse(store.get(K.ddDone) || "null");
+    if(saved && saved.date === date && saved.done) return saved.done;
+  }catch(e){ /* ignore corrupt cache */ }
+  return {};
+}
+function saveDdDone(){
+  if(!state.dougsDesk) return;
+  store.set(K.ddDone, JSON.stringify({ date: state.dougsDesk.date, done: state.dougsDeskDone }));
+}
+function toggleDdDone(key, checked){
+  if(checked) state.dougsDeskDone[key] = true;
+  else delete state.dougsDeskDone[key];
+  saveDdDone();
+}
+
 function renderDougsDesk(){
   const section = $("#dougsDeskSection");
   if(!section) return;
@@ -930,6 +964,12 @@ function renderDougsDesk(){
   if(!state.isDoug){ section.hidden = true; return; }
   section.hidden = false;
   $("#dougsDeskBody").innerHTML = dougsDeskHTML();
+  $$(".dd-check", $("#dougsDeskBody")).forEach(cb=>{
+    cb.addEventListener("change", ()=>{
+      toggleDdDone(cb.dataset.ddKey, cb.checked);
+      cb.closest(".dd-row").classList.toggle("dd-done", cb.checked);
+    });
+  });
 }
 
 /* ---------- split-pane drag-to-resize (Doug only) ---------- */
