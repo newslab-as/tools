@@ -482,8 +482,8 @@ body.can-edit .kanban-add-board{display:flex}
     <!-- DOUG'S DESK — only ever populated/shown for doug@newslab.no; hidden (not just empty) for everyone else -->
     <section class="section dd-section" id="dougsDeskSection" hidden>
       <div class="section-head">
-        <h2 id="ddTitle">Doug's Desk</h2>
-        <span class="desc" id="ddDesc">Today's brief</span>
+        <h2 id="ddTitle">Today's Brief</h2>
+        <span class="desc" id="ddDesc">Personal summary</span>
       </div>
       <div id="dougsDeskBody"></div>
     </section>
@@ -629,11 +629,11 @@ const DEFAULT_CONFIG = {
   meta: { agencyName: "NewsLab", tagline: "tools", version: 1 },
   notice: "",
   categories: [
-    { id:"tools",     label:"Tools",     color:"#d99587" },
-    { id:"design",    label:"Design",    color:"#b0a3d4" },
-    { id:"files",     label:"Files",     color:"#b8d99e" },
-    { id:"resources", label:"Resources", color:"#d9c876" },
-    { id:"admin",     label:"Admin",     color:"#dcb392" }
+    { id:"tools",     label:"Tools",     color:"#d48a7c" },
+    { id:"design",    label:"Design",    color:"#a799ce" },
+    { id:"files",     label:"Files",     color:"#afd494" },
+    { id:"resources", label:"Resources", color:"#d4c16b" },
+    { id:"admin",     label:"Admin",     color:"#d7aa87" }
   ],
   agency: [
     { id:"prod-planner", name:"Production Planner", url:"https://tools.newslab.no/production-planner",
@@ -731,7 +731,7 @@ const STRINGS = {
     newBoard:"New board", untitledBoard:"Untitled board", deleteBoardTitle:"Delete board", removeCardTitle:"Remove", addCardTitle:"Add card",
     authGateTitle:"Sign in to sync", authGateBody:"Sign in with your @newslab.no Google account to view and use the tools hub.",
     authGateBtn:"Sign in with Google",
-    ddTitle:"Doug's Desk", ddDesc:"Today's brief",
+    ddTitle:"Today's Brief", ddDesc:"Personal summary",
     ddMeetings:"Notable meetings", ddActions:"Action items", ddReplies:"Needs a reply",
     ddNoMeetings:"Nothing notable today.", ddNoActions:"Nothing outstanding.", ddNoReplies:"All caught up.",
     ddClientBadge:"Client", ddEmptyTitle:"No brief yet", ddEmptyBody:"The daily brief hasn't run yet.",
@@ -778,7 +778,7 @@ const STRINGS = {
     newBoard:"Ny tavle", untitledBoard:"Uten navn", deleteBoardTitle:"Slett tavle", removeCardTitle:"Fjern", addCardTitle:"Legg til kort",
     authGateTitle:"Logg inn for å synkronisere", authGateBody:"Logg inn med din @newslab.no Google-konto for å se og bruke verktøyhuben.",
     authGateBtn:"Logg inn med Google",
-    ddTitle:"Dougs skrivebord", ddDesc:"Dagens sammendrag",
+    ddTitle:"Dagens sammendrag", ddDesc:"Personlig sammendrag",
     ddMeetings:"Viktige møter", ddActions:"Oppgaver", ddReplies:"Trenger svar",
     ddNoMeetings:"Ingenting spesielt i dag.", ddNoActions:"Ingenting utestående.", ddNoReplies:"Alt er unnagjort.",
     ddClientBadge:"Kunde", ddEmptyTitle:"Ingen sammendrag ennå", ddEmptyBody:"Det daglige sammendraget har ikke kjørt ennå.",
@@ -908,7 +908,7 @@ function dougsDeskHTML(){
   const meetings = (d.meetings||[]).map(m => `<div class="dd-row">
       <span class="dd-time">${esc(m.time||"")}</span>
       <span class="dd-text">${esc(m.title||"")}</span>
-      ${m.client ? `<span class="badge">${esc(tr("ddClientBadge"))}</span>` : ""}
+      ${m.client ? `<span class="dd-source">${esc(tr("ddClientBadge"))}</span>` : ""}
     </div>`).join("") || `<div class="dd-empty">${esc(tr("ddNoMeetings"))}</div>`;
   const actions = (d.action_items||[]).map((a,i) => {
     const key = `action:${i}`, done = !!state.dougsDeskDone[key];

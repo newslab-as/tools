@@ -2,11 +2,11 @@
   "meta": { "agencyName": "NewsLab", "tagline": "tools", "version": 1 },
   "notice": "",
   "categories": [
-    { "id": "tools",     "label": "Tools",     "color": "#d99587" },
-    { "id": "design",    "label": "Design",    "color": "#b0a3d4" },
-    { "id": "files",     "label": "Files",     "color": "#b8d99e" },
-    { "id": "resources", "label": "Resources", "color": "#d9c876" },
-    { "id": "admin",     "label": "Admin",     "color": "#dcb392" }
+    { "id": "tools",     "label": "Tools",     "color": "#d48a7c" },
+    { "id": "design",    "label": "Design",    "color": "#a799ce" },
+    { "id": "files",     "label": "Files",     "color": "#afd494" },
+    { "id": "resources", "label": "Resources", "color": "#d4c16b" },
+    { "id": "admin",     "label": "Admin",     "color": "#d7aa87" }
   ],
   "agency": [
     { "id": "prod-planner", "name": "Production Planner", "url": "https://tools.newslab.no/production-planner",
