@@ -1,16 +1,20 @@
 {
-  "date": "2026-09-22",
+  "date": "2026-09-23",
   "meetings": [
-    { "time": "11:00", "title": "AHO rekrutteringskampanje — Design Review", "client": true }
+    { "time": "13:00", "title": "Redaksjon interne kanaler", "client": false },
+    { "time": "14:30", "title": "Mikael / Doug", "client": false }
   ],
   "action_items": [
-    "Confirm with Jan Tore that today's UDIR Vetuva shoot at IKB (storebarn group) is going ahead as planned.",
-    "Reply to Lasse at Klink Studio now that you're back from leave.",
-    "Review and respond to Karoline's Figma comment on the Telenor Sikkerhetsrapport 2026 project.",
-    "Check salary info."
+    "Check salary info.",
+    "Reply to Sofia at Holzweiler with answers on the model mix and tether/upload workflow ahead of today's shoot.",
+    "Answer Linn's Figma comment on the Holzweiler 'Until Next Summer' deck about including Fanny and Ruben in a shot.",
+    "Respond to Karoline's Figma comment on the Telenor Sikkerhetsrapport 2026 chapter illustration selection.",
+    "Send Frode a short reply now that he's confirmed his availability for the UDIR illustration work."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "lasse@klinkstudio.no", "summary": "Following up on collaboration now that Doug is back from leave." },
-    { "source": "gmail", "from": "Karoline (via Figma)", "summary": "Tagged Doug in a comment on the Telenor Sikkerhetsrapport 2026 project needing input." }
+    { "source": "gmail", "from": "sofia.borisova@holzweiler.no", "summary": "Asked how to split shots between both models vs. each alone, and whether dropping tether/live upload during the shoot is okay." },
+    { "source": "gmail", "from": "frode@hjemmekontoret.no", "summary": "Confirmed he's available for the UDIR illustration work and is looking forward to it." },
+    { "source": "slack", "from": "Karoline (via Figma)", "summary": "Tagged Doug with a chapter illustration selection on the Telenor Sikkerhetsrapport 2026 project needing input." },
+    { "source": "slack", "from": "Linn Isaksen (via Figma)", "summary": "Tagged Doug asking whether Fanny and Ruben should be in a specific Holzweiler shot idea." }
   ]
 }
