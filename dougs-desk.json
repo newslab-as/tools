@@ -1,20 +1,12 @@
 {
-  "date": "2026-09-23",
+  "date": "2026-09-24",
   "meetings": [
-    { "time": "13:00", "title": "Redaksjon interne kanaler", "client": false },
-    { "time": "14:30", "title": "Mikael / Doug", "client": false }
+    { "time": "10:00", "title": "30 under 30", "client": false },
+    { "time": "11:00", "title": "Mikael / Doug", "client": false },
+    { "time": "13:30", "title": "Workshop konsept til lesekampanje", "client": true }
   ],
   "action_items": [
-    "Check salary info.",
-    "Reply to Sofia at Holzweiler with answers on the model mix and tether/upload workflow ahead of today's shoot.",
-    "Answer Linn's Figma comment on the Holzweiler 'Until Next Summer' deck about including Fanny and Ruben in a shot.",
-    "Respond to Karoline's Figma comment on the Telenor Sikkerhetsrapport 2026 chapter illustration selection.",
-    "Send Frode a short reply now that he's confirmed his availability for the UDIR illustration work."
+    "Write up a photo guide (format, style, lighting, background) for Snorre to give the 30 Under 30 nominees tomorrow."
   ],
-  "needs_reply": [
-    { "source": "gmail", "from": "sofia.borisova@holzweiler.no", "summary": "Asked how to split shots between both models vs. each alone, and whether dropping tether/live upload during the shoot is okay." },
-    { "source": "gmail", "from": "frode@hjemmekontoret.no", "summary": "Confirmed he's available for the UDIR illustration work and is looking forward to it." },
-    { "source": "slack", "from": "Karoline (via Figma)", "summary": "Tagged Doug with a chapter illustration selection on the Telenor Sikkerhetsrapport 2026 project needing input." },
-    { "source": "slack", "from": "Linn Isaksen (via Figma)", "summary": "Tagged Doug asking whether Fanny and Ruben should be in a specific Holzweiler shot idea." }
-  ]
+  "needs_reply": []
 }
