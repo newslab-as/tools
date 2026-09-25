@@ -1,12 +1,17 @@
 {
-  "date": "2026-09-24",
+  "date": "2026-09-25",
   "meetings": [
-    { "time": "10:00", "title": "30 under 30", "client": false },
-    { "time": "11:00", "title": "Mikael / Doug", "client": false },
-    { "time": "13:30", "title": "Workshop konsept til lesekampanje", "client": true }
+    { "time": "09:30", "title": "Check salary info", "client": false },
+    { "time": "10:00", "title": "FIMBUL", "client": false },
+    { "time": "11:00", "title": "FF: Forespørsel om kampanje", "client": false },
+    { "time": "13:00", "title": "Design dept challenge", "client": false },
+    { "time": "14:00", "title": "Redaksjon interne kanaler", "client": false }
   ],
   "action_items": [
-    "Write up a photo guide (format, style, lighting, background) for Snorre to give the 30 Under 30 nominees tomorrow."
+    "Update the down-education campaign budget for the two-actor concept once Holzweiler confirms the actor fee and Ida confirms the external studio cost."
   ],
-  "needs_reply": []
+  "needs_reply": [
+    { "source": "gmail", "from": "Karoline (Figma comments)", "summary": "Left 4 new comments on the Telenor Sikkerhetsrapport 2026 file that need review." },
+    { "source": "gmail", "from": "Nils (Figma comments)", "summary": "Left 4 new comments on the Nasjonalt senter for yrkesfag file that need review." }
+  ]
 }
