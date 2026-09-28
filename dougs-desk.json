@@ -1,17 +1,18 @@
 {
-  "date": "2026-09-25",
+  "date": "2026-09-28",
   "meetings": [
-    { "time": "09:30", "title": "Check salary info", "client": false },
-    { "time": "10:00", "title": "FIMBUL", "client": false },
-    { "time": "11:00", "title": "FF: Forespørsel om kampanje", "client": false },
-    { "time": "13:00", "title": "Design dept challenge", "client": false },
-    { "time": "14:00", "title": "Redaksjon interne kanaler", "client": false }
+    { "time": "09:15", "title": "Internpolitisk kvarter (fhv. Akkurat nå! fhv. Hammertime)", "client": false },
+    { "time": "09:30", "title": "Budget and plan for props for Holzweiler", "client": false },
+    { "time": "09:30", "title": "Teamledermøte", "client": false },
+    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
+    { "time": "11:00", "title": "Design Dept — Ukentlig møte", "client": false },
+    { "time": "12:00", "title": "Smuss og NL om samarbeidet om NB videre", "client": true },
+    { "time": "13:00", "title": "Lunch", "client": false },
+    { "time": "13:00", "title": "Ukentlig status lesekampanje", "client": false },
+    { "time": "14:00", "title": "Timeline for Forskerforbundet", "client": false }
   ],
   "action_items": [
-    "Update the down-education campaign budget for the two-actor concept once Holzweiler confirms the actor fee and Ida confirms the external studio cost."
+    "Finalize the Down Education actor budget once Holzweiler confirms the model (Marie vs. Gard Løkke) and the external studio cost is confirmed."
   ],
-  "needs_reply": [
-    { "source": "gmail", "from": "Karoline (Figma comments)", "summary": "Left 4 new comments on the Telenor Sikkerhetsrapport 2026 file that need review." },
-    { "source": "gmail", "from": "Nils (Figma comments)", "summary": "Left 4 new comments on the Nasjonalt senter for yrkesfag file that need review." }
-  ]
+  "needs_reply": []
 }
