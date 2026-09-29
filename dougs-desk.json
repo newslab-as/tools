@@ -1,18 +1,24 @@
 {
-  "date": "2026-09-28",
+  "date": "2026-09-29",
   "meetings": [
-    { "time": "09:15", "title": "Internpolitisk kvarter (fhv. Akkurat nå! fhv. Hammertime)", "client": false },
-    { "time": "09:30", "title": "Budget and plan for props for Holzweiler", "client": false },
-    { "time": "09:30", "title": "Teamledermøte", "client": false },
-    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
-    { "time": "11:00", "title": "Design Dept — Ukentlig møte", "client": false },
-    { "time": "12:00", "title": "Smuss og NL om samarbeidet om NB videre", "client": true },
-    { "time": "13:00", "title": "Lunch", "client": false },
-    { "time": "13:00", "title": "Ukentlig status lesekampanje", "client": false },
-    { "time": "14:00", "title": "Timeline for Forskerforbundet", "client": false }
+    { "time": "08:30", "title": "Email Holz about VO accent + information cards", "client": false },
+    { "time": "09:00", "title": "Check Arendal anbud", "client": false },
+    { "time": "09:30", "title": "Holzweiler Script + Shotlist", "client": false },
+    { "time": "10:30", "title": "Arendal anbud chat", "client": false },
+    { "time": "11:00", "title": "Meeting with Meghna", "client": false },
+    { "time": "12:15", "title": "Lunch", "client": false },
+    { "time": "12:15", "title": "Oliver appointment", "client": false },
+    { "time": "14:00", "title": "UDIR image selection", "client": false },
+    { "time": "14:15", "title": "Book in UDIR illustrator", "client": false },
+    { "time": "15:00", "title": "NSY identit — Ukentlig møte", "client": false },
+    { "time": "15:30", "title": "Design Dept Meeting", "client": false },
+    { "time": "15:30", "title": "Ideas for Leselyst", "client": false }
   ],
   "action_items": [
-    "Finalize the Down Education actor budget once Holzweiler confirms the model (Marie vs. Gard Løkke) and the external studio cost is confirmed."
+    "Email Holzweiler about the VO accent and information cards.",
+    "Confirm the Down Education shoot at Oslo fotostudio (Schweigaards gate 34b) and drop-off logistics for 30 September."
   ],
-  "needs_reply": []
+  "needs_reply": [
+    { "source": "gmail", "from": "Caroline Fjellbu (Holzweiler)", "summary": "Asks how much styling/HMU time is needed per model for the Down Education shoot (she suggests 20 min for the male model and 40 min for the female model)." }
+  ]
 }
