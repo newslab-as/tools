@@ -1,24 +1,21 @@
 {
-  "date": "2026-09-29",
+  "date": "2026-09-30",
   "meetings": [
-    { "time": "08:30", "title": "Email Holz about VO accent + information cards", "client": false },
-    { "time": "09:00", "title": "Check Arendal anbud", "client": false },
-    { "time": "09:30", "title": "Holzweiler Script + Shotlist", "client": false },
-    { "time": "10:30", "title": "Arendal anbud chat", "client": false },
-    { "time": "11:00", "title": "Meeting with Meghna", "client": false },
-    { "time": "12:15", "title": "Lunch", "client": false },
-    { "time": "12:15", "title": "Oliver appointment", "client": false },
-    { "time": "14:00", "title": "UDIR image selection", "client": false },
-    { "time": "14:15", "title": "Book in UDIR illustrator", "client": false },
-    { "time": "15:00", "title": "NSY identit — Ukentlig møte", "client": false },
-    { "time": "15:30", "title": "Design Dept Meeting", "client": false },
-    { "time": "15:30", "title": "Ideas for Leselyst", "client": false }
+    { "time": "08:00", "title": "Opptak Down education (Holzweiler studio shoot)", "client": false },
+    { "time": "10:00", "title": "Lesekampanje – ideer!", "client": false },
+    { "time": "11:30", "title": "Book in UDIR illustrator", "client": false },
+    { "time": "12:00", "title": "Telenor Sikkerhetsrapport Meeting", "client": false },
+    { "time": "12:00", "title": "Status (Telenor)", "client": true },
+    { "time": "12:00", "title": "Lunch", "client": false },
+    { "time": "16:00", "title": "Intern premiere: Vi ser på Halfdan 2 i Red Hook", "client": false }
   ],
   "action_items": [
-    "Email Holzweiler about the VO accent and information cards.",
-    "Confirm the Down Education shoot at Oslo fotostudio (Schweigaards gate 34b) and drop-off logistics for 30 September."
+    "Run the Down Education shoot at Oslo fotostudio (Schweigaards gate 34b) with the Holzweiler team.",
+    "Book the UDIR illustrator (Frode) and share finished edits of Kristin's chosen yrkesfag selects with UDIR.",
+    "Prepare for the 12:00 Telenor Sikkerhetsrapport status meeting, incl. Snorre's question about whether King Harald still opens the foreword."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Caroline Fjellbu (Holzweiler)", "summary": "Asks how much styling/HMU time is needed per model for the Down Education shoot (she suggests 20 min for the male model and 40 min for the female model)." }
+    { "source": "slack", "from": "Adam Enochsson", "summary": "Can't find his tripod head plate and thinks there may be a tripod at the studio." },
+    { "source": "gmail", "from": "Snorre Bryne", "summary": "Asks whether King Harald still writes the foreword (Telenor report) and has collected other open questions in a doc." }
   ]
 }
