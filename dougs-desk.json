@@ -1,21 +1,24 @@
 {
-  "date": "2026-09-30",
+  "date": "2026-10-01",
   "meetings": [
-    { "time": "08:00", "title": "Opptak Down education (Holzweiler studio shoot)", "client": false },
-    { "time": "10:00", "title": "Lesekampanje – ideer!", "client": false },
+    { "time": "09:30", "title": "Summary of the month", "client": false },
+    { "time": "10:30", "title": "Design Dept Meeting", "client": false },
     { "time": "11:30", "title": "Book in UDIR illustrator", "client": false },
-    { "time": "12:00", "title": "Telenor Sikkerhetsrapport Meeting", "client": false },
-    { "time": "12:00", "title": "Status (Telenor)", "client": true },
-    { "time": "12:00", "title": "Lunch", "client": false },
-    { "time": "16:00", "title": "Intern premiere: Vi ser på Halfdan 2 i Red Hook", "client": false }
+    { "time": "11:30", "title": "Case Study + SoMe post for Visit Oslo", "client": false },
+    { "time": "12:30", "title": "Tibi", "client": false },
+    { "time": "13:00", "title": "Mikael / Doug", "client": false },
+    { "time": "13:45", "title": "Holz Selects", "client": false },
+    { "time": "15:00", "title": "30 under 30 — Tshirts and stickers", "client": false },
+    { "time": "18:00", "title": "Grafill Event", "client": false }
   ],
   "action_items": [
-    "Run the Down Education shoot at Oslo fotostudio (Schweigaards gate 34b) with the Holzweiler team.",
-    "Book the UDIR illustrator (Frode) and share finished edits of Kristin's chosen yrkesfag selects with UDIR.",
-    "Prepare for the 12:00 Telenor Sikkerhetsrapport status meeting, incl. Snorre's question about whether King Harald still opens the foreword."
+    "Book the UDIR illustrator.",
+    "Work on the Case Study and SoMe post for Visit Oslo.",
+    "Go through the Holz selects.",
+    "Update the Fimbul caviar tin label to the 52 mm inner lid spec and try other public domain crab illustrations.",
+    "Accept the Timely project invite for 855 Welcome to hell (Forbrukerrådet) and review the GitHub Claude app permissions request."
   ],
   "needs_reply": [
-    { "source": "slack", "from": "Adam Enochsson", "summary": "Can't find his tripod head plate and thinks there may be a tripod at the studio." },
-    { "source": "gmail", "from": "Snorre Bryne", "summary": "Asks whether King Harald still writes the foreword (Telenor report) and has collected other open questions in a doc." }
+    { "source": "gmail", "from": "Jens Semb (Fimbul)", "summary": "Sent the 52 mm inner lid spec for both tins and asks whether you can try other public domain crab sketches, since the supplier thinks the crab looks like a different species." }
   ]
 }
