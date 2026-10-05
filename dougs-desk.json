@@ -1,22 +1,18 @@
 {
-  "date": "2026-10-02",
+  "date": "2026-10-05",
   "meetings": [
-    { "time": "11:00", "title": "Book in UDIR illustrator", "client": false },
-    { "time": "11:00", "title": "30 under 30 — Tshirts and stickers", "client": false },
-    { "time": "12:30", "title": "Nils + Karoline buy some extra writing bits for work", "client": false },
-    { "time": "13:00", "title": "Mikael / Doug", "client": false },
-    { "time": "13:30", "title": "NSY assets + image alt text SEND", "client": false },
-    { "time": "14:00", "title": "Brief for Trondheim foto", "client": false },
-    { "time": "15:00", "title": "Start anbud", "client": false },
-    { "time": "15:00", "title": "Vinlotto!", "client": false }
+    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
+    { "time": "11:00", "title": "Design Dept — Ukentlig møte", "client": false },
+    { "time": "12:00", "title": "Newslab//Status (Telenor)", "client": true },
+    { "time": "13:00", "title": "Ukentlig status lesekampanje", "client": false },
+    { "time": "14:00", "title": "Plan for KBM \"Et måltid er en arbeidsplass\"", "client": false },
+    { "time": "15:00", "title": "Holzweiler UNS — review before delivering all films and images", "client": false },
+    { "time": "16:00", "title": "FO campaign designs", "client": false }
   ],
   "action_items": [
-    "Book the UDIR illustrator.",
-    "Send the NSY assets and image alt text.",
-    "Write the brief for the Trondheim foto.",
-    "Start the anbud.",
-    "Review the 852 Holzweiler Jackets budget, which Timely says is 100% used.",
-    "Respond to the invitation for Monday's KBM 'Et måltid er en arbeidsplass' planning meeting (5 Oct, 14:00)."
+    "Prepare for the 12:00 Newslab//Status meeting with Telenor, which you have accepted.",
+    "Review feedback and the new rough-cut proposals with your graphics before the Holzweiler UNS delivery.",
+    "Block time for the FO campaign designs at 16:00."
   ],
   "needs_reply": []
 }
