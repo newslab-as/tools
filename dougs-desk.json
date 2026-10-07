@@ -1,18 +1,25 @@
 {
-  "date": "2026-10-05",
+  "date": "2026-10-07",
   "meetings": [
-    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
-    { "time": "11:00", "title": "Design Dept — Ukentlig møte", "client": false },
-    { "time": "12:00", "title": "Newslab//Status (Telenor)", "client": true },
-    { "time": "13:00", "title": "Ukentlig status lesekampanje", "client": false },
-    { "time": "14:00", "title": "Plan for KBM \"Et måltid er en arbeidsplass\"", "client": false },
-    { "time": "15:00", "title": "Holzweiler UNS — review before delivering all films and images", "client": false },
-    { "time": "16:00", "title": "FO campaign designs", "client": false }
+    { "time": "09:00", "title": "Email to Frode and co with recap", "client": false },
+    { "time": "09:30", "title": "Ask Harald about server", "client": false },
+    { "time": "10:00", "title": "Holzweiler-status", "client": false },
+    { "time": "11:00", "title": "Rapport ferdigstillelse (Telenor)", "client": true },
+    { "time": "13:00", "title": "Redaksjon interne kanaler", "client": false },
+    { "time": "13:30", "title": "Gather sikkerhetsrapport images, illustrations and text into folders", "client": false },
+    { "time": "14:30", "title": "Kirkens bymisjon: Vi ser på og evt. ferdigstiller presentasjon", "client": false }
   ],
   "action_items": [
-    "Prepare for the 12:00 Newslab//Status meeting with Telenor, which you have accepted.",
-    "Review feedback and the new rough-cut proposals with your graphics before the Holzweiler UNS delivery.",
-    "Block time for the FO campaign designs at 16:00."
+    "Review Julie Hæhre's feedback on V3/4 before the 11:00 Telenor Rapport ferdigstillelse meeting, which still needs your RSVP on the invite.",
+    "Help Nicolai and Ida draft the Kirkens bymisjon film budget estimate before the 14:30 review.",
+    "Send the recap email to Frode and co at 09:00.",
+    "Respond to the 14:30 Kirkens bymisjon invite (not yet accepted)."
   ],
-  "needs_reply": []
+  "needs_reply": [
+    { "source": "gmail", "from": "Snorre Bryne", "summary": "Asks whether the S-CALe iIT logo request from Justervesenet, now in post@newslab.no, was handled earlier this year." },
+    { "source": "gmail", "from": "Julie Hæhre (Telenor)", "summary": "Sent feedback for the V3/4 review and is waiting on your input." },
+    { "source": "slack", "from": "Jan Tore", "summary": "Asks whether UDIR has said which pictures to move forward with, so he can plan the week." },
+    { "source": "slack", "from": "torgeir", "summary": "Asks you to review the updated production timeline and confirm it works, including Fartein being in Nepal in week 47." },
+    { "source": "slack", "from": "Linn Isaksen", "summary": "Asks you to help Nico and Ida draft the Kirkens Bymisjon film budget estimate today." }
+  ]
 }
