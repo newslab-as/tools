@@ -1,19 +1,20 @@
 {
-  "date": "2026-10-08",
+  "date": "2026-10-09",
   "meetings": [
-    { "time": "09:00", "title": "Test videos in Holzweiler pres.", "client": false },
-    { "time": "10:00", "title": "Nordic Sikkerhetsrapport", "client": true },
-    { "time": "11:00", "title": "ANBUD", "client": false },
-    { "time": "11:30", "title": "NSY identit — Ukentlig møte", "client": false },
-    { "time": "12:30", "title": "KBM: Lyndrodling – alternativ slutt", "client": false },
-    { "time": "13:00", "title": "Nils + Karoline buy some extra writing bits for work", "client": false }
+    { "time": "09:30", "title": "KBM: Lyndrodling – alternativ slutt", "client": false },
+    { "time": "10:00", "title": "Ask Harald about server", "client": false },
+    { "time": "12:45", "title": "Et måltid er en arbeidsplass: Møte med KBM", "client": true },
+    { "time": "13:30", "title": "UNS: Feedback fra Holzweiler (digitalt)", "client": false }
   ],
   "action_items": [
-    "Review Snorre's Figma comments and the missing intro text in the latest Telenor Sikkerhetsrapport version before the 10:00 meeting.",
-    "Finish the tender (ANBUD) work blocked out 11:00-17:00.",
-    "Decide who to book for the Down Education voice over with Nicolai, who proposed recording today."
+    "Finish the anbud (tender), blocked out 09:00-17:00.",
+    "Review the uploaded Nordisk sikkerhetsrapport articles with Snorre and produce a budget estimate.",
+    "Send Nicolai the scripts he asked for.",
+    "Try the new Mastercard-bill system for the September statement and tell Linn and Ida what you need."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "torgeir (newslab)", "summary": "Asked you and Norad to review the updated production timeline and confirm it works." }
+    { "source": "gmail", "from": "linn@newslab.no", "summary": "Asks whether you want to try the new system on the September Mastercard bill and what you need from her and Ida." },
+    { "source": "slack", "from": "Nicolai Gundorff Asmussen", "summary": "Asked you to send him the scripts." },
+    { "source": "slack", "from": "Jan Tore", "summary": "Asked whether a friendly reminder can be sent on an open item." }
   ]
 }
