@@ -1,20 +1,19 @@
 {
-  "date": "2026-10-09",
+  "date": "2026-10-12",
   "meetings": [
-    { "time": "09:30", "title": "KBM: Lyndrodling – alternativ slutt", "client": false },
-    { "time": "10:00", "title": "Ask Harald about server", "client": false },
-    { "time": "12:45", "title": "Et måltid er en arbeidsplass: Møte med KBM", "client": true },
-    { "time": "13:30", "title": "UNS: Feedback fra Holzweiler (digitalt)", "client": false }
+    { "time": "09:15", "title": "Internpolitisk kvarter", "client": false },
+    { "time": "09:30", "title": "Teamledermøte", "client": false },
+    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
+    { "time": "11:00", "title": "Design Dept — Ukentlig møte", "client": false },
+    { "time": "12:30", "title": "Holzweiler UNS graphics updates", "client": false },
+    { "time": "14:00", "title": "Ask Harald about server", "client": false },
+    { "time": "14:00", "title": "UDIR magasiner — Ukentlig møte", "client": false }
   ],
   "action_items": [
-    "Finish the anbud (tender), blocked out 09:00-17:00.",
-    "Review the uploaded Nordisk sikkerhetsrapport articles with Snorre and produce a budget estimate.",
-    "Send Nicolai the scripts he asked for.",
-    "Try the new Mastercard-bill system for the September statement and tell Linn and Ida what you need."
+    "Work through Linn's Holzweiler 'Until Next Summer' change list from the Friday client meeting.",
+    "Give input on the Tibi instruction-video script feedback from Kristin Fagerlid (NB), which Torgeir is handling."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "linn@newslab.no", "summary": "Asks whether you want to try the new system on the September Mastercard bill and what you need from her and Ida." },
-    { "source": "slack", "from": "Nicolai Gundorff Asmussen", "summary": "Asked you to send him the scripts." },
-    { "source": "slack", "from": "Jan Tore", "summary": "Asked whether a friendly reminder can be sent on an open item." }
+    { "source": "gmail", "from": "Kristin.Fagerlid@nb.no", "summary": "Asks for input on the shortened, oral-form script for the Tibi instruction video (you are cc'd; Torgeir is the addressee)." }
   ]
 }
