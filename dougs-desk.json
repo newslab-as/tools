@@ -1,19 +1,17 @@
 {
-  "date": "2026-10-12",
+  "date": "2026-10-13",
   "meetings": [
-    { "time": "09:15", "title": "Internpolitisk kvarter", "client": false },
-    { "time": "09:30", "title": "Teamledermøte", "client": false },
-    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
-    { "time": "11:00", "title": "Design Dept — Ukentlig møte", "client": false },
-    { "time": "12:30", "title": "Holzweiler UNS graphics updates", "client": false },
-    { "time": "14:00", "title": "Ask Harald about server", "client": false },
-    { "time": "14:00", "title": "UDIR magasiner — Ukentlig møte", "client": false }
+    { "time": "09:00", "title": "Start on Norad", "client": false },
+    { "time": "10:00", "title": "NSY identit — Ukentlig møte", "client": false },
+    { "time": "11:00", "title": "Plan out design dept projects", "client": false },
+    { "time": "12:30", "title": "Ask Harald about server", "client": false },
+    { "time": "13:00", "title": "Mastercardregning september", "client": false },
+    { "time": "13:30", "title": "Down Education Presentation", "client": false },
+    { "time": "18:00", "title": "Grafill Event", "client": false }
   ],
   "action_items": [
-    "Work through Linn's Holzweiler 'Until Next Summer' change list from the Friday client meeting.",
-    "Give input on the Tibi instruction-video script feedback from Kristin Fagerlid (NB), which Torgeir is handling."
+    "Review Kristin Lien's (Norad) 9 Oct confirmations on the script and updated timeline with Torgeir.",
+    "Find a way to track hours in realtime and compare past Timely project hours to project budgets."
   ],
-  "needs_reply": [
-    { "source": "gmail", "from": "Kristin.Fagerlid@nb.no", "summary": "Asks for input on the shortened, oral-form script for the Tibi instruction video (you are cc'd; Torgeir is the addressee)." }
-  ]
+  "needs_reply": []
 }
