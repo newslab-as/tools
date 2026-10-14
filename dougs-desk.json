@@ -1,17 +1,24 @@
 {
-  "date": "2026-10-13",
+  "date": "2026-10-14",
   "meetings": [
-    { "time": "09:00", "title": "Start on Norad", "client": false },
-    { "time": "10:00", "title": "NSY identit — Ukentlig møte", "client": false },
-    { "time": "11:00", "title": "Plan out design dept projects", "client": false },
-    { "time": "12:30", "title": "Ask Harald about server", "client": false },
-    { "time": "13:00", "title": "Mastercardregning september", "client": false },
-    { "time": "13:30", "title": "Down Education Presentation", "client": false },
-    { "time": "18:00", "title": "Grafill Event", "client": false }
+    { "time": "09:00", "title": "Design frokost!", "client": false },
+    { "time": "11:00", "title": "UDIR magasiner — Ukentlig møte", "client": false },
+    { "time": "12:30", "title": "Timeline for Tibi", "client": false },
+    { "time": "13:00", "title": "UDIR magasiner — Ukentlig møte", "client": false },
+    { "time": "13:30", "title": "Ask Harald about server", "client": false },
+    { "time": "14:00", "title": "Plan out design dept projects", "client": false },
+    { "time": "15:00", "title": "Find a way to keep track of hours in realtime and compare past Timely hours to budgets", "client": false },
+    { "time": "16:00", "title": "Melontaxi & Newslab Meeting", "client": true }
   ],
   "action_items": [
-    "Review Kristin Lien's (Norad) 9 Oct confirmations on the script and updated timeline with Torgeir.",
-    "Find a way to track hours in realtime and compare past Timely project hours to project budgets."
+    "Prepare an image folder of the ~70 Vetuva candidate images for Aurora at Udir, as promised on 13 Oct.",
+    "Review Torgeir's script adjustments for the Tibi video with Kristin Fagerlid (Nasjonalbiblioteket) and the timeline.",
+    "Share Frode's Vetuva illustration sketches with Udir for approval and comments."
   ],
-  "needs_reply": []
+  "needs_reply": [
+    { "source": "gmail", "from": "Frode (hjemmekontoret.no)", "summary": "Asks whether his Vetuva illustration sketches work and for you to share them with Udir for approval." },
+    { "source": "gmail", "from": "Snorre Bryne", "summary": "Forwarded the Telenor store animation request and wants to talk about it." },
+    { "source": "gmail", "from": "Nils (Figma)", "summary": "Mentioned you in NSY asking for thoughts on the front design." },
+    { "source": "slack", "from": "Snorre Bryne", "summary": "Asked how many pages last year's report was and whether this year's is 44 spreads / 84 pages." }
+  ]
 }
