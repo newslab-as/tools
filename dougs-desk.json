@@ -1,22 +1,28 @@
 {
-  "date": "2026-10-15",
+  "date": "2026-10-16",
   "meetings": [
-    { "time": "10:00", "title": "NSY identit — Ukentlig møte", "client": false },
-    { "time": "10:30", "title": "Ask Harald about server", "client": false },
-    { "time": "11:00", "title": "Design Dept — Monthly Coffee & Catch-up", "client": false },
+    { "time": "09:30", "title": "Down Education VO", "client": false },
+    { "time": "11:00", "title": "Drodlemøte: Holzweiler julegavekampanje", "client": false },
+    { "time": "11:00", "title": "Ask Harald about server", "client": false },
+    { "time": "11:30", "title": "Look into tool for helping people spot scams / phishing", "client": false },
     { "time": "13:00", "title": "Plan out design dept projects", "client": false },
-    { "time": "14:00", "title": "Down Education updates", "client": false },
-    { "time": "15:00", "title": "Melon Taxi", "client": true }
+    { "time": "14:00", "title": "Doug & Torgeir & Telenor-prez", "client": false },
+    { "time": "15:00", "title": "Down Education graphics", "client": false }
   ],
   "action_items": [
-    "Send Melontaxi rough budgets for past film productions plus a budget for the start-up idea.",
-    "Check with Snorre about getting Selin from Melontaxi set up in Slack.",
-    "Finish the Telenor project budget spreadsheet started on 14 Oct.",
-    "Follow up with Ida and Julie on testing the new receipt upload tool."
+    "Revise the Melontaxi budgets: use hourly rates of NOK 1,190/1,430 and note travel, accommodation and food come on top.",
+    "Ask Snorre to get Selin from Melontaxi set up in Slack; she is waiting on the update.",
+    "Send photographer Ole the Udir/NSY selects and follow up on the email signature and meeting with Kristin Ålmo.",
+    "Prepare the Holzweiler Christmas campaign brief response (200-250k budget, launch around 10 Nov) for the 11:00 brainstorm.",
+    "Send Holzweiler the 28 jacket images with and without graphics, as Sofia asked.",
+    "Finish the CMYK version of the 30 under 30 T-shirt and the Word template colour/black-white versions for NSY.",
+    "Follow up with Ida and Julie on the remaining missing receipts and the new receipt upload tool."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Karoline (Figma)", "summary": "Mentioned you in NSY recommending a colour and a black/white version of the Word template." },
-    { "source": "gmail", "from": "Nils (Figma)", "summary": "Mentioned you in NSY asking for your thoughts on the front design." },
-    { "source": "slack", "from": "Snorre Bryne", "summary": "Has a jury meeting 15-16 but will try to squeeze in a pre-Melon Taxi chat with you." }
+    { "source": "slack", "from": "Linn Isaksen", "summary": "Asks if you agree the Melontaxi first budget option is too low and that travel costs should be listed on top." },
+    { "source": "gmail", "from": "Aurora Berg Heltzer (Udir)", "summary": "Sent the final selection of 60 photos for Vetuva, 12 of them for their websites." },
+    { "source": "gmail", "from": "Selin Yılmaz (Melontaxi)", "summary": "Waiting for the Slack access update from Snorre." },
+    { "source": "gmail", "from": "Karoline (Figma)", "summary": "Recommends a colour and a black/white version of the NSY Word template." },
+    { "source": "slack", "from": "Ida Anett Danielsen", "summary": "Asks whether the receipt tool can separate September receipts posted in October." }
   ]
 }
