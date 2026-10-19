@@ -79,7 +79,11 @@
   .cloud-status.saving { color: #d99587; }
   
   /* Settings Dropdown updated for top-right placement */
-  .settings-dropdown-wrap { position: relative; }
+  /* Icon-only button stretches to its neighbours' height (their text line-height
+     depends on font metrics), so its own content is kept deliberately shorter. */
+  .settings-dropdown-wrap { position: relative; align-self: stretch; display: flex; }
+  #settingsBtn { padding: 6px 11px; }
+  #settingsBtn svg { width: 17px; height: 17px; display: block; }
   .settings-menu { position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); border-radius: 0; z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 6px 16px rgba(0,0,0,0.08); max-height: calc(100vh - 100px); overflow-y: auto; }
   .settings-menu.open { display: flex; }
   .settings-menu-item { display: flex; width: 100%; text-align: left; background: transparent; border: none; border-radius: 0; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); cursor: pointer; }
@@ -93,6 +97,52 @@
   .drive-panel label { font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); }
   .drive-input { width: 100%; padding: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; border: 1px solid var(--line); border-radius: 0; background: var(--bg-card); color: var(--ink); outline: none; }
   .drive-input:focus { border-color: var(--ink); }
+  [hidden] { display: none !important; }
+  .settings-menu { text-align: left; }
+  .settings-toggle-row > span:first-child { padding-right: 12px; }
+  .settings-section-label { padding: 12px 16px 4px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); }
+  .drive-hint { margin: 10px 0 0; font-family: 'ABC Diatype', Arial, sans-serif; font-size: 12px; line-height: 1.45; letter-spacing: 0; text-transform: none; color: var(--ink-soft); }
+  #currentPlanName { font-family: 'ABC Diatype', Arial, sans-serif; letter-spacing: 0; text-transform: none; }
+  .drive-account-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); }
+  #driveAccountLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .link-btn { background: none; border: none; padding: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); text-decoration: underline; cursor: pointer; white-space: nowrap; }
+  .current-plan-box { margin-top: 4px; padding: 8px 10px; background: var(--bg-card); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; }
+  #currentPlanName { font-size: 13px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #currentPlanState { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #539853; }
+  #currentPlanState.warn { color: var(--danger); }
+  .drive-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .drive-actions .action-btn { width: 100%; padding: 7px 8px; font-size: 11px; }
+  .drive-actions .span-2 { grid-column: span 2; }
+  #revokeShareBtn { display: none; }
+  body.drive-connected.drive-file-open #revokeShareBtn { display: flex; }
+  .cloud-status { cursor: pointer; }
+  .cloud-status.warn { color: var(--danger); }
+  .cloud-status .cs-name { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: none; letter-spacing: 0; color: var(--ink-soft); }
+  .empty-state { margin-top: 24px; padding: 20px 24px; border: 1px dashed var(--line); background: var(--bg-card); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; position: relative; }
+  .empty-state-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .empty-state-text { font-size: 13px; line-height: 1.5; color: var(--ink-soft); max-width: 520px; }
+  .empty-state-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .empty-state-actions .action-btn { padding: 8px 12px; font-size: 11px; }
+  .empty-state-close { position: absolute; top: 6px; right: 8px; background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 13px; padding: 4px; }
+  .plan-list { max-height: 360px; overflow-y: auto; border: 1px solid var(--line); background: var(--bg); }
+  .plan-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; background: transparent; border: none; border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; color: var(--ink); font-family: inherit; }
+  .plan-row:last-child { border-bottom: none; }
+  .plan-row:hover { background: var(--line-soft); }
+  .plan-row-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .plan-row-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); margin-top: 2px; }
+  .plan-row-badge { flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); border: 1px solid var(--line); padding: 2px 6px; }
+  .plan-list-empty { padding: 20px 16px; text-align: center; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+  .plan-picker-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  .choice-list { display: flex; flex-direction: column; gap: 8px; }
+  .choice-btn { display: block; width: 100%; text-align: left; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); cursor: pointer; color: var(--ink); font-family: inherit; }
+  .choice-btn:hover { border-color: var(--ink); }
+  .choice-btn strong { display: block; font-size: 14px; margin-bottom: 2px; }
+  .choice-btn span { font-size: 12px; color: var(--ink-soft); line-height: 1.4; }
+  .shortcut-list { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; align-items: baseline; font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
+  .shortcut-list kbd, .shortcut-list .sc-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); white-space: nowrap; }
+  @media (max-width: 700px) { .cloud-status .cs-name { display: none; } .empty-state { padding: 16px; } }
+  @media print { .empty-state { display: none !important; } }
+  body.read-only .empty-state { display: none !important; }
   
   .month-label { font-weight: 500; font-size: 20px; letter-spacing: -0.02em; color: var(--ink); }
   .week-range { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); letter-spacing: 0.06em; margin-left: 10px; }
@@ -344,8 +394,11 @@
     header.top { flex-direction: column; align-items: stretch; gap: 10px; }
     .brand-group { display: flex; justify-content: space-between; align-items: baseline; }
     .header-meta { flex-wrap: wrap; justify-content: flex-start; text-align: left; gap: 8px; }
-    .header-meta #topSignInBtn, .header-meta #topCopyLinkBtn, .header-meta .settings-dropdown-wrap { flex: 1; }
-    .header-meta #topCopyLinkBtn, .header-meta #settingsBtn { width: 100%; box-sizing: border-box; padding: 6px 12px; font-size: 11px; }
+    .header-meta #topSignInBtn, .header-meta #topCopyLinkBtn { flex: 1; }
+    .header-meta .settings-dropdown-wrap { flex: 0 0 auto; }
+    .header-meta #topCopyLinkBtn { width: 100%; box-sizing: border-box; padding: 6px 12px; font-size: 11px; }
+    .header-meta #settingsBtn { box-sizing: border-box; padding: 6px 9px; }
+    .header-meta #settingsBtn svg { width: 14px; height: 14px; }
     #todayBtn, #addEventBtn { padding: 6px 12px; font-size: 11px; }
     .settings-menu .ctl { padding: 10px 16px; border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; justify-content: space-between; }
 
@@ -405,49 +458,53 @@
         <button class="action-btn" id="topCopyLinkBtn" data-i18n="copy_client_link" style="font-weight: 500;">Copy Client Link</button>
         
         <div class="settings-dropdown-wrap">
-          <button class="action-btn" id="settingsBtn" data-i18n="settings">Settings</button>
+          <button class="action-btn" id="settingsBtn" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
           
           <div class="settings-menu" id="settingsMenu">
             <div class="drive-panel">
               <div id="driveLoginSection">
-                <button class="action-btn primary" style="width: 100%;" id="btnDriveLogin">Sign In with Google</button>
+                <button class="action-btn primary" style="width: 100%;" id="btnDriveLogin" data-i18n="sign_in_google">Sign In with Google</button>
+                <p class="drive-hint" data-i18n="sign_in_hint">Sign in to save plans to Google Drive and share them with clients. Until then, this plan is only stored in this browser.</p>
               </div>
               <div id="driveWorkspaceSection" style="display: none; flex-direction: column; gap: 10px;">
+                <div class="drive-account-row">
+                  <span id="driveAccountLabel">Google Drive</span>
+                  <button class="link-btn" id="btnDriveSignOut" data-i18n="sign_out">Sign out</button>
+                </div>
                 <div>
-                  <label>Workspace Folder</label>
-                  <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; margin-bottom: 8px; padding: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 0;">
-                    <span id="driveFolderNameLabel" style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Saved Folder</span>
-                    <button class="action-btn" id="btnBrowseFolder" style="padding: 4px 8px; font-size: 10px; border-color: var(--line-soft);">Browse</button>
+                  <label data-i18n="current_plan">Current plan</label>
+                  <div class="current-plan-box">
+                    <span id="currentPlanName">—</span>
+                    <span id="currentPlanState"></span>
                   </div>
                 </div>
-                <div>
-                  <label>Load Plan</label>
-                  <select class="drive-input" id="driveFileSelect" style="cursor: pointer;">
-                    <option value="">Select a file...</option>
-                  </select>
+                <div class="drive-actions">
+                  <button class="action-btn primary span-2" id="btnSaveToDrive" data-i18n="save_to_drive" hidden>Save to Drive</button>
+                  <button class="action-btn" id="btnOpenPlan" data-i18n="open_plan">Open plan…</button>
+                  <button class="action-btn" id="btnNewDriveFile" data-i18n="new_plan">+ New plan</button>
+                  <button class="action-btn" id="btnRenamePlan" data-i18n="rename_plan" hidden>Rename</button>
+                  <button class="action-btn" id="btnSaveCopy" data-i18n="save_copy" hidden>Save a copy</button>
                 </div>
-                <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Create New File</button>
+                <div>
+                  <label data-i18n="plans_folder">Plans folder</label>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 0;">
+                    <span id="driveFolderNameLabel" style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">—</span>
+                    <button class="action-btn" id="btnBrowseFolder" data-i18n="change_folder" style="padding: 4px 8px; font-size: 10px; border-color: var(--line-soft);">Change</button>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div class="settings-menu-divider"></div>
 
-            <div class="settings-toggle-row" id="readOnlyToggleWrapper">
-              <span data-i18n="read_only_link">Read-Only Link</span>
-              <div class="toggle-switch ctl" id="shareReadOnly">
-                <div class="toggle-switch-track"></div>
-              </div>
-            </div>
-            <button class="settings-menu-item" id="shareLinkBtn" data-i18n="share_link">Copy Share Link</button>
-            <button class="settings-menu-item" id="exportJsonBtn" data-i18n="export_data">Download Backup (JSON)</button>
-            <label class="settings-menu-item" for="importJsonInput" style="margin: 0;" data-i18n="import_data">Load Local File</label>
-            <input type="file" id="importJsonInput" accept=".json" style="display: none;" />
-            <button class="settings-menu-item" id="importUrlBtn" data-i18n="import_url">Load from URL</button>
-            <button class="settings-menu-item" id="exportCsvBtn" data-i18n="export_csv">Export to CSV</button>
+            <div class="settings-section-label" data-i18n="section_share">Share &amp; export</div>
+            <button class="settings-menu-item" id="revokeShareBtn" data-i18n="revoke_client_link">Revoke client link</button>
             <button class="settings-menu-item" id="exportBtn" data-i18n="export_pdf">Export PDF</button>
-            
+            <button class="settings-menu-item" id="exportCsvBtn" data-i18n="export_csv">Export to CSV</button>
+
             <div class="settings-menu-divider"></div>
 
+            <div class="settings-section-label" data-i18n="section_display">Display</div>
             <div class="settings-toggle-row" id="hideSingleDayToggleWrapper">
               <span data-i18n="hide_single_day">Hide Single-Day Events</span>
               <div class="toggle-switch ctl" id="hideSingleDayToggle">
@@ -472,8 +529,17 @@
             </div>
 
             <div class="settings-menu-divider"></div>
-            
-            <button class="settings-menu-item danger" id="clearAllBtn" data-i18n="clear_all">Clear all</button>
+
+            <div class="settings-section-label" data-i18n="section_backup">Backup</div>
+            <button class="settings-menu-item" id="exportJsonBtn" data-i18n="export_data">Download backup (JSON)</button>
+            <label class="settings-menu-item" for="importJsonInput" style="margin: 0;" data-i18n="import_data">Load backup file</label>
+            <input type="file" id="importJsonInput" accept=".json" style="display: none;" />
+            <button class="settings-menu-item" id="importUrlBtn" data-i18n="import_url">Load from link</button>
+
+            <div class="settings-menu-divider"></div>
+
+            <button class="settings-menu-item" id="shortcutsBtn" data-i18n="shortcuts_tips">Shortcuts &amp; tips</button>
+            <button class="settings-menu-item danger" id="clearAllBtn" data-i18n="clear_all">Clear plan</button>
           </div>
         </div>
       </div>
@@ -523,6 +589,19 @@
     </div>
   </div>
 
+  <div class="empty-state" id="emptyState" hidden>
+    <button class="empty-state-close" id="emptyStateClose" aria-label="Close">✕</button>
+    <div>
+      <div class="empty-state-title" data-i18n="empty_title">Start your plan</div>
+      <div class="empty-state-text" data-i18n="empty_text">Add events straight onto the calendar, or open an existing plan. Click any day to add something, and drag events to move them.</div>
+    </div>
+    <div class="empty-state-actions">
+      <button class="action-btn primary" id="emptyAddEventBtn" data-i18n="empty_add_event">+ Add first event</button>
+      <button class="action-btn" id="emptyOpenPlanBtn">Open a plan from Drive</button>
+      <button class="action-btn" id="emptyImportBtn" data-i18n="empty_import">Load a backup file</button>
+    </div>
+  </div>
+
   <div class="calendar-wrap">
     <div class="calendar" id="calendar"></div>
   </div>
@@ -544,21 +623,21 @@
 <!-- FOLDER PICKER MODAL -->
 <div class="modal-backdrop" id="folderPickerModal" style="z-index: 200;">
   <div class="modal" style="max-width: 400px; padding: 24px; border-radius: 0;">
-    <h2 class="modal-title" style="font-size: 16px; margin-bottom: 12px; font-weight: 600;">Select Workspace Folder</h2>
+    <h2 class="modal-title" style="font-size: 16px; margin-bottom: 12px; font-weight: 600;" data-i18n="choose_folder_title">Choose plans folder</h2>
     
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
         <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; max-width: 70%;">
             <button class="action-btn" id="folderPickerBack" style="padding: 2px 6px; font-size: 10px;" disabled>&larr; Back</button>
             <span id="folderPickerCurrentName" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">My Drive</span>
         </div>
-        <button class="action-btn primary" id="folderPickerSelectCurrent" style="padding: 4px 8px; font-size: 10px;">Select this folder</button>
+        <button class="action-btn primary" id="folderPickerSelectCurrent" style="padding: 4px 8px; font-size: 10px;" data-i18n="select_this_folder">Select this folder</button>
     </div>
 
     <div id="folderPickerList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--line); margin-bottom: 24px; background: var(--bg);">
        <div style="padding: 12px; text-align: center; color: var(--ink-faint);">Loading folders...</div>
     </div>
     <div class="modal-actions" style="justify-content: flex-end; margin-top: 0; padding-top: 0; border: none;">
-      <button class="action-btn" id="folderPickerCancel">Cancel</button>
+      <button class="action-btn" id="folderPickerCancel" data-i18n="cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -574,7 +653,23 @@
 <script>
 // ============ CUSTOM DIALOG REPLACEMENTS ============
 let dialogCallback = null;
+function resetDialogLabels() {
+  document.getElementById('dialogOk').textContent = 'OK';
+  document.getElementById('dialogCancel').textContent = typeof t === 'function' ? t('cancel') : 'Cancel';
+}
+function customConfirm(message, onConfirm, title = 'NewsLab', okLabel = 'OK', cancelLabel = null) {
+  resetDialogLabels();
+  document.getElementById('dialogTitle').textContent = title;
+  document.getElementById('dialogMessage').textContent = message;
+  document.getElementById('dialogInput').style.display = 'none';
+  document.getElementById('dialogCancel').style.display = 'inline-flex';
+  document.getElementById('dialogOk').textContent = okLabel;
+  if (cancelLabel) document.getElementById('dialogCancel').textContent = cancelLabel;
+  document.getElementById('dialogModal').classList.add('open');
+  dialogCallback = (v) => { resetDialogLabels(); if (v === true) onConfirm(); };
+}
 function customAlert(message, title = 'NewsLab') {
+  resetDialogLabels();
   document.getElementById('dialogTitle').textContent = title;
   document.getElementById('dialogMessage').textContent = message;
   document.getElementById('dialogInput').style.display = 'none';
@@ -583,6 +678,7 @@ function customAlert(message, title = 'NewsLab') {
   dialogCallback = null;
 }
 function customPrompt(message, defaultValue, callback) {
+  resetDialogLabels();
   document.getElementById('dialogTitle').textContent = 'NewsLab';
   document.getElementById('dialogMessage').textContent = message;
   const input = document.getElementById('dialogInput');
@@ -614,10 +710,19 @@ const GOOGLE_API_KEY = 'AIzaSyBrUd4L-IfFrfULoWYo8_d4cQEDIi6ir-I';
 const GOOGLE_CLIENT_ID = '832442581745-q05f99oh25br5aeqkrtaj7f2tthc2l3q.apps.googleusercontent.com';
 const DRIVE_DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const SCOPES = 'https://www.googleapis.com/auth/drive';
+// The team's shared plans folder. Offered as a visible choice on first sign-in,
+// and kept silently for browsers that were already relying on it before.
+const DEFAULT_PLANS_FOLDER_ID = '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
 
 let tokenClient; let gapiInited = false; let gisInited = false;
 let currentDriveFileId = localStorage.getItem('newslab-current-drive-file') || null;
+let currentDriveFileName = localStorage.getItem('newslab-current-drive-file-name') || null;
+let currentDriveCanEdit = localStorage.getItem('newslab-current-drive-canedit') !== '0';
 let lastKnownRevisionId = localStorage.getItem('newslab-drive-file-revision') || null;
+const driveWasConnectedBefore = localStorage.getItem('newslab_drive_connected') === '1' || !!currentDriveFileId;
+let sessionExpired = false; let pendingDriveSave = false; let sessionExpiryTimer = null;
+let driveFilesCache = []; let driveFolderError = null; let lastCloudStatus = 'Disconnected';
+let folderChoiceOffered = false;
 
 window.onload = function() {
   updateCloudStatus('Disconnected');
@@ -630,12 +735,12 @@ window.onload = function() {
           gapi.client.setToken({ access_token: tokenResponse.access_token });
           localStorage.setItem('newslab_drive_token', JSON.stringify({ token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) }));
           localStorage.setItem('newslab_drive_connected', '1');
-          document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
-          updateCloudStatus('Connected'); fetchDriveFiles();
+          onDriveConnected();
         }
       },
       error_callback: (err) => {
           if (err.type === 'popup_closed' || err.type === 'access_denied') return;
+          if (sessionExpired) { refreshCloudStatus(); return; }
           localStorage.removeItem('newslab_drive_connected');
           updateCloudStatus('Disconnected');
           document.getElementById('driveLoginSection').style.display = 'flex'; document.getElementById('driveWorkspaceSection').style.display = 'none';
@@ -663,19 +768,13 @@ window.onload = function() {
 async function initializeGapiClient() {
   await gapi.client.init({ apiKey: GOOGLE_API_KEY, discoveryDocs: [DRIVE_DISCOVERY_DOC] }); gapiInited = true;
   
-  const storedFolderName = localStorage.getItem('newslab-drive-folder-name');
-  if (storedFolderName) {
-      document.getElementById('driveFolderNameLabel').textContent = storedFolderName;
-  }
-  
   const savedToken = localStorage.getItem('newslab_drive_token');
   if (savedToken) {
     try {
       const parsed = JSON.parse(savedToken);
-      if (Date.now() < parsed.expiresAt - 60000) { 
-        gapi.client.setToken({ access_token: parsed.token }); 
-        document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
-        updateCloudStatus('Connected'); fetchDriveFiles();
+      if (Date.now() < parsed.expiresAt - 60000) {
+        gapi.client.setToken({ access_token: parsed.token });
+        onDriveConnected();
         return;
       }
     } catch(e) {}
@@ -806,11 +905,8 @@ document.getElementById('folderPickerBack')?.addEventListener('click', () => {
 
 document.getElementById('folderPickerSelectCurrent')?.addEventListener('click', () => {
     const currentFolder = pickerHistory[pickerHistory.length - 1];
-    localStorage.setItem('newslab-drive-folder', currentFolder.id);
-    localStorage.setItem('newslab-drive-folder-name', currentFolder.name);
-    document.getElementById('driveFolderNameLabel').textContent = currentFolder.name;
     document.getElementById('folderPickerModal').classList.remove('open');
-    fetchDriveFiles();
+    setPlansFolder(currentFolder.id, currentFolder.name);
 });
 
 document.getElementById('folderPickerCancel')?.addEventListener('click', () => {
@@ -818,58 +914,335 @@ document.getElementById('folderPickerCancel')?.addEventListener('click', () => {
 });
 
 
-async function fetchDriveFiles() {
-  const folderId = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M'; 
-  if (!folderId || !gapi.client.getToken()) return;
-  try {
-    updateCloudStatus('Syncing...');
-    const response = await gapi.client.drive.files.list({ q: `'${folderId}' in parents and trashed=false`, fields: 'files(id, name, mimeType)', spaces: 'drive', supportsAllDrives: true, includeItemsFromAllDrives: true });
-    const files = response.result.files.filter(f => f.name.endsWith('.json') || f.mimeType === 'application/json');
-    const select = document.getElementById('driveFileSelect'); select.innerHTML = '<option value="">Select a file...</option>';
-    if (files && files.length > 0) {
-      files.forEach(file => { const option = document.createElement('option'); option.value = file.id; option.textContent = file.name.replace('.json', ''); if (file.id === currentDriveFileId) option.selected = true; select.appendChild(option); });
-    }
-    updateCloudStatus('Connected');
-  } catch (err) { updateCloudStatus('Sync Error'); }
+// ---- Drive session, plans folder and current-plan state ----
+function isDriveSignedIn() { return typeof gapi !== 'undefined' && !!gapi.client && !!gapi.client.getToken(); }
+function driveErrorCode(err) { return err && (err.status || (err.result && err.result.error && err.result.error.code)); }
+function isAuthError(err) { return driveErrorCode(err) === 401; }
+function getPlansFolderId() { return localStorage.getItem('newslab-drive-folder'); }
+function stripJson(name) { return (name || '').replace(/\.json$/i, ''); }
+function closeSettingsMenu() { document.getElementById('settingsMenu')?.classList.remove('open'); }
+
+function setCurrentDriveFile(id, name, canEdit, revisionId) {
+  currentDriveFileId = id; currentDriveFileName = stripJson(name) || null; currentDriveCanEdit = canEdit !== false;
+  localStorage.setItem('newslab-current-drive-file', id);
+  if (currentDriveFileName) localStorage.setItem('newslab-current-drive-file-name', currentDriveFileName); else localStorage.removeItem('newslab-current-drive-file-name');
+  localStorage.setItem('newslab-current-drive-canedit', currentDriveCanEdit ? '1' : '0');
+  if (revisionId !== undefined) {
+    lastKnownRevisionId = revisionId || null;
+    if (lastKnownRevisionId) localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId); else localStorage.removeItem('newslab-drive-file-revision');
+  }
+  refreshCloudStatus();
+}
+function clearCurrentDriveFile() {
+  currentDriveFileId = null; currentDriveFileName = null; currentDriveCanEdit = true; lastKnownRevisionId = null;
+  ['newslab-current-drive-file', 'newslab-current-drive-file-name', 'newslab-current-drive-canedit', 'newslab-drive-file-revision'].forEach(k => localStorage.removeItem(k));
+  refreshCloudStatus();
 }
 
-document.getElementById('driveFileSelect')?.addEventListener('change', async (e) => {
-  const fileId = e.target.value; if (!fileId) return;
+function getTokenExpiry() { try { const p = JSON.parse(localStorage.getItem('newslab_drive_token') || 'null'); return (p && p.expiresAt) || 0; } catch (e) { return 0; } }
+function isTokenExpired() { const exp = getTokenExpiry(); return !!exp && Date.now() > exp - 30000; }
+// Google access tokens last ~1 hour and can only be renewed from a user click
+// (a background pop-up would be blocked), so on expiry we surface a Reconnect
+// button and hold the pending save until the user clicks it.
+function markSessionExpired() { if (sessionExpired || window.__isReadOnly) return; sessionExpired = true; refreshCloudStatus(); }
+function scheduleSessionExpiryCheck() {
+  clearTimeout(sessionExpiryTimer);
+  const exp = getTokenExpiry(); if (!exp) return;
+  sessionExpiryTimer = setTimeout(() => { if (currentDriveFileId) markSessionExpired(); }, Math.max(0, exp - Date.now() - 30000));
+}
+
+async function onDriveConnected() {
+  sessionExpired = false;
+  document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
+  scheduleSessionExpiryCheck();
+  updateCloudStatus('Connected');
+  loadDriveAccount();
+  await refreshCurrentFileMeta();
+  await ensurePlansFolder();
+  fetchDriveFiles();
+  if (pendingDriveSave) { pendingDriveSave = false; performDriveSave(false); }
+}
+
+async function loadDriveAccount() {
+  const label = document.getElementById('driveAccountLabel');
+  const cached = localStorage.getItem('newslab-drive-account');
+  if (cached) label.textContent = cached;
+  try {
+    const res = await gapi.client.drive.about.get({ fields: 'user(displayName,emailAddress)' });
+    const u = res.result.user || {};
+    const name = u.emailAddress || u.displayName || 'Google Drive';
+    localStorage.setItem('newslab-drive-account', name); label.textContent = name;
+  } catch (err) { if (isAuthError(err)) markSessionExpired(); }
+}
+
+async function refreshCurrentFileMeta() {
+  if (!currentDriveFileId || window.__isReadOnly) return;
+  try {
+    const res = await gapi.client.drive.files.get({ fileId: currentDriveFileId, fields: 'name,trashed,capabilities(canEdit)', supportsAllDrives: true });
+    if (res.result.trashed) throw { status: 404 };
+    setCurrentDriveFile(currentDriveFileId, res.result.name, !(res.result.capabilities && res.result.capabilities.canEdit === false));
+  } catch (err) {
+    if (isAuthError(err)) { markSessionExpired(); return; }
+    // Drive answers 404 both for deleted files and for files this account can't access.
+    if (driveErrorCode(err) === 404) {
+      const name = currentDriveFileName;
+      clearCurrentDriveFile();
+      customAlert(t('file_missing_msg', name || t('untitled')), t('file_missing_title'));
+    }
+  }
+}
+
+async function ensurePlansFolder() {
+  if (getPlansFolderId()) { resolveFolderName(); return; }
+  // Browsers that were signed in before folders became an explicit choice were
+  // silently using the team folder — keep that so their plan list doesn't vanish.
+  if (driveWasConnectedBefore && localStorage.getItem('newslab-folder-choice-pending') !== '1') {
+    localStorage.setItem('newslab-drive-folder', DEFAULT_PLANS_FOLDER_ID);
+    localStorage.removeItem('newslab-drive-folder-name');
+    await resolveFolderName();
+    return;
+  }
+  resolveFolderName();
+  if (!folderChoiceOffered) { folderChoiceOffered = true; openFolderChoiceModal(); }
+}
+
+async function resolveFolderName() {
+  const id = getPlansFolderId(); const label = document.getElementById('driveFolderNameLabel');
+  if (!id) { label.textContent = t('no_folder'); return; }
+  const stored = localStorage.getItem('newslab-drive-folder-name');
+  if (stored) { label.textContent = stored; return; }
+  if (id === 'root') { localStorage.setItem('newslab-drive-folder-name', 'My Drive'); label.textContent = 'My Drive'; return; }
+  try {
+    const res = await gapi.client.drive.files.get({ fileId: id, fields: 'name', supportsAllDrives: true });
+    localStorage.setItem('newslab-drive-folder-name', res.result.name); label.textContent = res.result.name;
+  } catch (err) { if (isAuthError(err)) markSessionExpired(); else label.textContent = t('folder_unavailable'); }
+}
+
+function setPlansFolder(id, name) {
+  localStorage.setItem('newslab-drive-folder', id);
+  if (name) localStorage.setItem('newslab-drive-folder-name', name); else localStorage.removeItem('newslab-drive-folder-name');
+  localStorage.removeItem('newslab-folder-choice-pending');
+  driveFilesCache = []; driveFolderError = null;
+  resolveFolderName(); fetchDriveFiles(); refreshCloudStatus();
+}
+
+async function openFolderChoiceModal(afterChoice) {
+  localStorage.setItem('newslab-folder-choice-pending', '1');
+  closeSettingsMenu();
+  const body = document.getElementById('modalBody');
+  document.getElementById('modalTitle').textContent = t('folder_choice_title');
+  body.dataset.view = 'folder-choice';
+  body.innerHTML = `<p style="font-size: 14px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 16px;">${escapeHtml(t('folder_choice_text'))}</p><div class="choice-list" id="folderChoiceList"><div class="plan-list-empty">${escapeHtml(t('loading'))}</div></div>`;
+  document.getElementById('modal').classList.add('open');
+
+  let teamFolderName = null;
+  try { const res = await gapi.client.drive.files.get({ fileId: DEFAULT_PLANS_FOLDER_ID, fields: 'name', supportsAllDrives: true }); teamFolderName = res.result.name; } catch (e) {}
+  if (body.dataset.view !== 'folder-choice') return;
+
+  const list = document.getElementById('folderChoiceList'); list.innerHTML = '';
+  const addChoice = (title, desc, onClick) => {
+    const b = document.createElement('button'); b.className = 'choice-btn';
+    b.innerHTML = `<strong>${escapeHtml(title)}</strong><span>${escapeHtml(desc)}</span>`;
+    b.addEventListener('click', onClick); list.appendChild(b);
+  };
+  if (teamFolderName) addChoice(t('folder_choice_team', teamFolderName), t('folder_choice_team_desc'), () => {
+    closeModal(); setPlansFolder(DEFAULT_PLANS_FOLDER_ID, teamFolderName); if (afterChoice) afterChoice();
+  });
+  addChoice(t('folder_choice_create'), t('folder_choice_create_desc'), async () => {
+    try {
+      const res = await gapi.client.drive.files.create({ resource: { name: t('default_folder_name'), mimeType: 'application/vnd.google-apps.folder', parents: ['root'] }, fields: 'id,name' });
+      closeModal(); setPlansFolder(res.result.id, res.result.name); if (afterChoice) afterChoice();
+    } catch (err) { if (isAuthError(err)) markSessionExpired(); else customAlert(t('folder_create_failed'), 'Error'); }
+  });
+  addChoice(t('folder_choice_browse'), t('folder_choice_browse_desc'), () => { closeModal(); document.getElementById('btnBrowseFolder').click(); });
+}
+
+async function fetchDriveFiles() {
+  const folderId = getPlansFolderId();
+  if (!folderId || !isDriveSignedIn()) { driveFilesCache = []; renderPlanPickerIfOpen(); return; }
+  try {
+    updateCloudStatus('Syncing...');
+    const response = await gapi.client.drive.files.list({ q: `'${folderId}' in parents and trashed=false`, fields: 'files(id,name,mimeType,modifiedTime,lastModifyingUser(displayName),capabilities(canEdit))', orderBy: 'modifiedTime desc', pageSize: 200, spaces: 'drive', supportsAllDrives: true, includeItemsFromAllDrives: true });
+    driveFilesCache = (response.result.files || []).filter(f => f.name.endsWith('.json') || f.mimeType === 'application/json');
+    driveFolderError = null;
+    updateCloudStatus('Connected');
+  } catch (err) {
+    driveFilesCache = []; driveFolderError = err;
+    if (isAuthError(err)) markSessionExpired(); else updateCloudStatus('Sync Error');
+  }
+  renderPlanPickerIfOpen();
+}
+
+function formatModified(iso) {
+  if (!iso) return '';
+  const d = new Date(iso); const loc = currentLang === 'nb' ? 'nb-NO' : 'en-GB';
+  return d.toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
+}
+
+function openPlanPicker() {
+  closeSettingsMenu();
+  if (!isDriveSignedIn()) { document.getElementById('btnDriveLogin').click(); return; }
+  if (sessionExpired) { customAlert(t('reconnect_first'), t('status_expired')); return; }
+  document.getElementById('modalTitle').textContent = t('open_plan_title');
+  document.getElementById('modalBody').dataset.view = 'plans';
+  renderPlanPicker(true);
+  document.getElementById('modal').classList.add('open');
+  if (getPlansFolderId()) fetchDriveFiles();
+}
+function renderPlanPickerIfOpen() {
+  const body = document.getElementById('modalBody');
+  if (body && body.dataset.view === 'plans' && document.getElementById('modal').classList.contains('open')) renderPlanPicker(false);
+}
+function renderPlanPicker(loading) {
+  const body = document.getElementById('modalBody');
+  const hasFolder = !!getPlansFolderId();
+  const folderName = localStorage.getItem('newslab-drive-folder-name') || (hasFolder ? '…' : t('no_folder'));
+  let listHtml;
+  if (!hasFolder) listHtml = `<div class="plan-list-empty">${escapeHtml(t('no_folder_msg'))}</div>`;
+  else if (driveFolderError) listHtml = `<div class="plan-list-empty">${escapeHtml(t('folder_error_msg'))}</div>`;
+  else if (loading) listHtml = `<div class="plan-list-empty">${escapeHtml(t('loading'))}</div>`;
+  else if (!driveFilesCache.length) listHtml = `<div class="plan-list-empty">${escapeHtml(t('no_plans_msg'))}</div>`;
+  else listHtml = driveFilesCache.map(f => {
+    const viewOnly = f.capabilities && f.capabilities.canEdit === false;
+    const who = f.lastModifyingUser && f.lastModifyingUser.displayName;
+    const badge = f.id === currentDriveFileId ? t('badge_open') : (viewOnly ? t('badge_view_only') : '');
+    return `<button class="plan-row" data-file-id="${escapeAttr(f.id)}"><div style="min-width: 0;"><div class="plan-row-name">${escapeHtml(stripJson(f.name))}</div><div class="plan-row-meta">${escapeHtml(t('edited_meta', formatModified(f.modifiedTime), who))}</div></div>${badge ? `<span class="plan-row-badge">${escapeHtml(badge)}</span>` : ''}</button>`;
+  }).join('');
+  body.innerHTML = `<div class="plan-list">${listHtml}</div>
+    <div class="plan-picker-footer">
+      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%;">${escapeHtml(t('folder_label', folderName))}</span>
+      <span style="display: flex; gap: 8px;">
+        <button class="action-btn" id="planPickerChangeFolder" style="padding: 6px 10px; font-size: 11px;">${escapeHtml(t('change_folder'))}</button>
+        <button class="action-btn primary" id="planPickerNew" style="padding: 6px 10px; font-size: 11px;">${escapeHtml(t('new_plan'))}</button>
+      </span>
+    </div>`;
+  body.querySelectorAll('.plan-row').forEach(row => row.addEventListener('click', () => {
+    const id = row.dataset.fileId;
+    if (id === currentDriveFileId) { closeModal(); return; }
+    confirmBeforeReplacingPlan('open', () => openDrivePlan(id));
+  }));
+  document.getElementById('planPickerChangeFolder').addEventListener('click', () => { closeModal(); if (hasFolder) document.getElementById('btnBrowseFolder').click(); else openFolderChoiceModal(); });
+  document.getElementById('planPickerNew').addEventListener('click', () => { closeModal(); startNewDrivePlan(); });
+}
+
+async function openDrivePlan(fileId) {
+  // Flush a queued autosave so the last edit to the current plan isn't lost.
+  if (autoSavePending) { clearTimeout(autoSaveTimeout); await performDriveSave(false); }
   try {
     updateCloudStatus('Downloading...');
     const [meta, response] = await Promise.all([
-      gapi.client.drive.files.get({ fileId: fileId, fields: 'headRevisionId', supportsAllDrives: true }),
+      gapi.client.drive.files.get({ fileId: fileId, fields: 'headRevisionId,name,capabilities(canEdit)', supportsAllDrives: true }),
       gapi.client.drive.files.get({ fileId: fileId, alt: 'media', supportsAllDrives: true })
     ]);
     const driveState = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
-    if (driveState && driveState.events) {
-      state = migrateData(driveState); currentDriveFileId = fileId; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
-      lastKnownRevisionId = meta.result.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId);
-      if (state.lang) setLanguage(state.lang); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render(); updateCloudStatus('Connected'); document.getElementById('settingsMenu').classList.remove('open');
-    }
-  } catch(err) { updateCloudStatus('Error'); customAlert("Could not load file from Drive.", "Error"); }
-});
+    if (!(driveState && driveState.events)) { updateCloudStatus('Connected'); customAlert(t('invalid_plan_file'), 'Error'); return; }
+    state = migrateData(driveState);
+    setCurrentDriveFile(fileId, meta.result.name, !(meta.result.capabilities && meta.result.capabilities.canEdit === false), meta.result.headRevisionId);
+    if (state.lang) setLanguage(state.lang);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render(); updateCloudStatus('Connected');
+    closeSettingsMenu(); closeModal();
+    if (!currentDriveCanEdit) customAlert(t('view_only_msg'), t('view_only_title'));
+  } catch (err) {
+    if (isAuthError(err)) { markSessionExpired(); return; }
+    updateCloudStatus('Error'); customAlert(t('load_failed'), 'Error');
+  }
+}
 
-document.getElementById('btnNewDriveFile')?.addEventListener('click', async () => {
-  const folderId = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
-  if (!folderId) return customAlert('Please select a workspace folder first.');
+async function createDrivePlanFile(name, planState, resetHistory) {
+  const fileName = /\.json$/i.test(name) ? name : name + '.json';
+  try {
+    updateCloudStatus('Creating...');
+    const createRes = await gapi.client.drive.files.create({ resource: { name: fileName, mimeType: 'application/json', parents: [getPlansFolderId()] }, fields: 'id', supportsAllDrives: true });
+    const fileId = createRes.result.id;
+    planState.lang = currentLang;
+    const resp = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media&supportsAllDrives=true&fields=headRevisionId`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: JSON.stringify(planState) });
+    if (!resp.ok) throw { status: resp.status };
+    const json = await resp.json();
+    state = planState;
+    setCurrentDriveFile(fileId, fileName, true, json.headRevisionId);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (resetHistory) initHistory();
+    render();
+    await fetchDriveFiles(); updateCloudStatus('Saved');
+    return true;
+  } catch (err) {
+    if (isAuthError(err)) { markSessionExpired(); return false; }
+    updateCloudStatus('Error'); customAlert(t('create_failed'), 'Error'); return false;
+  }
+}
 
-  customPrompt("Enter a name for the new file:", "Untitled Project", async (fileName) => {
-    if (!fileName) return;
-    try {
-      updateCloudStatus('Creating...');
-      const metadata = { name: fileName + (fileName.endsWith('.json') ? '' : '.json'), mimeType: 'application/json', parents: [folderId] };
-      const createRes = await gapi.client.drive.files.create({ resource: metadata, fields: 'id', supportsAllDrives: true });
-      currentDriveFileId = createRes.result.id; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
-      const blankState = getBlankState(); blankState.lang = currentLang; const fileContent = JSON.stringify(blankState);
-      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
-      state = blankState; saveState(); render();
-      await fetchDriveFiles(); updateCloudStatus('Saved');
-    } catch(err) { updateCloudStatus('Error'); customAlert("Failed to create file in Drive.", "Error"); }
+function ensureDriveReady(retry) {
+  closeSettingsMenu();
+  if (!isDriveSignedIn()) { document.getElementById('btnDriveLogin').click(); return false; }
+  if (sessionExpired) { customAlert(t('reconnect_first'), t('status_expired')); return false; }
+  if (!getPlansFolderId()) { openFolderChoiceModal(retry); return false; }
+  return true;
+}
+function hasUnsavedLocalWork() { return !currentDriveFileId && !!state.events && state.events.length > 0; }
+function confirmBeforeReplacingPlan(kind, proceed) {
+  if (kind === 'import' && currentDriveFileId && currentDriveCanEdit) {
+    return customConfirm(t('confirm_replace_drive', currentDriveFileName || t('untitled')), proceed, t('confirm_replace_title'), t('replace'));
+  }
+  if (hasUnsavedLocalWork()) {
+    return customConfirm(t('confirm_replace_local'), proceed, t('confirm_replace_title'), t('replace'));
+  }
+  proceed();
+}
+
+function startNewDrivePlan() {
+  if (!ensureDriveReady(startNewDrivePlan)) return;
+  confirmBeforeReplacingPlan('new', () => {
+    customPrompt(t('new_plan_prompt'), t('untitled'), async (name) => {
+      name = (name || '').trim(); if (!name) return;
+      const blank = getBlankState(); blank.title = stripJson(name);
+      await createDrivePlanFile(name, blank, true);
+    });
   });
-});
+}
+function saveCurrentPlanToDrive(asCopy) {
+  if (!ensureDriveReady(() => saveCurrentPlanToDrive(asCopy))) return;
+  const base = asCopy ? (currentDriveFileName || state.title || t('untitled')) : (state.title || t('untitled'));
+  customPrompt(asCopy ? t('save_copy_prompt') : t('save_to_drive_prompt'), asCopy ? t('copy_name', base) : base, async (name) => {
+    name = (name || '').trim(); if (!name) return;
+    const ok = await createDrivePlanFile(name, state, false);
+    if (ok) customAlert(t(asCopy ? 'copy_saved_msg' : 'saved_to_drive_msg', stripJson(name)), t('saved_title'));
+  });
+}
+function renameCurrentPlan() {
+  closeSettingsMenu();
+  if (!currentDriveFileId) return;
+  if (sessionExpired) { customAlert(t('reconnect_first'), t('status_expired')); return; }
+  customPrompt(t('rename_prompt'), currentDriveFileName || '', async (name) => {
+    name = (name || '').trim(); if (!name) return;
+    const fileName = /\.json$/i.test(name) ? name : name + '.json';
+    try {
+      await gapi.client.drive.files.update({ fileId: currentDriveFileId, resource: { name: fileName }, supportsAllDrives: true, fields: 'id,name' });
+      setCurrentDriveFile(currentDriveFileId, fileName, currentDriveCanEdit);
+      fetchDriveFiles();
+    } catch (err) { if (isAuthError(err)) markSessionExpired(); else customAlert(t('rename_failed'), 'Error'); }
+  });
+}
+function driveSignOut() {
+  closeSettingsMenu();
+  const tok = isDriveSignedIn() ? gapi.client.getToken().access_token : null;
+  if (tok && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2 && google.accounts.oauth2.revoke) { try { google.accounts.oauth2.revoke(tok, () => {}); } catch (e) {} }
+  if (typeof gapi !== 'undefined' && gapi.client) gapi.client.setToken(null);
+  ['newslab_drive_token', 'newslab_drive_connected', 'newslab-drive-account'].forEach(k => localStorage.removeItem(k));
+  clearTimeout(sessionExpiryTimer); clearTimeout(autoSaveTimeout);
+  sessionExpired = false; pendingDriveSave = false; autoSavePending = false;
+  document.getElementById('driveLoginSection').style.display = 'flex'; document.getElementById('driveWorkspaceSection').style.display = 'none';
+  updateCloudStatus('Disconnected');
+}
 
-let autoSaveTimeout = null;
+document.getElementById('btnOpenPlan')?.addEventListener('click', openPlanPicker);
+document.getElementById('btnNewDriveFile')?.addEventListener('click', startNewDrivePlan);
+document.getElementById('btnSaveToDrive')?.addEventListener('click', () => saveCurrentPlanToDrive(false));
+document.getElementById('btnSaveCopy')?.addEventListener('click', () => saveCurrentPlanToDrive(true));
+document.getElementById('btnRenamePlan')?.addEventListener('click', renameCurrentPlan);
+document.getElementById('btnDriveSignOut')?.addEventListener('click', driveSignOut);
+document.getElementById('cloudStatus')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.add('open'); });
+
+let autoSaveTimeout = null; let autoSavePending = false;
 
 // Drive's headRevisionId changes exactly when a file's content changes, so
 // it's used here as a cheap optimistic-concurrency check: before writing,
@@ -878,7 +1251,9 @@ let autoSaveTimeout = null;
 // silently overwriting their changes. `force` skips the check (used when
 // the user explicitly chooses to overwrite from the conflict prompt).
 async function performDriveSave(force = false) {
-  if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.getToken() || !currentDriveFileId || window.__isReadOnly) return;
+  autoSavePending = false;
+  if (!isDriveSignedIn() || !currentDriveFileId || window.__isReadOnly || !currentDriveCanEdit) return;
+  if (sessionExpired || isTokenExpired()) { pendingDriveSave = true; markSessionExpired(); return; }
   try {
     if (!force) {
       const meta = await gapi.client.drive.files.get({ fileId: currentDriveFileId, fields: 'headRevisionId', supportsAllDrives: true });
@@ -890,14 +1265,22 @@ async function performDriveSave(force = false) {
     }
     state.lang = currentLang; const fileContent = JSON.stringify(state);
     const resp = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true&fields=headRevisionId`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
+    if (!resp.ok) throw { status: resp.status };
     const json = await resp.json();
-    lastKnownRevisionId = json.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId);
+    if (json.headRevisionId) { lastKnownRevisionId = json.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId); }
+    pendingDriveSave = false;
     updateCloudStatus('Saved');
-  } catch(err) { updateCloudStatus('Save Failed'); }
+  } catch(err) {
+    if (isAuthError(err)) { pendingDriveSave = true; markSessionExpired(); return; }
+    updateCloudStatus('Save Failed');
+  }
 }
 function triggerAutoSave() {
-  if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.getToken() || !currentDriveFileId || window.__isReadOnly) return;
+  if (!isDriveSignedIn() || !currentDriveFileId || window.__isReadOnly) return;
+  if (!currentDriveCanEdit) { refreshCloudStatus(); return; }
+  if (sessionExpired || isTokenExpired()) { pendingDriveSave = true; markSessionExpired(); return; }
   updateCloudStatus('Saving...'); clearTimeout(autoSaveTimeout);
+  autoSavePending = true;
   autoSaveTimeout = setTimeout(() => performDriveSave(false), 1500);
 }
 
@@ -934,20 +1317,58 @@ function showSaveConflictPrompt() {
   };
 }
 
-function updateCloudStatus(msg) {
+function updateCloudStatus(msg) { lastCloudStatus = msg; refreshCloudStatus(); }
+function refreshCloudStatus() {
   const el = document.getElementById('cloudStatus');
   const topSignIn = document.getElementById('topSignInBtn');
-  if (el) { 
-    if (msg === 'Disconnected') {
-        el.style.display = 'none';
-        if (topSignIn && !window.__isReadOnly) topSignIn.style.display = 'inline-flex';
-    } else {
-        el.style.display = 'flex';
-        el.textContent = '☁️ ' + msg; 
-        el.className = 'cloud-status ' + (msg === 'Saved' || msg === 'Connected' ? 'saved' : (msg === 'Saving...' ? 'saving' : '')); 
-        if (topSignIn) topSignIn.style.display = 'none';
-    }
+  syncDriveUi();
+  if (!el) return;
+  const signedIn = isDriveSignedIn();
+  if (signedIn && lastCloudStatus === 'Disconnected') lastCloudStatus = 'Connected';
+  if (window.__isReadOnly || (!signedIn && !sessionExpired)) {
+    el.style.display = 'none';
+    if (topSignIn) { topSignIn.textContent = t('sign_in_drive'); topSignIn.style.display = window.__isReadOnly ? 'none' : 'inline-flex'; }
+    return;
   }
+  let label = lastCloudStatus; let cls = '';
+  const settled = lastCloudStatus === 'Saved' || lastCloudStatus === 'Connected';
+  if (sessionExpired) { label = t('status_expired'); cls = 'warn'; }
+  else if (settled && !currentDriveFileId) { label = t('status_not_saved'); cls = 'warn'; }
+  else if (settled && !currentDriveCanEdit) { label = t('status_view_only'); cls = 'warn'; }
+  else if (settled) { label = 'Saved'; cls = 'saved'; }
+  else if (lastCloudStatus === 'Saving...') { cls = 'saving'; }
+  else if (/error|fail|conflict/i.test(lastCloudStatus)) { cls = 'warn'; }
+  const showName = currentDriveFileId && currentDriveFileName && !sessionExpired;
+  el.innerHTML = `<span>☁️ ${escapeHtml(label)}</span>${showName ? `<span class="cs-name">· ${escapeHtml(currentDriveFileName)}</span>` : ''}`;
+  el.title = currentDriveFileId ? (currentDriveFileName || '') : t('status_not_saved_hint');
+  el.className = 'cloud-status ' + cls;
+  el.style.display = 'flex';
+  if (topSignIn) {
+    if (sessionExpired) { topSignIn.textContent = t('reconnect'); topSignIn.style.display = 'inline-flex'; }
+    else topSignIn.style.display = 'none';
+  }
+}
+
+// Keeps the Settings Drive panel, body state classes and empty-state actions in
+// step with sign-in / current-plan state. Cheap; safe to call on every render.
+function syncDriveUi() {
+  const signedIn = isDriveSignedIn();
+  const hasFile = !!currentDriveFileId;
+  document.body.classList.toggle('drive-connected', signedIn);
+  document.body.classList.toggle('drive-file-open', hasFile);
+  const nameEl = document.getElementById('currentPlanName');
+  const stateEl = document.getElementById('currentPlanState');
+  if (nameEl && stateEl) {
+    nameEl.textContent = hasFile ? (currentDriveFileName || t('untitled')) : (state && state.title ? state.title : t('untitled'));
+    stateEl.textContent = !hasFile ? t('plan_state_local') : (currentDriveCanEdit ? t('plan_state_drive') : t('plan_state_view_only'));
+    stateEl.classList.toggle('warn', !hasFile || !currentDriveCanEdit);
+  }
+  const toggle = (id, show) => { const b = document.getElementById(id); if (b) b.hidden = !show; };
+  toggle('btnSaveToDrive', !hasFile);
+  toggle('btnRenamePlan', hasFile && currentDriveCanEdit);
+  toggle('btnSaveCopy', hasFile);
+  const emptyOpen = document.getElementById('emptyOpenPlanBtn');
+  if (emptyOpen) emptyOpen.textContent = signedIn ? t('empty_open_plan') : t('empty_sign_in');
 }
 
 // ============ I18N ============
@@ -955,10 +1376,92 @@ const i18n = {
   en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', import_url: 'Load from URL', import_url_prompt: 'Paste the shared timeline URL here:', import_error: 'Invalid URL or corrupted data.', show_weekends: 'Weekends', hide_single_day: 'Hide Single-Day Events', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)', view_tooltip: 'Switch views for more detail', copy_client_link: 'Copy Client Link', copy_client_link_short: 'Share', sign_in_drive: 'Sign In' },
   nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', import_url: 'Åpne fra lenke', import_url_prompt: 'Lim inn delt tidslinje-lenke her:', import_error: 'Ugyldig lenke eller korrupt data.', show_weekends: 'Helger', hide_single_day: 'Skjul enkeltdagshendelser', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag', view_tooltip: 'Bytt visning for flere detaljer', copy_client_link: 'Kopier klientlenke', copy_client_link_short: 'Del', sign_in_drive: 'Logg inn' }
 };
+Object.assign(i18n.en, {
+  sign_in_google: 'Sign in with Google', sign_in_hint: 'Sign in to save plans to Google Drive and share them with clients. Until then, this plan is only stored in this browser.',
+  sign_out: 'Sign out', current_plan: 'Current plan', save_to_drive: 'Save to Drive', open_plan: 'Open plan…', new_plan: '+ New plan', rename_plan: 'Rename', save_copy: 'Save a copy',
+  plans_folder: 'Plans folder', change_folder: 'Change', section_share: 'Share & export', section_display: 'Display', section_backup: 'Backup',
+  revoke_client_link: 'Revoke client link', export_data: 'Download backup (JSON)', import_data: 'Load backup file', import_url: 'Load from link',
+  import_url_prompt: 'Paste a client link or shared plan link:', shortcuts_tips: 'Shortcuts & tips', clear_all: 'Clear plan', hide_single_day: 'Hide single-day events in Overview',
+  choose_folder_title: 'Choose plans folder', select_this_folder: 'Select this folder',
+  empty_title: 'Start your plan', empty_text: 'Add events straight onto the calendar, or open an existing plan. Click any day to add something, and drag events to move them.',
+  empty_add_event: '+ Add first event', empty_open_plan: 'Open a plan from Drive', empty_sign_in: 'Sign in to open plans', empty_import: 'Load a backup file',
+  untitled: 'Untitled plan', plan_state_local: 'Only in this browser', plan_state_drive: 'Saved to Google Drive', plan_state_view_only: 'View only — changes aren’t saved',
+  status_not_saved: 'Not saved to Drive', status_not_saved_hint: 'This plan is only stored in this browser. Open Settings → Save to Drive to keep it.',
+  status_view_only: 'View only', status_expired: 'Session expired', reconnect: 'Reconnect',
+  reconnect_first: 'Your Google session has expired. Click “Reconnect” at the top to continue — your changes are kept and will save once you’re back.',
+  no_folder: 'No folder chosen', folder_unavailable: 'Folder unavailable',
+  no_folder_msg: 'Choose a plans folder first — that’s where new plans are saved and where this list looks.',
+  folder_error_msg: 'Couldn’t open the plans folder. You may not have access to it — choose a different folder.',
+  no_plans_msg: 'No plans in this folder yet. Create one with “+ New plan”.', loading: 'Loading…', open_plan_title: 'Open a plan',
+  folder_label: (n) => `Folder: ${n}`, edited_meta: (when, who) => who ? `Edited ${when} by ${who}` : `Edited ${when}`, badge_open: 'Open', badge_view_only: 'View only',
+  folder_choice_title: 'Where should your plans be saved?',
+  folder_choice_text: 'Plans are saved as files in a Google Drive folder. You can change this any time under Settings → Plans folder.',
+  folder_choice_team: (n) => `Team folder: ${n}`, folder_choice_team_desc: 'Shared with the NewsLab team — everyone sees the same plans.',
+  folder_choice_create: 'Create a “Production Plans” folder in My Drive', folder_choice_create_desc: 'Private to you until you share it.',
+  folder_choice_browse: 'Choose another folder…', folder_choice_browse_desc: 'Pick any folder in My Drive or a shared drive.',
+  default_folder_name: 'Production Plans', folder_create_failed: 'Couldn’t create the folder in Google Drive.',
+  new_plan_prompt: 'Name the new plan:', save_to_drive_prompt: 'Save this plan to Google Drive as:', save_copy_prompt: 'Save a copy of this plan as:',
+  copy_name: (n) => `${n} (copy)`, saved_title: 'Saved',
+  saved_to_drive_msg: (n) => `“${n}” is now saved to Google Drive. Changes save automatically from here on.`,
+  copy_saved_msg: (n) => `Saved a copy as “${n}”. You’re now editing the copy.`,
+  rename_prompt: 'Rename this plan:', rename_failed: 'Couldn’t rename the plan in Google Drive.', create_failed: 'Couldn’t save the plan to Google Drive.',
+  load_failed: 'Couldn’t open this plan from Google Drive.', invalid_plan_file: 'This file isn’t a valid plan.',
+  view_only_title: 'View only', view_only_msg: 'You only have view access to this plan. You can look around and try changes, but they won’t be saved to Drive. Use “Save a copy” in Settings to keep your own version.',
+  file_missing_title: 'Plan not found',
+  file_missing_msg: (n) => `“${n}” couldn’t be found in Google Drive — it may have been deleted, or you no longer have access. Your copy is still here, but only in this browser. Use “Save to Drive” to keep it.`,
+  confirm_replace_title: 'Replace current plan?',
+  confirm_replace_local: 'Your current plan is only stored in this browser and will be replaced. To keep it, cancel and use “Save to Drive” or “Download backup” first.',
+  confirm_replace_drive: (n) => `This replaces the contents of “${n}” in Google Drive with the imported file.`, replace: 'Replace',
+  clear_drive_warning: (n) => `→ Also clears “${n}” in Google Drive`,
+  save_first_msg: 'Save this plan to Google Drive first (Settings → Save to Drive), then create the client link.',
+  shortcuts_title: 'Shortcuts & tips',
+  shortcuts_list: [['Click a day', 'Add an event on that day'], ['Click an event', 'Edit it'], ['Drag an event', 'Move it to another day'], ['Drag an event’s edge', 'Make it longer or shorter'], ['Shift/⌘-click events', 'Select several, then drag them together'], ['Esc', 'Clear the selection, cancel a resize or close a dialog'], ['⌘/Ctrl + Z', 'Undo'], ['⌘/Ctrl + Shift + Z', 'Redo'], ['?', 'Show this list']]
+});
+Object.assign(i18n.nb, {
+  sign_in_google: 'Logg inn med Google', sign_in_hint: 'Logg inn for å lagre planer i Google Disk og dele dem med kunder. Frem til da lagres planen bare i denne nettleseren.',
+  sign_out: 'Logg ut', current_plan: 'Gjeldende plan', save_to_drive: 'Lagre i Disk', open_plan: 'Åpne plan…', new_plan: '+ Ny plan', rename_plan: 'Gi nytt navn', save_copy: 'Lagre en kopi',
+  plans_folder: 'Planmappe', change_folder: 'Endre', section_share: 'Deling og eksport', section_display: 'Visning', section_backup: 'Sikkerhetskopi',
+  revoke_client_link: 'Trekk tilbake klientlenke', export_data: 'Last ned sikkerhetskopi (JSON)', import_data: 'Åpne sikkerhetskopi', import_url: 'Åpne fra lenke',
+  import_url_prompt: 'Lim inn en klientlenke eller delingslenke:', shortcuts_tips: 'Snarveier og tips', clear_all: 'Tøm plan', hide_single_day: 'Skjul endagshendelser i oversikt',
+  choose_folder_title: 'Velg planmappe', select_this_folder: 'Velg denne mappen',
+  empty_title: 'Start planen din', empty_text: 'Legg til elementer rett i kalenderen, eller åpne en eksisterende plan. Klikk på en dag for å legge til noe, og dra elementer for å flytte dem.',
+  empty_add_event: '+ Legg til første element', empty_open_plan: 'Åpne en plan fra Disk', empty_sign_in: 'Logg inn for å åpne planer', empty_import: 'Åpne en sikkerhetskopi',
+  untitled: 'Plan uten navn', plan_state_local: 'Bare i denne nettleseren', plan_state_drive: 'Lagret i Google Disk', plan_state_view_only: 'Kun visning – endringer lagres ikke',
+  status_not_saved: 'Ikke lagret i Disk', status_not_saved_hint: 'Denne planen lagres bare i denne nettleseren. Åpne Innstillinger → Lagre i Disk for å beholde den.',
+  status_view_only: 'Kun visning', status_expired: 'Økten er utløpt', reconnect: 'Koble til igjen',
+  reconnect_first: 'Google-økten din er utløpt. Klikk «Koble til igjen» øverst for å fortsette – endringene dine beholdes og lagres når du er tilbake.',
+  no_folder: 'Ingen mappe valgt', folder_unavailable: 'Mappen er utilgjengelig',
+  no_folder_msg: 'Velg en planmappe først – det er der nye planer lagres, og der denne listen henter planer fra.',
+  folder_error_msg: 'Kunne ikke åpne planmappen. Du har kanskje ikke tilgang – velg en annen mappe.',
+  no_plans_msg: 'Ingen planer i denne mappen ennå. Lag en med «+ Ny plan».', loading: 'Laster…', open_plan_title: 'Åpne en plan',
+  folder_label: (n) => `Mappe: ${n}`, edited_meta: (when, who) => who ? `Endret ${when} av ${who}` : `Endret ${when}`, badge_open: 'Åpen', badge_view_only: 'Kun visning',
+  folder_choice_title: 'Hvor skal planene dine lagres?',
+  folder_choice_text: 'Planer lagres som filer i en mappe i Google Disk. Du kan endre dette når som helst under Innstillinger → Planmappe.',
+  folder_choice_team: (n) => `Teammappe: ${n}`, folder_choice_team_desc: 'Delt med NewsLab-teamet – alle ser de samme planene.',
+  folder_choice_create: 'Opprett mappen «Produksjonsplaner» i Min disk', folder_choice_create_desc: 'Privat for deg til du deler den.',
+  folder_choice_browse: 'Velg en annen mappe…', folder_choice_browse_desc: 'Velg en mappe i Min disk eller på en delt disk.',
+  default_folder_name: 'Produksjonsplaner', folder_create_failed: 'Kunne ikke opprette mappen i Google Disk.',
+  new_plan_prompt: 'Gi den nye planen et navn:', save_to_drive_prompt: 'Lagre denne planen i Google Disk som:', save_copy_prompt: 'Lagre en kopi av planen som:',
+  copy_name: (n) => `${n} (kopi)`, saved_title: 'Lagret',
+  saved_to_drive_msg: (n) => `«${n}» er nå lagret i Google Disk. Endringer lagres automatisk fra nå av.`,
+  copy_saved_msg: (n) => `Kopi lagret som «${n}». Du redigerer nå kopien.`,
+  rename_prompt: 'Gi planen nytt navn:', rename_failed: 'Kunne ikke gi planen nytt navn i Google Disk.', create_failed: 'Kunne ikke lagre planen i Google Disk.',
+  load_failed: 'Kunne ikke åpne planen fra Google Disk.', invalid_plan_file: 'Denne filen er ikke en gyldig plan.',
+  view_only_title: 'Kun visning', view_only_msg: 'Du har bare lesetilgang til denne planen. Du kan se deg rundt og prøve endringer, men de lagres ikke i Disk. Bruk «Lagre en kopi» i Innstillinger for å beholde din egen versjon.',
+  file_missing_title: 'Fant ikke planen',
+  file_missing_msg: (n) => `Fant ikke «${n}» i Google Disk – den kan være slettet, eller du har ikke lenger tilgang. Kopien din er fortsatt her, men bare i denne nettleseren. Bruk «Lagre i Disk» for å beholde den.`,
+  confirm_replace_title: 'Erstatte gjeldende plan?',
+  confirm_replace_local: 'Den gjeldende planen er bare lagret i denne nettleseren og vil bli erstattet. Avbryt og bruk «Lagre i Disk» eller «Last ned sikkerhetskopi» først hvis du vil beholde den.',
+  confirm_replace_drive: (n) => `Dette erstatter innholdet i «${n}» i Google Disk med den importerte filen.`, replace: 'Erstatt',
+  clear_drive_warning: (n) => `→ Tømmer også «${n}» i Google Disk`,
+  save_first_msg: 'Lagre planen i Google Disk først (Innstillinger → Lagre i Disk), og lag deretter klientlenken.',
+  shortcuts_title: 'Snarveier og tips',
+  shortcuts_list: [['Klikk på en dag', 'Legg til et element den dagen'], ['Klikk på et element', 'Rediger det'], ['Dra et element', 'Flytt det til en annen dag'], ['Dra i kanten av et element', 'Gjør det lengre eller kortere'], ['Shift/⌘-klikk på elementer', 'Velg flere, og dra dem sammen'], ['Esc', 'Fjern markeringen, avbryt endring av lengde eller lukk en dialog'], ['⌘/Ctrl + Z', 'Angre'], ['⌘/Ctrl + Shift + Z', 'Gjør om'], ['?', 'Vis denne listen']]
+});
 
 let currentLang = localStorage.getItem('newslab-planner-lang') || 'en';
 function t(key, ...args) { const dict = i18n[currentLang] || i18n.en; const val = dict[key] ?? i18n.en[key] ?? key; return typeof val === 'function' ? val(...args) : val; }
-function applyStaticTranslations() { document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder)); }); if (isMobileViewport()) { const copyLinkBtn = document.getElementById('topCopyLinkBtn'); if (copyLinkBtn) copyLinkBtn.textContent = t('copy_client_link_short'); } }
+function applyStaticTranslations() { document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder)); }); if (isMobileViewport()) { const copyLinkBtn = document.getElementById('topCopyLinkBtn'); if (copyLinkBtn) copyLinkBtn.textContent = t('copy_client_link_short'); } const settingsBtn = document.getElementById('settingsBtn'); if (settingsBtn) { settingsBtn.title = t('settings'); settingsBtn.setAttribute('aria-label', t('settings')); } refreshCloudStatus(); }
 function updateLangToggle() { const toggle = document.getElementById('langToggleBtn'); if (currentLang === 'nb') { toggle.classList.add('on', 'is-nb'); } else { toggle.classList.remove('on', 'is-nb'); } }
 function setLanguage(lang) { if (!i18n[lang]) return; currentLang = lang; localStorage.setItem('newslab-planner-lang', lang); document.documentElement.lang = lang === 'nb' ? 'no' : 'en'; applyStaticTranslations(); updateLangToggle(); render(false); }
 
@@ -1007,6 +1510,8 @@ function loadState() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(sharedState));
         if (sharedState.lang) { currentLang = sharedState.lang; localStorage.setItem('newslab-planner-lang', currentLang); }
         currentDriveFileId = null; localStorage.removeItem('newslab-current-drive-file');
+        currentDriveFileName = null; localStorage.removeItem('newslab-current-drive-file-name');
+        currentDriveCanEdit = true; localStorage.removeItem('newslab-current-drive-canedit');
         lastKnownRevisionId = null; localStorage.removeItem('newslab-drive-file-revision');
         return sharedState;
       } catch(e) {}
@@ -1059,17 +1564,26 @@ function getTimeOffOverlapRanges(segStart, segEnd, timeOffEvents) {
   }
   return merged;
 }
-function appendTimeOffOverlays(bar, segStart, span, timeOffEvents) {
+function appendTimeOffOverlays(bar, segStart, span, timeOffEvents, pxPerDay) {
   if (!timeOffEvents.length) return;
+  // Bars are inset 4px from the true day-grid on each side (see the -4px/+4px/-8px
+  // margins applied to every event-bar's left/width at each render call site), so a
+  // sub-range mask must be positioned in real pixels against that same true grid and
+  // then clamped to the bar's own (inset) box — a plain percentage of the bar's own
+  // width would drift off the true day boundaries except at the exact midpoint.
+  const barWidthPx = span * pxPerDay - 8;
   const segEnd = addDays(segStart, span - 1);
   getTimeOffOverlapRanges(segStart, segEnd, timeOffEvents).forEach(([s, e]) => {
     const offsetStart = Math.round((s - segStart) / 86400000);
     const offsetSpan = Math.round((e - s) / 86400000) + 1;
-    const isLeftEdge = offsetStart === 0, isRightEdge = (offsetStart + offsetSpan) === span;
+    const left = Math.max(0, offsetStart * pxPerDay - 4);
+    const right = Math.min(barWidthPx, (offsetStart + offsetSpan) * pxPerDay - 4);
+    if (right <= left) return;
+    const isLeftEdge = left <= 0.01, isRightEdge = right >= barWidthPx - 0.01;
     const mask = document.createElement('div');
     mask.className = 'timeoff-overlay-mask';
-    mask.style.left = `${(offsetStart / span) * 100}%`;
-    mask.style.width = `${(offsetSpan / span) * 100}%`;
+    mask.style.left = `${left}px`;
+    mask.style.width = `${right - left}px`;
     mask.style.borderRadius = `${isLeftEdge ? 4 : 0}px ${isRightEdge ? 4 : 0}px ${isRightEdge ? 4 : 0}px ${isLeftEdge ? 4 : 0}px`;
     bar.appendChild(mask);
   });
@@ -1221,6 +1735,9 @@ function render(preserveScroll = true) {
     autoResizeTitle(); autoResizeDesc();
     document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
     document.getElementById('hideSingleDayToggle').classList.toggle('on', !!state.hideSingleDayOverview);
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.hidden = window.__isReadOnly || state.events.length > 0 || sessionStorage.getItem('newslab-empty-dismissed') === '1';
+    syncDriveUi();
 
     if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); }
     else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
@@ -1447,9 +1964,9 @@ function renderVerticalCalendar() {
       bar.appendChild(labelContainer);
 
       const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
-      appendTimeOffOverlays(bar, segStart, span, timeOffEvents);
 
       const rectWidth = (cal.clientWidth - sidebarW) * (span / daysToShow);
+      appendTimeOffOverlays(bar, segStart, span, timeOffEvents, rectWidth / span);
       bindEventBarEvents(bar, ev, rectWidth / span, segStart);
       layer.appendChild(bar);
     });
@@ -1734,7 +2251,7 @@ function renderHorizontalCalendar() {
     if (fromISO(ev.start) < days[0]) bar.classList.add('continues-left'); if (fromISO(ev.end) > days[days.length-1]) bar.classList.add('continues-right');
     
     const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
-    appendTimeOffOverlays(bar, days[startIdx], span, timeOffEvents);
+    appendTimeOffOverlays(bar, days[startIdx], span, timeOffEvents, dayWidth);
 
     bindEventBarEvents(bar, ev, dayWidth, days[startIdx]);
     layer.appendChild(bar);
@@ -1864,7 +2381,7 @@ function renderOverviewCalendar() {
             const isSingle = ev.start === ev.end;
             const bar = document.createElement('div');
             bar.className = 'event-bar ov-phase' + (isSingle ? ' ov-single-day' : '');
-            appendTimeOffOverlays(bar, eStart, actualSpan, timeOffEvents);
+            appendTimeOffOverlays(bar, eStart, actualSpan, timeOffEvents, pxPerDay);
             bar.dataset.id = ev.id; bar.dataset.color = ev.color;
             
             const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
@@ -2135,7 +2652,7 @@ function wireColorPicker(container) {
 }
 
 const modal = document.getElementById('modal'); const modalBody = document.getElementById('modalBody'); const modalTitle = document.getElementById('modalTitle');
-function closeModal() { modal.classList.remove('open'); }
+function closeModal() { modal.classList.remove('open'); delete modalBody.dataset.view; }
 document.getElementById('modalClose').addEventListener('click', closeModal); modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
 function openEventModal(event = null, defaultStart = null, defaultEnd = null) {
@@ -2201,7 +2718,7 @@ function openClearAllModal() {
   modalTitle.textContent = t('clear_title'); const eventCount = state.events.length; const confirmWord = t('clear_confirm_word');
   modalBody.innerHTML = `
     <p style="font-size: 15px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 16px;">${t('clear_description')}</p>
-    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); padding: 14px 16px; background: var(--bg); border-left: 2px solid var(--danger); margin-bottom: 8px;"><div style="margin-bottom: 4px;">${t('clear_events', eventCount)}</div><div>${t('clear_meta')}</div></div>
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); padding: 14px 16px; background: var(--bg); border-left: 2px solid var(--danger); margin-bottom: 8px;"><div style="margin-bottom: 4px;">${t('clear_events', eventCount)}</div><div>${t('clear_meta')}</div>${currentDriveFileId && currentDriveCanEdit ? `<div style="margin-top: 4px; color: var(--danger);">${escapeHtml(t('clear_drive_warning', currentDriveFileName || t('untitled')))}</div>` : ''}</div>
     <p style="font-size: 13px; color: var(--ink-soft); margin-top: 16px;">${t('clear_confirm_prefix')} <strong style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em;">${confirmWord}</strong> ${t('clear_confirm_suffix')}</p>
     <div class="field" style="margin-top: 8px;"><input type="text" id="clearConfirmInput" placeholder="${confirmWord}" autocomplete="off" style="font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase;" /></div>
     <div class="modal-actions" style="justify-content: flex-end;"><button class="action-btn" id="cancelClear">${t('cancel')}</button><button class="action-btn danger" id="confirmClear" disabled style="opacity: 0.4; cursor: not-allowed;">${t('clear_button')}</button></div>`;
@@ -2345,7 +2862,6 @@ document.getElementById('todayBtn')?.addEventListener('click', () => {
 document.getElementById('addEventBtn')?.addEventListener('click', () => { if(!window.__isReadOnly) openEventModal(); });
 document.getElementById('clearAllBtn')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.remove('open'); if(!window.__isReadOnly) openClearAllModal(); });
 document.getElementById('settingsBtn')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.toggle('open'); });
-document.getElementById('readOnlyToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('shareReadOnly').classList.toggle('on'); });
 document.getElementById('weekendToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); state.showWeekends = !state.showWeekends; saveState(); render(false); });
 document.getElementById('hideSingleDayToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); state.hideSingleDayOverview = !state.hideSingleDayOverview; saveState(); render(false); });
 document.getElementById('langToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); setLanguage(currentLang === 'en' ? 'nb' : 'en'); });
@@ -2378,15 +2894,6 @@ document.getElementById('topCopyLinkBtn')?.addEventListener('click', (e) => {
   } catch (err) { customAlert("Failed to generate link.", "Error"); }
 });
 
-document.getElementById('shareLinkBtn')?.addEventListener('click', (e) => {
-  document.getElementById('settingsMenu').classList.remove('open');
-  try {
-    state.lang = currentLang; const isReadOnly = document.getElementById('shareReadOnly').classList.contains('on');
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state)))); const baseUrl = window.location.href.split('#')[0]; const shareUrl = baseUrl + '#plan=' + encoded + (isReadOnly ? '&ro=1' : '');
-    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(shareUrl).then(() => { customAlert(t('link_copied'), 'Success'); }); } else { customPrompt(t('link_copied_fallback'), shareUrl, () => {}); }
-  } catch (err) { customAlert("Failed to generate link.", "Error"); }
-});
-
 document.getElementById('exportJsonBtn')?.addEventListener('click', (e) => {
   document.getElementById('settingsMenu').classList.remove('open'); state.lang = currentLang; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); const safeTitle = (state.title || 'Project').replace(/[^a-z0-9]/gi, '_').toLowerCase(); const dateStr = toISO(new Date()); downloadAnchorNode.setAttribute("download", `newslab_plan_${safeTitle}_${dateStr}.json`); document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove();
 });
@@ -2408,60 +2915,87 @@ document.getElementById('exportCsvBtn')?.addEventListener('click', (e) => {
 });
 
 document.getElementById('importJsonInput')?.addEventListener('change', (event) => {
-  document.getElementById('settingsMenu').classList.remove('open'); const file = event.target.files[0]; if (!file) return;
+  closeSettingsMenu(); const file = event.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    try { const importedState = JSON.parse(e.target.result); if (importedState && importedState.events) { state = migrateData(importedState); if (state.lang) setLanguage(state.lang); saveState(); render(); customAlert('Plan loaded successfully!', 'Success'); } else { customAlert('Invalid file format. Ensure it is a valid plan file.', 'Error'); } } catch (err) { customAlert('Error parsing the file.', 'Error'); }
     event.target.value = '';
+    let importedState;
+    try { importedState = JSON.parse(e.target.result); } catch (err) { customAlert('Error parsing the file.', 'Error'); return; }
+    if (!(importedState && importedState.events)) { customAlert('Invalid file format. Ensure it is a valid plan file.', 'Error'); return; }
+    confirmBeforeReplacingPlan('import', () => {
+      state = migrateData(importedState); if (state.lang) setLanguage(state.lang); saveState(); render(); customAlert('Plan loaded successfully!', 'Success');
+    });
   };
   reader.readAsText(file);
 });
 
+// Loads a plan from a link as a browser-only copy (never touches an open Drive
+// file). Accepts both client links (/share/#<driveFileId>) and the older
+// #plan=<base64> links, which must keep working for links already sent out.
+function applyPlanFromLink(importedState) {
+  state = migrateData(importedState);
+  window.__isReadOnly = false;
+  document.body.classList.remove('read-only');
+  document.querySelectorAll('#projectTitle, #projectDesc, #projectStart, #projectEnd').forEach(el => el.disabled = false);
+  clearCurrentDriveFile();
+  if (state.lang) setLanguage(state.lang);
+  saveState();
+  render(false);
+  customAlert('Plan loaded successfully!', 'Success');
+  history.replaceState(null, null, window.location.pathname);
+}
+function extractShareLinkFileId(url) {
+  const m = url.match(/\/share\/?(?:index\.html)?#([A-Za-z0-9_-]{10,})/) || url.match(/#file=([A-Za-z0-9_-]{10,})/);
+  return m ? m[1] : null;
+}
 document.getElementById('importUrlBtn')?.addEventListener('click', () => {
-  document.getElementById('settingsMenu').classList.remove('open');
-  customPrompt(t('import_url_prompt'), '', (url) => {
+  closeSettingsMenu();
+  customPrompt(t('import_url_prompt'), '', async (url) => {
     if (!url) return;
+    url = url.trim();
     try {
-      const hashIndex = url.indexOf('#plan=');
-      if (hashIndex === -1) throw new Error('No plan data found in URL');
-      
-      let encoded = url.substring(hashIndex + 6);
-      const ampIndex = encoded.indexOf('&');
-      if (ampIndex !== -1) encoded = encoded.substring(0, ampIndex);
-      
-      const json = decodeURIComponent(escape(atob(encoded)));
-      const importedState = JSON.parse(json);
-      
-      if (importedState && importedState.events) {
-         state = migrateData(importedState);
-         
-         // Remove read-only locks so the imported version is editable
-         window.__isReadOnly = false;
-         document.body.classList.remove('read-only');
-         document.querySelectorAll('#projectTitle, #projectDesc, #projectStart, #projectEnd').forEach(el => el.disabled = false);
-         
-         // Disconnect from any active Drive file
-         currentDriveFileId = null;
-         localStorage.removeItem('newslab-current-drive-file');
-         lastKnownRevisionId = null;
-         localStorage.removeItem('newslab-drive-file-revision');
-         updateCloudStatus('Disconnected');
-         
-         if (state.lang) setLanguage(state.lang);
-         saveState();
-         render(false);
-         customAlert('Plan loaded successfully!', 'Success');
-         
-         // Strip the hash from the browser URL to avoid refreshing back to the old state
-         history.replaceState(null, null, window.location.pathname);
+      let importedState;
+      const shareId = extractShareLinkFileId(url);
+      if (shareId) {
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(shareId)}?alt=media&key=${GOOGLE_API_KEY}&supportsAllDrives=true`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        importedState = await res.json();
       } else {
-         throw new Error('Invalid format');
+        const hashIndex = url.indexOf('#plan=');
+        if (hashIndex === -1) throw new Error('No plan data found in URL');
+        let encoded = url.substring(hashIndex + 6);
+        const ampIndex = encoded.indexOf('&');
+        if (ampIndex !== -1) encoded = encoded.substring(0, ampIndex);
+        importedState = JSON.parse(decodeURIComponent(escape(atob(encoded))));
       }
+      if (!(importedState && importedState.events)) throw new Error('Invalid format');
+      confirmBeforeReplacingPlan('link', () => applyPlanFromLink(importedState));
     } catch(err) {
       customAlert(t('import_error'), 'Error');
     }
   });
 });
+
+function openShortcutsModal() {
+  closeSettingsMenu();
+  modalTitle.textContent = t('shortcuts_title');
+  modalBody.dataset.view = 'shortcuts';
+  modalBody.innerHTML = `<div class="shortcut-list">${t('shortcuts_list').map(([k, d]) => `<span class="sc-key">${escapeHtml(k)}</span><span>${escapeHtml(d)}</span>`).join('')}</div>`;
+  modal.classList.add('open');
+}
+document.getElementById('shortcutsBtn')?.addEventListener('click', openShortcutsModal);
+document.addEventListener('keydown', (e) => {
+  if (e.key !== '?' || e.metaKey || e.ctrlKey || e.altKey) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+  if (modal.classList.contains('open') || document.getElementById('dialogModal').classList.contains('open')) return;
+  e.preventDefault(); openShortcutsModal();
+});
+
+document.getElementById('emptyStateClose')?.addEventListener('click', () => { sessionStorage.setItem('newslab-empty-dismissed', '1'); document.getElementById('emptyState').hidden = true; });
+document.getElementById('emptyAddEventBtn')?.addEventListener('click', () => { if (!window.__isReadOnly) openEventModal(); });
+document.getElementById('emptyOpenPlanBtn')?.addEventListener('click', () => { if (isDriveSignedIn()) openPlanPicker(); else document.getElementById('btnDriveLogin').click(); });
+document.getElementById('emptyImportBtn')?.addEventListener('click', () => document.getElementById('importJsonInput').click());
 
 if (window.__isReadOnly) document.querySelectorAll('#projectTitle, #projectDesc, #projectStart, #projectEnd').forEach(el => el.disabled = true);
 applyStaticTranslations(); updateLangToggle(); document.documentElement.lang = currentLang === 'nb' ? 'no' : 'en';
@@ -2630,11 +3164,13 @@ if (initialLoad) {
       if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.getToken()) {
         return customAlert('Sign in with Google first to create a client link.', 'Sign in required');
       }
+      if (sessionExpired) return customAlert(t('reconnect_first'), t('status_expired'));
       if (!currentDriveFileId) {
-        return customAlert('Save this plan to a Drive file first (Settings → "Save as New File"), then create the client link.', 'Save to Drive first');
+        return customAlert(t('save_first_msg'), 'Save to Drive first');
       }
+      if (!currentDriveCanEdit) return customAlert(t('view_only_msg'), t('view_only_title'));
       const fileId = currentDriveFileId;
-      const name = state.title || 'this plan';
+      const name = currentDriveFileName || state.title || 'this plan';
       const already = await isFilePublic(fileId);
 
       const doShare = function () {
@@ -2643,8 +3179,8 @@ if (initialLoad) {
             updateCloudStatus('Sharing...');
             state.lang = currentLang;
             // Push the latest edits so the link opens the current version.
-            await fetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId +
-              '?uploadType=media&supportsAllDrives=true', {
+            const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId +
+              '?uploadType=media&supportsAllDrives=true&fields=headRevisionId', {
               method: 'PATCH',
               headers: new Headers({
                 'Authorization': 'Bearer ' + gapi.client.getToken().access_token,
@@ -2652,6 +3188,11 @@ if (initialLoad) {
               }),
               body: JSON.stringify(state)
             });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            // Keep the conflict check's baseline in step with this upload, or the
+            // next autosave would mistake our own write for someone else's.
+            const saved = await resp.json();
+            if (saved.headRevisionId) { lastKnownRevisionId = saved.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId); }
             if (!already) await setFilePublic(fileId);
             const shareUrl = buildShareUrl(fileId);
             updateCloudStatus('Saved');
@@ -2686,13 +3227,10 @@ if (initialLoad) {
 
   // ---- 7. "Revoke Client Link" — new Settings item ------------------------
   function wireRevokeItem() {
-    const anchor = document.getElementById('shareLinkBtn');
-    if (!anchor || document.getElementById('revokeShareBtn')) return;
-    const item = document.createElement('button');
-    item.className = 'settings-menu-item';
-    item.id = 'revokeShareBtn';
-    item.textContent = 'Revoke Client Link';
-    anchor.parentNode.insertBefore(item, anchor.nextSibling);
+    // The button lives in the Settings markup ("Share & export"); CSS only shows
+    // it while signed in with a Drive plan open.
+    const item = document.getElementById('revokeShareBtn');
+    if (!item) return;
 
     item.addEventListener('click', function () {
       document.getElementById('settingsMenu').classList.remove('open');
