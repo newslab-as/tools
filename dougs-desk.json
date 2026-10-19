@@ -1,28 +1,25 @@
 {
-  "date": "2026-10-16",
+  "date": "2026-10-19",
   "meetings": [
-    { "time": "09:30", "title": "Down Education VO", "client": false },
-    { "time": "11:00", "title": "Drodlemøte: Holzweiler julegavekampanje", "client": false },
-    { "time": "11:00", "title": "Ask Harald about server", "client": false },
-    { "time": "11:30", "title": "Look into tool for helping people spot scams / phishing", "client": false },
-    { "time": "13:00", "title": "Plan out design dept projects", "client": false },
-    { "time": "14:00", "title": "Doug & Torgeir & Telenor-prez", "client": false },
-    { "time": "15:00", "title": "Down Education graphics", "client": false }
+    { "time": "09:15", "title": "Internpolitisk kvarter", "client": false },
+    { "time": "09:30", "title": "Teamledermøte", "client": false },
+    { "time": "10:00", "title": "Prepare Department Meeting", "client": false },
+    { "time": "10:30", "title": "Holzweiler julekampanje", "client": false },
+    { "time": "11:30", "title": "Until Next Summer graphics", "client": false },
+    { "time": "12:30", "title": "Nordisk sikkerhetsrapport kickoff", "client": true },
+    { "time": "13:00", "title": "Design Dept — Ukentlig møte", "client": false },
+    { "time": "14:00", "title": "Cat to the vet (14:20)", "client": false },
+    { "time": "15:30", "title": "Update Production Planner for Torgeir", "client": false },
+    { "time": "16:00", "title": "Cancel squarespace", "client": false }
   ],
   "action_items": [
-    "Revise the Melontaxi budgets: use hourly rates of NOK 1,190/1,430 and note travel, accommodation and food come on top.",
-    "Ask Snorre to get Selin from Melontaxi set up in Slack; she is waiting on the update.",
-    "Send photographer Ole the Udir/NSY selects and follow up on the email signature and meeting with Kristin Ålmo.",
-    "Prepare the Holzweiler Christmas campaign brief response (200-250k budget, launch around 10 Nov) for the 11:00 brainstorm.",
-    "Send Holzweiler the 28 jacket images with and without graphics, as Sofia asked.",
-    "Finish the CMYK version of the 30 under 30 T-shirt and the Word template colour/black-white versions for NSY.",
-    "Follow up with Ida and Julie on the remaining missing receipts and the new receipt upload tool."
+    "Download Ole's edited NSY photos (TIFF and JPG) from the Dropbox link and check that other brands' logos are removed.",
+    "Update the Production Planner for Torgeir (15:30).",
+    "Cancel the Squarespace subscription (16:00).",
+    "Prepare for the Nordisk sikkerhetsrapport kickoff with Jakob Andresen from Telenor at 12:30.",
+    "Note that the Figma Professional subscription renews on Oct 25."
   ],
   "needs_reply": [
-    { "source": "slack", "from": "Linn Isaksen", "summary": "Asks if you agree the Melontaxi first budget option is too low and that travel costs should be listed on top." },
-    { "source": "gmail", "from": "Aurora Berg Heltzer (Udir)", "summary": "Sent the final selection of 60 photos for Vetuva, 12 of them for their websites." },
-    { "source": "gmail", "from": "Selin Yılmaz (Melontaxi)", "summary": "Waiting for the Slack access update from Snorre." },
-    { "source": "gmail", "from": "Karoline (Figma)", "summary": "Recommends a colour and a black/white version of the NSY Word template." },
-    { "source": "slack", "from": "Ida Anett Danielsen", "summary": "Asks whether the receipt tool can separate September receipts posted in October." }
+    { "source": "gmail", "from": "Ole Ekker (studio.ekker@gmail.com)", "summary": "Delivered the NSY photos as TIFF and JPG with logos and details fixed, and is waiting for your confirmation." }
   ]
 }
