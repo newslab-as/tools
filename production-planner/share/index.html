@@ -136,6 +136,17 @@
   .choice-list { display: flex; flex-direction: column; gap: 8px; }
   .choice-btn { display: block; width: 100%; text-align: left; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); cursor: pointer; color: var(--ink); font-family: inherit; }
   .choice-btn:hover { border-color: var(--ink); }
+  .choice-btn.selected { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--bg-card); }
+  .choice-btn.selected strong::after { content: '  ✓'; }
+  .history-section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); margin-bottom: 6px; }
+  .history-day { position: sticky; top: 0; z-index: 1; padding: 6px 12px; background: var(--bg-card); border-bottom: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  .history-note { margin-top: 14px; font-size: 12px; line-height: 1.5; color: var(--ink-faint); }
+  .version-preview { padding: 16px; border: 1px solid var(--line); background: var(--bg); }
+  .version-title { font-size: 20px; font-weight: 500; color: var(--ink); margin: 6px 0 4px; }
+  .version-stats { font-size: 13px; color: var(--ink-soft); }
+  .version-sample { margin: 12px 0 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink); }
+  .version-sample li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-top: 1px solid var(--line-soft); }
+  .version-sample li span { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); white-space: nowrap; }
   .choice-btn strong { display: block; font-size: 14px; margin-bottom: 2px; }
   .choice-btn span { font-size: 12px; color: var(--ink-soft); line-height: 1.4; }
   .shortcut-list { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; align-items: baseline; font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
@@ -531,6 +542,7 @@
             <div class="settings-menu-divider"></div>
 
             <div class="settings-section-label" data-i18n="section_backup">Backup</div>
+            <button class="settings-menu-item" id="versionHistoryBtn" data-i18n="version_history">Version history…</button>
             <button class="settings-menu-item" id="exportJsonBtn" data-i18n="export_data">Download backup (JSON)</button>
             <label class="settings-menu-item" for="importJsonInput" style="margin: 0;" data-i18n="import_data">Load backup file</label>
             <input type="file" id="importJsonInput" accept=".json" style="display: none;" />
@@ -785,16 +797,90 @@ async function initializeGapiClient() {
 document.getElementById('btnDriveLogin')?.addEventListener('click', () => { if (gapiInited && gisInited) { if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'}); else tokenClient.requestAccessToken({prompt: ''}); } });
 document.getElementById('topSignInBtn')?.addEventListener('click', () => { document.getElementById('btnDriveLogin')?.click(); });
 
-// Custom Drive Picker Logic
-let pickerHistory = [{id: 'top', name: 'Google Drive'}];
+// Drive list endpoints return at most one page per call; follow nextPageToken so
+// long folder/plan lists are never silently cut off.
+async function listAllPages(request, params, key) {
+  const out = []; let pageToken;
+  do {
+    const res = await request(pageToken ? { ...params, pageToken } : params);
+    out.push(...(res.result[key] || []));
+    pageToken = res.result.nextPageToken;
+  } while (pageToken && out.length < 5000);
+  return out;
+}
 
-document.getElementById('btnBrowseFolder')?.addEventListener('click', async () => {
-  const token = gapi.client.getToken()?.access_token;
-  if (!token) return customAlert("Please sign in first.");
-  
+// ---- Google's own Drive picker (falls back to the in-app folder browser) ----
+const GOOGLE_PROJECT_NUMBER = '832442581745';
+let pickerApiPromise = null;
+function loadPickerApi() {
+  if (typeof google !== 'undefined' && google.picker) return Promise.resolve();
+  if (!pickerApiPromise) {
+    pickerApiPromise = new Promise((resolve, reject) => {
+      if (typeof gapi === 'undefined' || !gapi.load) return reject(new Error('gapi unavailable'));
+      gapi.load('picker', { callback: resolve, onerror: reject, timeout: 10000, ontimeout: reject });
+    }).catch(err => { pickerApiPromise = null; throw err; });
+  }
+  return pickerApiPromise;
+}
+async function showGooglePicker(views, title, onPicked) {
+  await loadPickerApi();
+  const builder = new google.picker.PickerBuilder()
+    .setTitle(title)
+    .enableFeature(google.picker.Feature.SUPPORT_DRIVES)
+    .setOAuthToken(gapi.client.getToken().access_token)
+    .setDeveloperKey(GOOGLE_API_KEY)
+    .setAppId(GOOGLE_PROJECT_NUMBER)
+    .setLocale(currentLang === 'nb' ? 'no' : 'en')
+    .setCallback((data) => {
+      const action = data[google.picker.Response.ACTION];
+      if (action === google.picker.Action.PICKED) {
+        const doc = data[google.picker.Response.DOCUMENTS][0];
+        onPicked(doc[google.picker.Document.ID], doc[google.picker.Document.NAME]);
+      } else if (action === 'error') {
+        onPicked(null, null, new Error('picker error'));
+      }
+    });
+  views.forEach(v => builder.addView(v));
+  builder.build().setVisible(true);
+}
+function chooseDriveFolder(onPick) {
+  if (!isDriveSignedIn()) { document.getElementById('btnDriveLogin').click(); return; }
+  if (sessionExpired) { customAlert(t('reconnect_first'), t('status_expired')); return; }
+  const fallback = () => openFallbackFolderBrowser(onPick);
+  const folderMime = 'application/vnd.google-apps.folder';
+  loadPickerApi().then(() => {
+    const myDrive = new google.picker.DocsView(google.picker.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true).setMimeTypes(folderMime).setParent('root');
+    const sharedDrives = new google.picker.DocsView(google.picker.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true).setMimeTypes(folderMime).setEnableDrives(true);
+    return showGooglePicker([myDrive, sharedDrives], t('choose_folder_title'), (id, name, err) => { if (err) fallback(); else onPick(id, name); });
+  }).catch(fallback);
+}
+function browseDriveForPlan() {
+  if (!isDriveSignedIn()) { document.getElementById('btnDriveLogin').click(); return; }
+  if (sessionExpired) { customAlert(t('reconnect_first'), t('status_expired')); return; }
+  loadPickerApi().then(() => {
+    const mine = new google.picker.DocsView(google.picker.ViewId.DOCS).setMimeTypes('application/json').setIncludeFolders(true).setMode(google.picker.DocsViewMode.LIST);
+    const shared = new google.picker.DocsView(google.picker.ViewId.DOCS).setMimeTypes('application/json').setIncludeFolders(true).setEnableDrives(true).setMode(google.picker.DocsViewMode.LIST);
+    return showGooglePicker([mine, shared], t('open_plan_title'), (id, name, err) => {
+      if (err) { customAlert(t('picker_unavailable'), 'Error'); return; }
+      if (id === currentDriveFileId) { closeModal(); return; }
+      confirmBeforeReplacingPlan('open', () => openDrivePlan(id));
+    });
+  }).catch(() => customAlert(t('picker_unavailable'), 'Error'));
+}
+
+// In-app folder browser — fallback when Google's picker can't be used.
+let pickerHistory = [{id: 'top', name: 'Google Drive'}];
+let folderBrowserOnPick = null;
+function openFallbackFolderBrowser(onPick) {
+  folderBrowserOnPick = onPick;
   pickerHistory = [{id: 'top', name: 'Google Drive'}];
   document.getElementById('folderPickerModal').classList.add('open');
   loadPickerFolders();
+}
+
+document.getElementById('btnBrowseFolder')?.addEventListener('click', () => {
+  closeSettingsMenu();
+  chooseDriveFolder((id, name) => setPlansFolder(id, name));
 });
 
 async function loadPickerFolders() {
@@ -819,12 +905,8 @@ async function loadPickerFolders() {
   if (currentFolder.id === 'top') {
       const drivesList = [{id: 'root', name: 'My Drive'}];
       try {
-          const drivesRes = await gapi.client.drive.drives.list({pageSize: 100});
-          if (drivesRes.result.drives) {
-              drivesRes.result.drives.forEach(d => {
-                  drivesList.push({id: d.id, name: d.name});
-              });
-          }
+          const drives = await listAllPages((p) => gapi.client.drive.drives.list(p), { pageSize: 100 }, 'drives');
+          drives.forEach(d => drivesList.push({id: d.id, name: d.name}));
       } catch(e) { console.error(e); }
       
       listContainer.innerHTML = '';
@@ -853,16 +935,14 @@ async function loadPickerFolders() {
   }
 
   try {
-    const response = await gapi.client.drive.files.list({
+    const folders = await listAllPages((p) => gapi.client.drive.files.list(p), {
       q: `'${currentFolder.id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       orderBy: "name",
-      pageSize: 100,
-      fields: "files(id, name)",
+      pageSize: 1000,
+      fields: "nextPageToken, files(id, name)",
       supportsAllDrives: true,
       includeItemsFromAllDrives: true
-    });
-
-    const folders = response.result.files;
+    }, 'files');
     listContainer.innerHTML = '';
 
     if (!folders || folders.length === 0) {
@@ -906,7 +986,9 @@ document.getElementById('folderPickerBack')?.addEventListener('click', () => {
 document.getElementById('folderPickerSelectCurrent')?.addEventListener('click', () => {
     const currentFolder = pickerHistory[pickerHistory.length - 1];
     document.getElementById('folderPickerModal').classList.remove('open');
-    setPlansFolder(currentFolder.id, currentFolder.name);
+    const onPick = folderBrowserOnPick || ((id, name) => setPlansFolder(id, name));
+    folderBrowserOnPick = null;
+    onPick(currentFolder.id, currentFolder.name);
 });
 
 document.getElementById('folderPickerCancel')?.addEventListener('click', () => {
@@ -1054,7 +1136,9 @@ async function openFolderChoiceModal(afterChoice) {
       closeModal(); setPlansFolder(res.result.id, res.result.name); if (afterChoice) afterChoice();
     } catch (err) { if (isAuthError(err)) markSessionExpired(); else customAlert(t('folder_create_failed'), 'Error'); }
   });
-  addChoice(t('folder_choice_browse'), t('folder_choice_browse_desc'), () => { closeModal(); document.getElementById('btnBrowseFolder').click(); });
+  addChoice(t('folder_choice_browse'), t('folder_choice_browse_desc'), () => {
+    closeModal(); chooseDriveFolder((id, name) => { setPlansFolder(id, name); if (afterChoice) afterChoice(); });
+  });
 }
 
 async function fetchDriveFiles() {
@@ -1062,8 +1146,8 @@ async function fetchDriveFiles() {
   if (!folderId || !isDriveSignedIn()) { driveFilesCache = []; renderPlanPickerIfOpen(); return; }
   try {
     updateCloudStatus('Syncing...');
-    const response = await gapi.client.drive.files.list({ q: `'${folderId}' in parents and trashed=false`, fields: 'files(id,name,mimeType,modifiedTime,lastModifyingUser(displayName),capabilities(canEdit))', orderBy: 'modifiedTime desc', pageSize: 200, spaces: 'drive', supportsAllDrives: true, includeItemsFromAllDrives: true });
-    driveFilesCache = (response.result.files || []).filter(f => f.name.endsWith('.json') || f.mimeType === 'application/json');
+    const files = await listAllPages((p) => gapi.client.drive.files.list(p), { q: `'${folderId}' in parents and trashed=false`, fields: 'nextPageToken, files(id,name,mimeType,modifiedTime,lastModifyingUser(displayName),capabilities(canEdit))', orderBy: 'modifiedTime desc', pageSize: 1000, spaces: 'drive', supportsAllDrives: true, includeItemsFromAllDrives: true }, 'files');
+    driveFilesCache = files.filter(f => f.name.endsWith('.json') || f.mimeType === 'application/json');
     driveFolderError = null;
     updateCloudStatus('Connected');
   } catch (err) {
@@ -1110,18 +1194,23 @@ function renderPlanPicker(loading) {
   }).join('');
   body.innerHTML = `<div class="plan-list">${listHtml}</div>
     <div class="plan-picker-footer">
-      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%;">${escapeHtml(t('folder_label', folderName))}</span>
-      <span style="display: flex; gap: 8px;">
-        <button class="action-btn" id="planPickerChangeFolder" style="padding: 6px 10px; font-size: 11px;">${escapeHtml(t('change_folder'))}</button>
-        <button class="action-btn primary" id="planPickerNew" style="padding: 6px 10px; font-size: 11px;">${escapeHtml(t('new_plan'))}</button>
-      </span>
+      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1;">${escapeHtml(t('folder_label', folderName))}</span>
+      <button class="link-btn" id="planPickerChangeFolder">${escapeHtml(t('change_folder'))}</button>
+    </div>
+    <div class="modal-actions" style="justify-content: flex-end; margin-top: 16px;">
+      <button class="action-btn" id="planPickerBrowse" style="padding: 8px 12px; font-size: 11px;">${escapeHtml(t('browse_drive'))}</button>
+      <button class="action-btn primary" id="planPickerNew" style="padding: 8px 12px; font-size: 11px;">${escapeHtml(t('new_plan'))}</button>
     </div>`;
   body.querySelectorAll('.plan-row').forEach(row => row.addEventListener('click', () => {
     const id = row.dataset.fileId;
     if (id === currentDriveFileId) { closeModal(); return; }
     confirmBeforeReplacingPlan('open', () => openDrivePlan(id));
   }));
-  document.getElementById('planPickerChangeFolder').addEventListener('click', () => { closeModal(); if (hasFolder) document.getElementById('btnBrowseFolder').click(); else openFolderChoiceModal(); });
+  document.getElementById('planPickerChangeFolder').addEventListener('click', () => {
+    if (!hasFolder) { openFolderChoiceModal(); return; }
+    chooseDriveFolder((id, name) => setPlansFolder(id, name)); // the open list refreshes itself
+  });
+  document.getElementById('planPickerBrowse').addEventListener('click', browseDriveForPlan);
   document.getElementById('planPickerNew').addEventListener('click', () => { closeModal(); startNewDrivePlan(); });
 }
 
@@ -1138,6 +1227,7 @@ async function openDrivePlan(fileId) {
     if (!(driveState && driveState.events)) { updateCloudStatus('Connected'); customAlert(t('invalid_plan_file'), 'Error'); return; }
     state = migrateData(driveState);
     setCurrentDriveFile(fileId, meta.result.name, !(meta.result.capabilities && meta.result.capabilities.canEdit === false), meta.result.headRevisionId);
+    delete sessionCheckpointDone[fileId]; // first save after opening checkpoints "before these changes"
     if (state.lang) setLanguage(state.lang);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render(); updateCloudStatus('Connected');
     closeSettingsMenu(); closeModal();
@@ -1148,11 +1238,11 @@ async function openDrivePlan(fileId) {
   }
 }
 
-async function createDrivePlanFile(name, planState, resetHistory) {
+async function createDrivePlanFile(name, planState, resetHistory, folderId) {
   const fileName = /\.json$/i.test(name) ? name : name + '.json';
   try {
     updateCloudStatus('Creating...');
-    const createRes = await gapi.client.drive.files.create({ resource: { name: fileName, mimeType: 'application/json', parents: [getPlansFolderId()] }, fields: 'id', supportsAllDrives: true });
+    const createRes = await gapi.client.drive.files.create({ resource: { name: fileName, mimeType: 'application/json', parents: [folderId || getPlansFolderId()] }, fields: 'id', supportsAllDrives: true });
     const fileId = createRes.result.id;
     planState.lang = currentLang;
     const resp = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media&supportsAllDrives=true&fields=headRevisionId`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: JSON.stringify(planState) });
@@ -1171,41 +1261,88 @@ async function createDrivePlanFile(name, planState, resetHistory) {
   }
 }
 
-function ensureDriveReady(retry) {
+function ensureDriveReady() {
   closeSettingsMenu();
   if (!isDriveSignedIn()) { document.getElementById('btnDriveLogin').click(); return false; }
   if (sessionExpired) { customAlert(t('reconnect_first'), t('status_expired')); return false; }
-  if (!getPlansFolderId()) { openFolderChoiceModal(retry); return false; }
   return true;
 }
 function hasUnsavedLocalWork() { return !currentDriveFileId && !!state.events && state.events.length > 0; }
 function confirmBeforeReplacingPlan(kind, proceed) {
+  const go = () => { saveLocalSnapshot(kind); proceed(); };
   if (kind === 'import' && currentDriveFileId && currentDriveCanEdit) {
-    return customConfirm(t('confirm_replace_drive', currentDriveFileName || t('untitled')), proceed, t('confirm_replace_title'), t('replace'));
+    return customConfirm(t('confirm_replace_drive', currentDriveFileName || t('untitled')), async () => { await checkpointCurrentDriveVersion(); go(); }, t('confirm_replace_title'), t('replace'));
   }
   if (hasUnsavedLocalWork()) {
-    return customConfirm(t('confirm_replace_local'), proceed, t('confirm_replace_title'), t('replace'));
+    return customConfirm(t('confirm_replace_local'), go, t('confirm_replace_title'), t('replace'));
   }
   proceed();
 }
 
-function startNewDrivePlan() {
-  if (!ensureDriveReady(startNewDrivePlan)) return;
-  confirmBeforeReplacingPlan('new', () => {
-    customPrompt(t('new_plan_prompt'), t('untitled'), async (name) => {
-      name = (name || '').trim(); if (!name) return;
-      const blank = getBlankState(); blank.title = stripJson(name);
-      await createDrivePlanFile(name, blank, true);
-    });
+// Name + "Save in" dialog shared by New plan, Save to Drive and Save a copy.
+// The chosen folder becomes the plans folder, so "same folder as before" means
+// wherever the user last saved.
+function openSavePlanDialog({ title, defaultName, actionLabel, onSave }) {
+  closeSettingsMenu();
+  const currentId = getPlansFolderId();
+  const currentName = localStorage.getItem('newslab-drive-folder-name') || t('plans_folder');
+  let chosen = currentId ? { id: currentId, name: currentName } : null;
+  modalTitle.textContent = title;
+  modalBody.dataset.view = 'save-plan';
+  modalBody.innerHTML = `
+    <div class="field"><label>${escapeHtml(t('plan_name'))}</label><input type="text" id="savePlanName" value="${escapeAttr(defaultName)}" autocomplete="off" /></div>
+    <div class="field" style="margin-bottom: 0;"><label>${escapeHtml(t('save_in'))}</label><div class="choice-list" id="saveFolderChoices"></div></div>
+    <div class="modal-actions" style="justify-content: flex-end;">
+      <button class="action-btn" id="savePlanCancel">${escapeHtml(t('cancel'))}</button>
+      <button class="action-btn primary" id="savePlanConfirm">${escapeHtml(actionLabel)}</button>
+    </div>`;
+  const nameInput = document.getElementById('savePlanName');
+  const confirmBtn = document.getElementById('savePlanConfirm');
+  const updateConfirm = () => { const ok = !!chosen && !!nameInput.value.trim(); confirmBtn.disabled = !ok; confirmBtn.style.opacity = ok ? '1' : '0.4'; };
+  const renderChoices = () => {
+    const box = document.getElementById('saveFolderChoices'); if (!box) return;
+    box.innerHTML = '';
+    const add = (selected, label, desc, onClick) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'choice-btn' + (selected ? ' selected' : '');
+      b.innerHTML = `<strong>${escapeHtml(label)}</strong><span>${escapeHtml(desc)}</span>`;
+      b.addEventListener('click', onClick); box.appendChild(b);
+    };
+    if (currentId) add(!!chosen && chosen.id === currentId, currentName, t('save_in_same_desc'), () => { chosen = { id: currentId, name: currentName }; renderChoices(); updateConfirm(); });
+    const other = chosen && chosen.id !== currentId ? chosen : null;
+    add(!!other, other ? other.name : t(currentId ? 'choose_other_folder' : 'choose_a_folder'), t(other ? 'save_in_other_desc' : 'choose_folder_desc'),
+      () => chooseDriveFolder((id, name) => { chosen = { id, name }; renderChoices(); updateConfirm(); }));
+  };
+  renderChoices(); updateConfirm();
+  nameInput.addEventListener('input', updateConfirm);
+  nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !confirmBtn.disabled) { e.preventDefault(); confirmBtn.click(); } });
+  document.getElementById('savePlanCancel').addEventListener('click', closeModal);
+  confirmBtn.addEventListener('click', () => {
+    if (confirmBtn.disabled) return;
+    const name = nameInput.value.trim(); const folder = chosen;
+    closeModal();
+    if (folder.id !== getPlansFolderId()) setPlansFolder(folder.id, folder.name);
+    onSave(name, folder.id);
   });
+  modal.classList.add('open');
+  setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
+}
+
+function startNewDrivePlan() {
+  if (!ensureDriveReady()) return;
+  confirmBeforeReplacingPlan('new', () => openSavePlanDialog({
+    title: t('new_plan_title'), defaultName: t('untitled'), actionLabel: t('create'),
+    onSave: async (name, folderId) => { const blank = getBlankState(); blank.title = stripJson(name); await createDrivePlanFile(name, blank, true, folderId); }
+  }));
 }
 function saveCurrentPlanToDrive(asCopy) {
-  if (!ensureDriveReady(() => saveCurrentPlanToDrive(asCopy))) return;
+  if (!ensureDriveReady()) return;
   const base = asCopy ? (currentDriveFileName || state.title || t('untitled')) : (state.title || t('untitled'));
-  customPrompt(asCopy ? t('save_copy_prompt') : t('save_to_drive_prompt'), asCopy ? t('copy_name', base) : base, async (name) => {
-    name = (name || '').trim(); if (!name) return;
-    const ok = await createDrivePlanFile(name, state, false);
-    if (ok) customAlert(t(asCopy ? 'copy_saved_msg' : 'saved_to_drive_msg', stripJson(name)), t('saved_title'));
+  openSavePlanDialog({
+    title: t(asCopy ? 'save_copy' : 'save_to_drive'), defaultName: asCopy ? t('copy_name', base) : base, actionLabel: t('save'),
+    onSave: async (name, folderId) => {
+      const ok = await createDrivePlanFile(name, state, false, folderId);
+      if (ok) customAlert(t(asCopy ? 'copy_saved_msg' : 'saved_to_drive_msg', stripJson(name)), t('saved_title'));
+    }
   });
 }
 function renameCurrentPlan() {
@@ -1234,7 +1371,170 @@ function driveSignOut() {
   updateCloudStatus('Disconnected');
 }
 
+// ---- Version history ----
+// Drive stores a version of the plan file on every autosave, but discards
+// ordinary versions after ~30 days / 100 versions. Key versions are marked
+// keepForever as checkpoints: the plan as it was when opened (before that
+// session's edits), at most hourly during long sessions, and right before
+// destructive actions (clear, import over, restore).
+const CHECKPOINT_INTERVAL_MS = 60 * 60 * 1000;
+const sessionCheckpointDone = {};
+const lastCheckpointAt = {};
+const keptRevisions = new Set();
+async function markCheckpoint(fileId, revisionId) {
+  if (!fileId || !revisionId || keptRevisions.has(fileId + ':' + revisionId)) return;
+  try {
+    await gapi.client.drive.revisions.update({ fileId, revisionId, resource: { keepForever: true } });
+    keptRevisions.add(fileId + ':' + revisionId);
+    lastCheckpointAt[fileId] = Date.now();
+    await pruneCheckpoints(fileId);
+  } catch (err) { if (isAuthError(err)) markSessionExpired(); }
+}
+// Drive allows 200 kept versions per file; release the oldest well before that.
+async function pruneCheckpoints(fileId) {
+  const revs = await listAllPages((p) => gapi.client.drive.revisions.list(p), { fileId, pageSize: 1000, fields: 'nextPageToken, revisions(id,modifiedTime,keepForever)' }, 'revisions');
+  const kept = revs.filter(r => r.keepForever).sort((a, b) => new Date(a.modifiedTime) - new Date(b.modifiedTime));
+  for (const r of kept.slice(0, Math.max(0, kept.length - 180))) {
+    await gapi.client.drive.revisions.update({ fileId, revisionId: r.id, resource: { keepForever: false } });
+    keptRevisions.delete(fileId + ':' + r.id);
+  }
+}
+async function checkpointCurrentDriveVersion() {
+  if (!currentDriveFileId || !currentDriveCanEdit || !isDriveSignedIn() || sessionExpired || window.__isReadOnly) return;
+  if (autoSavePending) { clearTimeout(autoSaveTimeout); await performDriveSave(false); }
+  await markCheckpoint(currentDriveFileId, lastKnownRevisionId);
+}
+function maybeCheckpointAfterSave(fileId, previousRevisionId, newRevisionId) {
+  if (!sessionCheckpointDone[fileId]) { sessionCheckpointDone[fileId] = true; markCheckpoint(fileId, previousRevisionId); }
+  else if (Date.now() - (lastCheckpointAt[fileId] || 0) > CHECKPOINT_INTERVAL_MS) markCheckpoint(fileId, newRevisionId);
+}
+
+// Safety copies kept in this browser before destructive actions, so even a plan
+// that was never saved to Drive can be brought back.
+const SNAPSHOT_KEY = 'newslab-planner-snapshots';
+function getLocalSnapshots() { try { return JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || '[]'); } catch (e) { return []; } }
+function saveLocalSnapshot(reason) {
+  if (!state || ((!state.events || !state.events.length) && !state.title)) return;
+  const data = JSON.stringify(state);
+  const snaps = getLocalSnapshots();
+  if (snaps[0] && snaps[0].data === data) return;
+  snaps.unshift({ at: Date.now(), reason, title: state.title || '', events: (state.events || []).length, fileName: currentDriveFileName || null, data });
+  snaps.length = Math.min(snaps.length, 10);
+  while (snaps.length) { try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snaps)); return; } catch (e) { snaps.pop(); } }
+}
+
+let historyRevisions = null; let historyError = null;
+const historyMsg = (text) => `<div class="plan-list-empty" style="border: 1px solid var(--line);">${escapeHtml(text)}</div>`;
+function historyViewOpen() { return modalBody.dataset.view === 'history' && modal.classList.contains('open'); }
+function openVersionHistory() {
+  closeSettingsMenu();
+  if (window.__isReadOnly) return;
+  modalTitle.textContent = t('history_title');
+  modalBody.dataset.view = 'history';
+  historyRevisions = null; historyError = null;
+  modal.classList.add('open');
+  renderVersionHistory();
+  loadDriveRevisions();
+}
+async function loadDriveRevisions() {
+  if (!currentDriveFileId || !currentDriveCanEdit || !isDriveSignedIn() || sessionExpired) return;
+  const fileId = currentDriveFileId;
+  try {
+    const revs = await listAllPages((p) => gapi.client.drive.revisions.list(p), { fileId, pageSize: 1000, fields: 'nextPageToken, revisions(id,modifiedTime,lastModifyingUser(displayName),keepForever)' }, 'revisions');
+    if (fileId !== currentDriveFileId) return;
+    historyRevisions = revs.sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+  } catch (err) { if (isAuthError(err)) markSessionExpired(); historyError = err; }
+  renderVersionHistory();
+}
+function renderVersionHistory() {
+  if (!historyViewOpen()) return;
+  const loc = currentLang === 'nb' ? 'nb-NO' : 'en-GB';
+  let driveHtml;
+  if (!currentDriveFileId) driveHtml = historyMsg(t('history_needs_drive'));
+  else if (!isDriveSignedIn() || sessionExpired) driveHtml = historyMsg(t('history_sign_in'));
+  else if (!currentDriveCanEdit) driveHtml = historyMsg(t('history_view_only'));
+  else if (historyError) driveHtml = historyMsg(t('history_load_failed'));
+  else if (!historyRevisions) driveHtml = historyMsg(t('loading'));
+  else if (!historyRevisions.length) driveHtml = historyMsg(t('history_empty'));
+  else {
+    let lastDay = ''; const rows = [];
+    historyRevisions.forEach((r, i) => {
+      const d = new Date(r.modifiedTime);
+      const day = d.toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      if (day !== lastDay) { rows.push(`<div class="history-day">${escapeHtml(day)}</div>`); lastDay = day; }
+      const who = r.lastModifyingUser && r.lastModifyingUser.displayName;
+      const badge = i === 0 ? t('history_current') : (r.keepForever ? t('history_checkpoint') : '');
+      rows.push(`<button class="plan-row" data-rev-index="${i}"><div style="min-width: 0;"><div class="plan-row-name">${escapeHtml(d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' }))}</div>${who ? `<div class="plan-row-meta">${escapeHtml(t('history_by', who))}</div>` : ''}</div>${badge ? `<span class="plan-row-badge">${escapeHtml(badge)}</span>` : ''}</button>`);
+    });
+    driveHtml = `<div class="plan-list">${rows.join('')}</div>`;
+  }
+  const snaps = getLocalSnapshots();
+  const reasons = t('snapshot_reasons') || {};
+  const localHtml = snaps.length
+    ? `<div class="plan-list" style="max-height: 220px;">${snaps.map((s, i) => `<button class="plan-row" data-snap-index="${i}"><div style="min-width: 0;"><div class="plan-row-name">${escapeHtml(s.title || s.fileName || t('untitled'))}</div><div class="plan-row-meta">${escapeHtml(t('snapshot_meta', formatModified(new Date(s.at).toISOString()), s.events, reasons[s.reason] || ''))}</div></div></button>`).join('')}</div>`
+    : historyMsg(t('snapshots_empty'));
+  modalBody.innerHTML = `
+    <div class="history-section-label">${escapeHtml(t('history_drive_label'))}</div>${driveHtml}
+    <div class="history-section-label" style="margin-top: 20px;">${escapeHtml(t('history_local_label'))}</div>${localHtml}
+    <p class="history-note">${escapeHtml(t('history_note'))}</p>`;
+  modalBody.querySelectorAll('[data-rev-index]').forEach(b => b.addEventListener('click', () => {
+    const i = Number(b.dataset.revIndex); previewRevision(historyRevisions[i], i === 0);
+  }));
+  modalBody.querySelectorAll('[data-snap-index]').forEach(b => b.addEventListener('click', () => {
+    const s = getLocalSnapshots()[Number(b.dataset.snapIndex)]; if (!s) return;
+    try { renderVersionPreview(JSON.parse(s.data), t('snapshot_saved_meta', formatModified(new Date(s.at).toISOString())), false); } catch (e) {}
+  }));
+}
+function backToHistory() { modalBody.dataset.view = 'history'; renderVersionHistory(); }
+async function previewRevision(rev, isCurrent) {
+  modalBody.dataset.view = 'history-preview';
+  modalBody.innerHTML = historyMsg(t('loading'));
+  try {
+    const res = await gapi.client.drive.revisions.get({ fileId: currentDriveFileId, revisionId: rev.id, alt: 'media' });
+    const data = typeof res.body === 'string' ? JSON.parse(res.body) : res.body;
+    if (!data || !data.events) throw new Error('invalid');
+    const who = rev.lastModifyingUser && rev.lastModifyingUser.displayName;
+    renderVersionPreview(data, t('history_saved_meta', formatModified(rev.modifiedTime), who), isCurrent);
+  } catch (err) {
+    if (isAuthError(err)) markSessionExpired();
+    modalBody.innerHTML = historyMsg(t('history_load_failed')) + `<div class="modal-actions"><button class="action-btn" id="versionBack">← ${escapeHtml(t('back'))}</button></div>`;
+    document.getElementById('versionBack').addEventListener('click', backToHistory);
+  }
+}
+function renderVersionPreview(data, metaLine, isCurrent) {
+  modalBody.dataset.view = 'history-preview';
+  const evs = (data.events || []).filter(e => !e.isTimeOff);
+  const starts = evs.map(e => e.start).sort(); const ends = evs.map(e => e.end).sort();
+  const fmt = (iso) => fromISO(iso).toLocaleDateString(currentLang === 'nb' ? 'nb-NO' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const range = evs.length ? `${fmt(starts[0])} – ${fmt(ends[ends.length - 1])}` : '—';
+  const sample = evs.slice().sort((a, b) => a.start.localeCompare(b.start)).slice(0, 6).map(e => `<li>${escapeHtml(e.name || '—')} <span>${escapeHtml(fmt(e.start))}</span></li>`).join('');
+  modalBody.innerHTML = `
+    <div class="version-preview">
+      <div class="plan-row-meta">${escapeHtml(metaLine)}</div>
+      <div class="version-title">${escapeHtml(data.title || t('untitled'))}</div>
+      <div class="version-stats">${escapeHtml(t('version_stats', evs.length, range))}</div>
+      ${sample ? `<ul class="version-sample">${sample}</ul>` : ''}
+    </div>
+    <div class="modal-actions">
+      <button class="action-btn" id="versionBack">← ${escapeHtml(t('back'))}</button>
+      ${isCurrent ? `<span class="plan-row-meta">${escapeHtml(t('history_is_current'))}</span>` : `<button class="action-btn primary" id="versionRestore">${escapeHtml(t('restore_version'))}</button>`}
+    </div>`;
+  document.getElementById('versionBack').addEventListener('click', backToHistory);
+  document.getElementById('versionRestore')?.addEventListener('click', () => restorePlanVersion(data));
+}
+function restorePlanVersion(data) {
+  customConfirm(t('restore_confirm'), async () => {
+    if (window.__isReadOnly) return;
+    saveLocalSnapshot('restore');
+    await checkpointCurrentDriveVersion();
+    state = migrateData(JSON.parse(JSON.stringify(data)));
+    saveState(); render(); closeModal();
+    customAlert(t('restored_msg'), t('restored_title'));
+  }, t('restore_title'), t('restore_version'));
+}
+
 document.getElementById('btnOpenPlan')?.addEventListener('click', openPlanPicker);
+document.getElementById('versionHistoryBtn')?.addEventListener('click', openVersionHistory);
 document.getElementById('btnNewDriveFile')?.addEventListener('click', startNewDrivePlan);
 document.getElementById('btnSaveToDrive')?.addEventListener('click', () => saveCurrentPlanToDrive(false));
 document.getElementById('btnSaveCopy')?.addEventListener('click', () => saveCurrentPlanToDrive(true));
@@ -1264,10 +1564,14 @@ async function performDriveSave(force = false) {
       }
     }
     state.lang = currentLang; const fileContent = JSON.stringify(state);
-    const resp = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true&fields=headRevisionId`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
+    const fileId = currentDriveFileId; const previousRevisionId = lastKnownRevisionId;
+    const resp = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media&supportsAllDrives=true&fields=headRevisionId`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
     if (!resp.ok) throw { status: resp.status };
     const json = await resp.json();
-    if (json.headRevisionId) { lastKnownRevisionId = json.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId); }
+    if (json.headRevisionId) {
+      lastKnownRevisionId = json.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId);
+      maybeCheckpointAfterSave(fileId, previousRevisionId, json.headRevisionId);
+    }
     pendingDriveSave = false;
     updateCloudStatus('Saved');
   } catch(err) {
@@ -1400,7 +1704,6 @@ Object.assign(i18n.en, {
   folder_choice_create: 'Create a “Production Plans” folder in My Drive', folder_choice_create_desc: 'Private to you until you share it.',
   folder_choice_browse: 'Choose another folder…', folder_choice_browse_desc: 'Pick any folder in My Drive or a shared drive.',
   default_folder_name: 'Production Plans', folder_create_failed: 'Couldn’t create the folder in Google Drive.',
-  new_plan_prompt: 'Name the new plan:', save_to_drive_prompt: 'Save this plan to Google Drive as:', save_copy_prompt: 'Save a copy of this plan as:',
   copy_name: (n) => `${n} (copy)`, saved_title: 'Saved',
   saved_to_drive_msg: (n) => `“${n}” is now saved to Google Drive. Changes save automatically from here on.`,
   copy_saved_msg: (n) => `Saved a copy as “${n}”. You’re now editing the copy.`,
@@ -1441,7 +1744,6 @@ Object.assign(i18n.nb, {
   folder_choice_create: 'Opprett mappen «Produksjonsplaner» i Min disk', folder_choice_create_desc: 'Privat for deg til du deler den.',
   folder_choice_browse: 'Velg en annen mappe…', folder_choice_browse_desc: 'Velg en mappe i Min disk eller på en delt disk.',
   default_folder_name: 'Produksjonsplaner', folder_create_failed: 'Kunne ikke opprette mappen i Google Disk.',
-  new_plan_prompt: 'Gi den nye planen et navn:', save_to_drive_prompt: 'Lagre denne planen i Google Disk som:', save_copy_prompt: 'Lagre en kopi av planen som:',
   copy_name: (n) => `${n} (kopi)`, saved_title: 'Lagret',
   saved_to_drive_msg: (n) => `«${n}» er nå lagret i Google Disk. Endringer lagres automatisk fra nå av.`,
   copy_saved_msg: (n) => `Kopi lagret som «${n}». Du redigerer nå kopien.`,
@@ -1457,6 +1759,54 @@ Object.assign(i18n.nb, {
   save_first_msg: 'Lagre planen i Google Disk først (Innstillinger → Lagre i Disk), og lag deretter klientlenken.',
   shortcuts_title: 'Snarveier og tips',
   shortcuts_list: [['Klikk på en dag', 'Legg til et element den dagen'], ['Klikk på et element', 'Rediger det'], ['Dra et element', 'Flytt det til en annen dag'], ['Dra i kanten av et element', 'Gjør det lengre eller kortere'], ['Shift/⌘-klikk på elementer', 'Velg flere, og dra dem sammen'], ['Esc', 'Fjern markeringen, avbryt endring av lengde eller lukk en dialog'], ['⌘/Ctrl + Z', 'Angre'], ['⌘/Ctrl + Shift + Z', 'Gjør om'], ['?', 'Vis denne listen']]
+});
+Object.assign(i18n.en, {
+  picker_unavailable: 'Google Drive’s file browser couldn’t be opened. Try again in a moment.', browse_drive: 'Browse Google Drive…',
+  plan_name: 'Plan name', save_in: 'Save in', save_in_same_desc: 'Same folder as last time', save_in_other_desc: 'New plans will be saved here from now on',
+  choose_other_folder: 'Choose another folder…', choose_a_folder: 'Choose a folder…', choose_folder_desc: 'Browse My Drive and shared drives',
+  new_plan_title: 'New plan', create: 'Create', back: 'Back', version_history: 'Version history…', history_title: 'Version history',
+  history_drive_label: 'Saved versions in Google Drive', history_local_label: 'Safety copies in this browser',
+  history_needs_drive: 'This plan isn’t saved to Google Drive yet, so there are no Drive versions. Use “Save to Drive” to start keeping them.',
+  history_sign_in: 'Sign in to Google Drive to see this plan’s saved versions.',
+  history_view_only: 'You have view-only access to this plan, so its version history isn’t available.',
+  history_load_failed: 'Couldn’t load the version history from Google Drive.', history_empty: 'No saved versions yet.',
+  history_current: 'Current', history_checkpoint: 'Kept', history_by: (n) => `Saved by ${n}`,
+  history_saved_meta: (when, who) => who ? `Saved ${when} by ${who}` : `Saved ${when}`,
+  snapshot_saved_meta: (when) => `Safety copy from ${when}`,
+  snapshot_meta: (when, n, reason) => `${when} · ${n} event${n === 1 ? '' : 's'}${reason ? ' · ' + reason : ''}`,
+  snapshot_reasons: { clear: 'before clearing', import: 'before an import', link: 'before loading a link', open: 'before opening another plan', new: 'before a new plan', restore: 'before restoring' },
+  snapshots_empty: 'None yet. A copy is kept here automatically before a plan is cleared, replaced or restored.',
+  history_note: 'Google Drive keeps recent versions for about 30 days. Versions marked “Kept” — taken when a plan is opened, hourly while editing, and before big changes — are kept long-term.',
+  history_is_current: 'This is the current version', version_stats: (n, range) => `${n} event${n === 1 ? '' : 's'} · ${range}`,
+  restore_version: 'Restore this version', restore_title: 'Restore this version?',
+  restore_confirm: 'The plan will be replaced with this version. Your current version is kept in the history, so you can switch back.',
+  restored_title: 'Version restored', restored_msg: 'The plan has been restored. If it isn’t the right one, open Version history again and pick another version.',
+  clear_description: 'This removes all project details and events from this planner. If you change your mind, you can bring it back from Settings → Version history.',
+  shortcuts_list: [['Click a day', 'Add an event on that day'], ['Click an event', 'Edit it'], ['Drag an event', 'Move it to another day'], ['Drag an event’s edge', 'Make it longer or shorter'], ['Shift/⌘-click events', 'Select several, then drag them together'], ['Esc', 'Clear the selection, cancel a resize or close a dialog'], ['⌘/Ctrl + Z', 'Undo'], ['⌘/Ctrl + Shift + Z', 'Redo'], ['Settings → Version history', 'Go back to an earlier version of the plan'], ['?', 'Show this list']]
+});
+Object.assign(i18n.nb, {
+  picker_unavailable: 'Kunne ikke åpne filvelgeren i Google Disk. Prøv igjen om litt.', browse_drive: 'Bla i Google Disk…',
+  plan_name: 'Plannavn', save_in: 'Lagre i', save_in_same_desc: 'Samme mappe som sist', save_in_other_desc: 'Nye planer lagres her fra nå av',
+  choose_other_folder: 'Velg en annen mappe…', choose_a_folder: 'Velg en mappe…', choose_folder_desc: 'Bla i Min disk og delte disker',
+  new_plan_title: 'Ny plan', create: 'Opprett', back: 'Tilbake', version_history: 'Versjonslogg…', history_title: 'Versjonslogg',
+  history_drive_label: 'Lagrede versjoner i Google Disk', history_local_label: 'Sikkerhetskopier i denne nettleseren',
+  history_needs_drive: 'Denne planen er ikke lagret i Google Disk ennå, så det finnes ingen Disk-versjoner. Bruk «Lagre i Disk» for å begynne å ta vare på dem.',
+  history_sign_in: 'Logg inn på Google Disk for å se planens lagrede versjoner.',
+  history_view_only: 'Du har bare lesetilgang til denne planen, så versjonsloggen er ikke tilgjengelig.',
+  history_load_failed: 'Kunne ikke hente versjonsloggen fra Google Disk.', history_empty: 'Ingen lagrede versjoner ennå.',
+  history_current: 'Gjeldende', history_checkpoint: 'Beholdt', history_by: (n) => `Lagret av ${n}`,
+  history_saved_meta: (when, who) => who ? `Lagret ${when} av ${who}` : `Lagret ${when}`,
+  snapshot_saved_meta: (when) => `Sikkerhetskopi fra ${when}`,
+  snapshot_meta: (when, n, reason) => `${when} · ${n} element${n === 1 ? '' : 'er'}${reason ? ' · ' + reason : ''}`,
+  snapshot_reasons: { clear: 'før tømming', import: 'før import', link: 'før åpning av lenke', open: 'før åpning av en annen plan', new: 'før ny plan', restore: 'før gjenoppretting' },
+  snapshots_empty: 'Ingen ennå. En kopi lagres her automatisk før en plan tømmes, erstattes eller gjenopprettes.',
+  history_note: 'Google Disk tar vare på nylige versjoner i omtrent 30 dager. Versjoner merket «Beholdt» – tatt når en plan åpnes, hver time under redigering og før store endringer – beholdes lenge.',
+  history_is_current: 'Dette er gjeldende versjon', version_stats: (n, range) => `${n} element${n === 1 ? '' : 'er'} · ${range}`,
+  restore_version: 'Gjenopprett denne versjonen', restore_title: 'Gjenopprette denne versjonen?',
+  restore_confirm: 'Planen erstattes med denne versjonen. Den gjeldende versjonen beholdes i loggen, så du kan bytte tilbake.',
+  restored_title: 'Versjon gjenopprettet', restored_msg: 'Planen er gjenopprettet. Hvis det ikke var riktig versjon, åpner du Versjonslogg igjen og velger en annen.',
+  clear_description: 'Dette fjerner alle prosjektdetaljer og elementer fra denne planleggeren. Hvis du ombestemmer deg, kan du hente den tilbake fra Innstillinger → Versjonslogg.',
+  shortcuts_list: [['Klikk på en dag', 'Legg til et element den dagen'], ['Klikk på et element', 'Rediger det'], ['Dra et element', 'Flytt det til en annen dag'], ['Dra i kanten av et element', 'Gjør det lengre eller kortere'], ['Shift/⌘-klikk på elementer', 'Velg flere, og dra dem sammen'], ['Esc', 'Fjern markeringen, avbryt endring av lengde eller lukk en dialog'], ['⌘/Ctrl + Z', 'Angre'], ['⌘/Ctrl + Shift + Z', 'Gjør om'], ['Innstillinger → Versjonslogg', 'Gå tilbake til en tidligere versjon av planen'], ['?', 'Vis denne listen']]
 });
 
 let currentLang = localStorage.getItem('newslab-planner-lang') || 'en';
@@ -2726,8 +3076,11 @@ function openClearAllModal() {
   input.addEventListener('input', () => { const ready = input.value.trim().toUpperCase() === confirmWord; confirmBtn.disabled = !ready; confirmBtn.style.opacity = ready ? '1' : '0.4'; confirmBtn.style.cursor = ready ? 'pointer' : 'not-allowed'; });
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !confirmBtn.disabled) { e.preventDefault(); confirmBtn.click(); } });
   document.getElementById('cancelClear').addEventListener('click', closeModal);
-  confirmBtn.addEventListener('click', () => {
+  confirmBtn.addEventListener('click', async () => {
     if (confirmBtn.disabled || window.__isReadOnly) return;
+    confirmBtn.disabled = true;
+    saveLocalSnapshot('clear');
+    await checkpointCurrentDriveVersion();
     localStorage.removeItem(STORAGE_KEY);
     state = getBlankState(); saveState(); render(); closeModal();
   });
