@@ -98,6 +98,10 @@
   .drive-input { width: 100%; padding: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; border: 1px solid var(--line); border-radius: 0; background: var(--bg-card); color: var(--ink); outline: none; }
   .drive-input:focus { border-color: var(--ink); }
   [hidden] { display: none !important; }
+  /* Google Drive picker: pin to the centre of the window and freeze the page behind it. */
+  html.picker-open { overflow: hidden; scrollbar-gutter: stable; }
+  .picker-dialog-bg { position: fixed !important; inset: 0 !important; width: auto !important; height: auto !important; }
+  .picker-dialog { position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); }
   .settings-menu { text-align: left; }
   .settings-toggle-row > span:first-child { padding-right: 12px; }
   .settings-section-label { padding: 12px 16px 4px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); }
@@ -824,8 +828,13 @@ function loadPickerApi() {
 }
 async function showGooglePicker(views, title, onPicked) {
   await loadPickerApi();
+  // The picker positions itself in page coordinates, so the page is locked while
+  // it's open (CSS pins it to the centre of the window — see .picker-dialog).
+  const root = document.documentElement;
+  const unlock = () => root.classList.remove('picker-open');
   const builder = new google.picker.PickerBuilder()
     .setTitle(title)
+    .setSize(Math.min(1051, window.innerWidth - 32), Math.min(650, window.innerHeight - 32))
     .enableFeature(google.picker.Feature.SUPPORT_DRIVES)
     .setOAuthToken(gapi.client.getToken().access_token)
     .setDeveloperKey(GOOGLE_API_KEY)
@@ -834,14 +843,19 @@ async function showGooglePicker(views, title, onPicked) {
     .setCallback((data) => {
       const action = data[google.picker.Response.ACTION];
       if (action === google.picker.Action.PICKED) {
+        unlock();
         const doc = data[google.picker.Response.DOCUMENTS][0];
         onPicked(doc[google.picker.Document.ID], doc[google.picker.Document.NAME]);
+      } else if (action === google.picker.Action.CANCEL) {
+        unlock();
       } else if (action === 'error') {
+        unlock();
         onPicked(null, null, new Error('picker error'));
       }
     });
   views.forEach(v => builder.addView(v));
-  builder.build().setVisible(true);
+  root.classList.add('picker-open');
+  try { builder.build().setVisible(true); } catch (err) { unlock(); throw err; }
 }
 function chooseDriveFolder(onPick) {
   if (!isDriveSignedIn()) { document.getElementById('btnDriveLogin').click(); return; }
@@ -2900,7 +2914,7 @@ function setupStickyHeader() {
       if (c > 0 && c < 1) setC(c >= 0.5 ? 1 : 0, true);
     }, SETTLE_DELAY);
   };
-  const wantsIntercept = (deltaDown) => (deltaDown > 0 && c < 1) || (deltaDown < 0 && c > 0 && window.scrollY <= 0);
+  const wantsIntercept = (deltaDown) => !document.documentElement.classList.contains('picker-open') && ((deltaDown > 0 && c < 1) || (deltaDown < 0 && c > 0 && window.scrollY <= 0));
   const onWheel = (e) => {
     if (!wantsIntercept(e.deltaY)) return;
     e.preventDefault();
