@@ -1,25 +1,24 @@
 {
-  "date": "2026-10-19",
+  "date": "2026-10-20",
   "meetings": [
-    { "time": "09:15", "title": "Internpolitisk kvarter", "client": false },
-    { "time": "09:30", "title": "Teamledermøte", "client": false },
-    { "time": "10:00", "title": "Prepare Department Meeting", "client": false },
-    { "time": "10:30", "title": "Holzweiler julekampanje", "client": false },
-    { "time": "11:30", "title": "Until Next Summer graphics", "client": false },
-    { "time": "12:30", "title": "Nordisk sikkerhetsrapport kickoff", "client": true },
-    { "time": "13:00", "title": "Design Dept — Ukentlig møte", "client": false },
-    { "time": "14:00", "title": "Cat to the vet (14:20)", "client": false },
-    { "time": "15:30", "title": "Update Production Planner for Torgeir", "client": false },
-    { "time": "16:00", "title": "Cancel squarespace", "client": false }
+    { "time": "09:30", "title": "Holzweiler photo edits", "client": false },
+    { "time": "11:00", "title": "NSY identit — Ukentlig møte", "client": false },
+    { "time": "13:00", "title": "Linn / Doug", "client": false },
+    { "time": "13:30", "title": "Mikael / Doug", "client": false },
+    { "time": "14:00", "title": "Find a way to keep track of hours in realtime and compare Timely hours to project budgets", "client": false },
+    { "time": "14:30", "title": "Profil NSY - veien videre", "client": true },
+    { "time": "15:00", "title": "Plan out design dept projects", "client": false }
   ],
   "action_items": [
-    "Download Ole's edited NSY photos (TIFF and JPG) from the Dropbox link and check that other brands' logos are removed.",
-    "Update the Production Planner for Torgeir (15:30).",
-    "Cancel the Squarespace subscription (16:00).",
-    "Prepare for the Nordisk sikkerhetsrapport kickoff with Jakob Andresen from Telenor at 12:30.",
-    "Note that the Figma Professional subscription renews on Oct 25."
+    "Send Forskerforbundet poster proposals for approval, with Norwegian and English texts gathered in one presentation (#850).",
+    "Swap the Holzweiler Christmas presentation cover background to 'Glitterkule' with silver glitter and draft the slide texts.",
+    "Prepare for the Profil NSY follow-up with Udir (font and PowerPoint template feedback) at 14:30.",
+    "Check Ole's edited NSY photos (TIFF and JPG) in the Dropbox link for removed third-party logos.",
+    "Send Norad styleframe concept and image selection, and the Tibi concept and style direction promised by Wednesday."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Ole Ekker (studio.ekker@gmail.com)", "summary": "Delivered the NSY photos as TIFF and JPG with logos and details fixed, and is waiting for your confirmation." }
+    { "source": "slack", "from": "Linn Isaksen (#850-høst-kampanje-2026-forskerforbundet)", "summary": "Asks you and Nils to put all Norwegian and English texts into one presentation and send the posters for approval today." },
+    { "source": "slack", "from": "Ida Solheim-Olsen (#856-down-education)", "summary": "Asks whether the material is ready for Adam to online on Tuesday or Wednesday." },
+    { "source": "slack", "from": "Snorre Bryne (#30-under-30-ext)", "summary": "Asks for your input on the diploma signature font and on what winners can share on social media." }
   ]
 }
