@@ -117,8 +117,10 @@
   .drive-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .drive-actions .action-btn { width: 100%; padding: 7px 8px; font-size: 11px; }
   .drive-actions .span-2 { grid-column: span 2; }
-  #revokeShareBtn { display: none; }
-  body.drive-connected.drive-file-open #revokeShareBtn { display: flex; }
+  #revokeShareBtn, #copyEditorLinkBtn { display: none; }
+  body.drive-connected.drive-file-open #revokeShareBtn, body.drive-connected.drive-file-open #copyEditorLinkBtn { display: flex; }
+  #topCopyLinkBtn { gap: 8px; }
+  #topCopyLinkBtn svg { width: 14px; height: 14px; flex-shrink: 0; }
   .cloud-status { cursor: pointer; }
   .cloud-status.warn { color: var(--danger); }
   .cloud-status .cs-name { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: none; letter-spacing: 0; color: var(--ink-soft); }
@@ -411,7 +413,8 @@
     .header-meta { flex-wrap: wrap; justify-content: flex-start; text-align: left; gap: 8px; }
     .header-meta #topSignInBtn, .header-meta #topCopyLinkBtn { flex: 1; }
     .header-meta .settings-dropdown-wrap { flex: 0 0 auto; }
-    .header-meta #topCopyLinkBtn { width: 100%; box-sizing: border-box; padding: 6px 12px; font-size: 11px; }
+    .header-meta #topCopyLinkBtn { width: 100%; box-sizing: border-box; padding: 6px 12px; font-size: 11px; gap: 6px; }
+    .header-meta #topCopyLinkBtn svg { width: 12px; height: 12px; }
     .header-meta #settingsBtn { box-sizing: border-box; padding: 6px 9px; }
     .header-meta #settingsBtn svg { width: 14px; height: 14px; }
     #todayBtn, #addEventBtn { padding: 6px 12px; font-size: 11px; }
@@ -470,7 +473,7 @@
       <div class="header-meta">
         <button class="action-btn ghost-danger" id="topSignInBtn" data-i18n="sign_in_drive" style="display: none; background: #fbeae9; color: var(--danger); font-weight: 500; font-size: 11px; padding: 6px 12px; border-radius: 0;">Sign in</button>
         <div class="cloud-status" id="cloudStatus" style="display: none;"></div>
-        <button class="action-btn" id="topCopyLinkBtn" data-i18n="copy_client_link" style="font-weight: 500;">Copy Client Link</button>
+        <button class="action-btn" id="topCopyLinkBtn" style="font-weight: 500;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span class="btn-label" data-i18n="copy_client_link">Copy Client Link</span></button>
         
         <div class="settings-dropdown-wrap">
           <button class="action-btn" id="settingsBtn" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
@@ -513,6 +516,7 @@
             <div class="settings-menu-divider"></div>
 
             <div class="settings-section-label" data-i18n="section_share">Share &amp; export</div>
+            <button class="settings-menu-item" id="copyEditorLinkBtn" data-i18n="copy_editor_link">Copy link for colleagues</button>
             <button class="settings-menu-item" id="revokeShareBtn" data-i18n="revoke_client_link">Revoke client link</button>
             <button class="settings-menu-item" id="exportBtn" data-i18n="export_pdf">Export PDF</button>
             <button class="settings-menu-item" id="exportCsvBtn" data-i18n="export_csv">Export to CSV</button>
@@ -627,7 +631,7 @@
 <div class="modal-backdrop" id="dialogModal" style="z-index: 200;">
   <div class="modal" style="max-width: 400px; padding: 24px; border-radius: 0;">
     <h2 class="modal-title" id="dialogTitle" style="font-size: 16px; margin-bottom: 12px; font-weight: 600;"></h2>
-    <div id="dialogMessage" style="font-size: 14px; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.5;"></div>
+    <div id="dialogMessage" style="font-size: 14px; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere;"></div>
     <input type="text" id="dialogInput" style="width: 100%; font-size: 14px; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 6px 0; outline: none; margin-bottom: 24px; display: none; font-family: 'JetBrains Mono', monospace;" />
     <div class="modal-actions" style="justify-content: flex-end; margin-top: 0; padding-top: 0; border: none;">
       <button class="action-btn" id="dialogCancel">Cancel</button>
@@ -1053,11 +1057,39 @@ async function onDriveConnected() {
   scheduleSessionExpiryCheck();
   updateCloudStatus('Connected');
   loadDriveAccount();
+  const pendingOpen = sessionStorage.getItem(PENDING_OPEN_KEY);
+  if (pendingOpen) folderChoiceOffered = true; // don't interrupt opening a colleague's link with the folder question
   await refreshCurrentFileMeta();
   await ensurePlansFolder();
   fetchDriveFiles();
   if (pendingDriveSave) { pendingDriveSave = false; performDriveSave(false); }
+  if (pendingOpen) {
+    sessionStorage.removeItem(PENDING_OPEN_KEY);
+    if (pendingOpen !== currentDriveFileId) confirmBeforeReplacingPlan('open', () => openDrivePlan(pendingOpen));
+  }
 }
+
+// ---- Links for colleagues: <planner URL>#open=<driveFileId> opens that plan for editing ----
+const PENDING_OPEN_KEY = 'newslab-open-pending';
+function buildEditorLink(fileId) { return window.location.href.split('#')[0].split('?')[0] + '#open=' + fileId; }
+async function copyEditorLink() {
+  closeSettingsMenu();
+  if (!currentDriveFileId) return customAlert(t('editor_save_first'), t('editor_link_title'));
+  const fileId = currentDriveFileId;
+  const url = buildEditorLink(fileId);
+  // Tell the sender whether the colleague will actually be able to open it.
+  let access = '';
+  try {
+    const res = await gapi.client.drive.files.get({ fileId, fields: 'driveId,shared', supportsAllDrives: true });
+    access = t(res.result.driveId ? 'editor_access_shared_drive' : (res.result.shared ? 'editor_access_shared' : 'editor_access_private'));
+  } catch (err) { if (isAuthError(err)) markSessionExpired(); }
+  const message = t('editor_link_msg') + (access ? '\n\n' + access : '') + '\n\n' + url;
+  if (navigator.clipboard && window.isSecureContext) {
+    try { await navigator.clipboard.writeText(url); customAlert(message, t('editor_link_title')); return; } catch (e) {}
+  }
+  customPrompt(t('link_copied_fallback'), url, () => {});
+}
+document.getElementById('copyEditorLinkBtn')?.addEventListener('click', copyEditorLink);
 
 async function loadDriveAccount() {
   const label = document.getElementById('driveAccountLabel');
@@ -1248,7 +1280,9 @@ async function openDrivePlan(fileId) {
     if (!currentDriveCanEdit) customAlert(t('view_only_msg'), t('view_only_title'));
   } catch (err) {
     if (isAuthError(err)) { markSessionExpired(); return; }
-    updateCloudStatus('Error'); customAlert(t('load_failed'), 'Error');
+    const code = driveErrorCode(err);
+    updateCloudStatus('Connected');
+    customAlert(t(code === 404 || code === 403 ? 'open_no_access' : 'load_failed'), 'Error');
   }
 }
 
@@ -1823,9 +1857,32 @@ Object.assign(i18n.nb, {
   shortcuts_list: [['Klikk på en dag', 'Legg til et element den dagen'], ['Klikk på et element', 'Rediger det'], ['Dra et element', 'Flytt det til en annen dag'], ['Dra i kanten av et element', 'Gjør det lengre eller kortere'], ['Shift/⌘-klikk på elementer', 'Velg flere, og dra dem sammen'], ['Esc', 'Fjern markeringen, avbryt endring av lengde eller lukk en dialog'], ['⌘/Ctrl + Z', 'Angre'], ['⌘/Ctrl + Shift + Z', 'Gjør om'], ['Innstillinger → Versjonslogg', 'Gå tilbake til en tidligere versjon av planen'], ['?', 'Vis denne listen']]
 });
 
-let currentLang = localStorage.getItem('newslab-planner-lang') || 'en';
+Object.assign(i18n.en, {
+  copy_editor_link: 'Copy link for colleagues', editor_link_title: 'Link for colleagues copied',
+  editor_link_msg: 'Send this to a colleague: it opens this plan in the planner, ready to edit.',
+  editor_access_shared_drive: 'The plan is on a shared drive, so anyone with access to that drive can open it.',
+  editor_access_shared: 'Anyone it’s shared with in Google Drive can open it.',
+  editor_access_private: 'Right now only you can open it — it’s in your own Drive and not shared. Share the file with your colleague in Google Drive first.',
+  editor_save_first: 'Save this plan to Google Drive first (Settings → Save to Drive), then copy the link.',
+  open_shared_title: 'Open shared plan', open_shared_msg: 'A colleague sent you a link to a plan. Sign in with Google to open it.',
+  open_no_access: 'You don’t have access to this plan in Google Drive. Ask the person who sent the link to share it with you.'
+});
+Object.assign(i18n.nb, {
+  copy_editor_link: 'Kopier lenke til kolleger', editor_link_title: 'Lenke til kolleger kopiert',
+  editor_link_msg: 'Send denne til en kollega: den åpner planen i planleggeren, klar til redigering.',
+  editor_access_shared_drive: 'Planen ligger på en delt disk, så alle med tilgang til den disken kan åpne den.',
+  editor_access_shared: 'Alle den er delt med i Google Disk kan åpne den.',
+  editor_access_private: 'Akkurat nå er det bare du som kan åpne den – den ligger i din egen Disk og er ikke delt. Del filen med kollegaen din i Google Disk først.',
+  editor_save_first: 'Lagre planen i Google Disk først (Innstillinger → Lagre i Disk), og kopier deretter lenken.',
+  open_shared_title: 'Åpne delt plan', open_shared_msg: 'En kollega har sendt deg en lenke til en plan. Logg inn med Google for å åpne den.',
+  open_no_access: 'Du har ikke tilgang til denne planen i Google Disk. Be den som sendte lenken om å dele den med deg.'
+});
+
+// New users start in Norwegian. Browsers that already have a plan stored but never
+// picked a language were seeing English, so they keep it.
+let currentLang = localStorage.getItem('newslab-planner-lang') || (localStorage.getItem('newslab-planner-v4') ? 'en' : 'nb');
 function t(key, ...args) { const dict = i18n[currentLang] || i18n.en; const val = dict[key] ?? i18n.en[key] ?? key; return typeof val === 'function' ? val(...args) : val; }
-function applyStaticTranslations() { document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder)); }); if (isMobileViewport()) { const copyLinkBtn = document.getElementById('topCopyLinkBtn'); if (copyLinkBtn) copyLinkBtn.textContent = t('copy_client_link_short'); } const settingsBtn = document.getElementById('settingsBtn'); if (settingsBtn) { settingsBtn.title = t('settings'); settingsBtn.setAttribute('aria-label', t('settings')); } refreshCloudStatus(); }
+function applyStaticTranslations() { document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder)); }); if (isMobileViewport()) setCopyLinkLabel(t('copy_client_link_short')); const settingsBtn = document.getElementById('settingsBtn'); if (settingsBtn) { settingsBtn.title = t('settings'); settingsBtn.setAttribute('aria-label', t('settings')); } refreshCloudStatus(); }
 function updateLangToggle() { const toggle = document.getElementById('langToggleBtn'); if (currentLang === 'nb') { toggle.classList.add('on', 'is-nb'); } else { toggle.classList.remove('on', 'is-nb'); } }
 function setLanguage(lang) { if (!i18n[lang]) return; currentLang = lang; localStorage.setItem('newslab-planner-lang', lang); document.documentElement.lang = lang === 'nb' ? 'no' : 'en'; applyStaticTranslations(); updateLangToggle(); render(false); }
 
@@ -2044,6 +2101,13 @@ function autoResizeDesc() {
 }
 function isCoarsePointer() { return window.matchMedia('(pointer: coarse)').matches; }
 
+// Looked up fresh each time: the share module clones/replaces #topCopyLinkBtn
+// after this script runs, so a reference captured once would go stale.
+function setCopyLinkLabel(text) {
+  const label = document.querySelector('#topCopyLinkBtn .btn-label');
+  if (label) label.textContent = text;
+}
+
 function setupMobileLayout() {
   const mq = window.matchMedia('(max-width: 700px)');
   const startCtl = document.getElementById('projectStart').closest('.ctl');
@@ -2053,18 +2117,14 @@ function setupMobileLayout() {
   const settingsMenu = document.getElementById('settingsMenu');
   const menuAnchor = settingsMenu.querySelector('.settings-menu-divider');
   function apply(e) {
-    // Re-fetch on every call: the share module (loaded after this script)
-    // clones/replaces #topCopyLinkBtn, so a reference captured once here
-    // would go stale the moment that happens.
-    const copyLinkBtn = document.getElementById('topCopyLinkBtn');
     if (e.matches) {
       settingsMenu.insertBefore(startCtl, menuAnchor);
       settingsMenu.insertBefore(endCtl, menuAnchor);
-      if (copyLinkBtn) copyLinkBtn.textContent = t('copy_client_link_short');
+      setCopyLinkLabel(t('copy_client_link_short'));
     } else {
       toolbarParent.insertBefore(startCtl, addEventBtn);
       toolbarParent.insertBefore(endCtl, addEventBtn);
-      if (copyLinkBtn) copyLinkBtn.textContent = t('copy_client_link');
+      setCopyLinkLabel(t('copy_client_link'));
     }
   }
   mq.addEventListener('change', apply);
@@ -3363,6 +3423,24 @@ document.getElementById('emptyStateClose')?.addEventListener('click', () => { se
 document.getElementById('emptyAddEventBtn')?.addEventListener('click', () => { if (!window.__isReadOnly) openEventModal(); });
 document.getElementById('emptyOpenPlanBtn')?.addEventListener('click', () => { if (isDriveSignedIn()) openPlanPicker(); else document.getElementById('btnDriveLogin').click(); });
 document.getElementById('emptyImportBtn')?.addEventListener('click', () => document.getElementById('importJsonInput').click());
+
+// A colleague's link (#open=<fileId>): remember it, tidy the URL, and open the
+// plan once Drive is connected. If sign-in is needed, ask only once Google's
+// sign-in is ready, so the click can open its pop-up straight away.
+function promptSignInForPendingLink(startedAt = Date.now()) {
+  if (!sessionStorage.getItem(PENDING_OPEN_KEY) || isDriveSignedIn()) return;
+  const waited = Date.now() - startedAt;
+  const ready = gapiInited && gisInited;
+  if (!ready || (driveWasConnectedBefore && waited < 3000)) { if (waited < 15000) setTimeout(() => promptSignInForPendingLink(startedAt), 250); return; }
+  customConfirm(t('open_shared_msg'), () => document.getElementById('btnDriveLogin').click(), t('open_shared_title'), t('sign_in_google'));
+}
+(function captureOpenLink() {
+  const m = window.location.hash.match(/^#open=([A-Za-z0-9_-]{10,})/);
+  if (!m || window.__isReadOnly) return;
+  sessionStorage.setItem(PENDING_OPEN_KEY, m[1]);
+  history.replaceState(null, null, window.location.pathname + window.location.search);
+  promptSignInForPendingLink();
+})();
 
 if (window.__isReadOnly) document.querySelectorAll('#projectTitle, #projectDesc, #projectStart, #projectEnd').forEach(el => el.disabled = true);
 applyStaticTranslations(); updateLangToggle(); document.documentElement.lang = currentLang === 'nb' ? 'no' : 'en';
