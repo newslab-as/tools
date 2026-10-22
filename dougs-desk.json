@@ -1,22 +1,24 @@
 {
-  "date": "2026-10-21",
+  "date": "2026-10-22",
   "meetings": [
-    { "time": "09:00", "title": "Check through 30 under 30 images", "client": false },
-    { "time": "10:30", "title": "Partnermøte for september", "client": true },
-    { "time": "13:00", "title": "Redaksjon interne kanaler", "client": false },
-    { "time": "14:30", "title": "Budskap til KBM reklamefilm", "client": false },
-    { "time": "15:15", "title": "Plan out design dept projects", "client": false },
-    { "time": "16:15", "title": "Find a way to keep track of hours in realtime, and to compare past Timely project hours to budgets", "client": false }
+    { "time": "09:15", "title": "Budskap til KBM reklamefilm", "client": false },
+    { "time": "10:00", "title": "Holzweiler photo graphics", "client": false },
+    { "time": "11:00", "title": "Linn / Doug", "client": false },
+    { "time": "12:45", "title": "30 under 30", "client": false },
+    { "time": "13:30", "title": "Redaksjon interne kanaler", "client": false },
+    { "time": "14:00", "title": "Find a way to keep track of hours in realtime, and to compare past Timely project hours to budgets from the projects.", "client": false }
   ],
   "action_items": [
-    "Review Karoline's Figma presentation before she leaves (she asked you to look it over).",
-    "Prepare input on communicating the Vipps and web-shop message for the Kirkens bymisjon TV ad at 14:30.",
-    "Check the 30 under 30 images this morning.",
-    "Respond to Udir's photo-assignment plan for the primary and secondary school shoot next Thursday."
+    "Prepare input on communicating the Vipps and web-shop message for the Kirkens bymisjon TV ad at 09:15.",
+    "Review the illustrations Frode sent for approval and give comments.",
+    "Create new light and dark Teams background versions for Udir.",
+    "Agree a plan B with Ida for getting the photographer to the Udir school shoot, since train travel may not work.",
+    "Get Slack set up for Melontaxi with Snorre."
   ],
   "needs_reply": [
-    { "source": "slack", "from": "Karoline", "summary": "Asks you to look over her filled-out Figma presentation." },
-    { "source": "slack", "from": "Linn Isaksen", "summary": "Waiting for your final adjustments to the Holzweiler presentation so she can send it." },
-    { "source": "gmail", "from": "Aurora Berg Heltzer (Udir)", "summary": "Sent meeting notes and a plan for next Thursday's school photo shoot." }
+    { "source": "gmail", "from": "Selin Yılmaz (Melontaxi)", "summary": "Replied with feedback on your film project budget proposal after reviewing it with the team." },
+    { "source": "gmail", "from": "Frode (Hjemmekontoret)", "summary": "Sent illustrations for your approval and comments; you promised to review them this morning." },
+    { "source": "slack", "from": "Ida Solheim-Olsen", "summary": "Wants to settle a plan B for the Udir shoot and suggests a production assistant drive the photographer." },
+    { "source": "slack", "from": "Linn Isaksen", "summary": "Asked the group what you want for food instead of Eckers." }
   ]
 }
