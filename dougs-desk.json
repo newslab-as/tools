@@ -1,24 +1,27 @@
 {
-  "date": "2026-10-22",
+  "date": "2026-10-23",
   "meetings": [
-    { "time": "09:15", "title": "Budskap til KBM reklamefilm", "client": false },
+    { "time": "09:00", "title": "NSY Powerpoint fonts", "client": false },
     { "time": "10:00", "title": "Holzweiler photo graphics", "client": false },
-    { "time": "11:00", "title": "Linn / Doug", "client": false },
-    { "time": "12:45", "title": "30 under 30", "client": false },
-    { "time": "13:30", "title": "Redaksjon interne kanaler", "client": false },
-    { "time": "14:00", "title": "Find a way to keep track of hours in realtime, and to compare past Timely project hours to budgets from the projects.", "client": false }
+    { "time": "12:00", "title": "Julegave kampanje (Holzweiler)", "client": true },
+    { "time": "12:00", "title": "Holzweiler Julekampanje", "client": false },
+    { "time": "13:15", "title": "Mikael / Doug", "client": false },
+    { "time": "14:00", "title": "Forbrukerrådet print ads", "client": false },
+    { "time": "17:00", "title": "Plan out design dept projects", "client": false },
+    { "time": "18:00", "title": "Subtitle tool?", "client": false },
+    { "time": "19:00", "title": "Find a way to keep track of hours in realtime, and to compare past Timely project hours to budgets from the projects.", "client": false }
   ],
   "action_items": [
-    "Prepare input on communicating the Vipps and web-shop message for the Kirkens bymisjon TV ad at 09:15.",
-    "Review the illustrations Frode sent for approval and give comments.",
-    "Create new light and dark Teams background versions for Udir.",
-    "Agree a plan B with Ida for getting the photographer to the Udir school shoot, since train travel may not work.",
-    "Get Slack set up for Melontaxi with Snorre."
+    "Share the Down Education video (or the first one) with Sofia at Holzweiler so she can plan the roll-out.",
+    "Create a transparent-logo version of the Udir Teams backgrounds, alongside the new light and dark ones.",
+    "Review the Kirkevalgkampanje 2027 tender invitation so the team can decide on Monday whether to bid.",
+    "Get Slack set up for Melontaxi with Snorre.",
+    "Resolve the 12:00 clash between the Holzweiler client meeting and the internal Julekampanje meeting."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Selin Yılmaz (Melontaxi)", "summary": "Replied with feedback on your film project budget proposal after reviewing it with the team." },
-    { "source": "gmail", "from": "Frode (Hjemmekontoret)", "summary": "Sent illustrations for your approval and comments; you promised to review them this morning." },
-    { "source": "slack", "from": "Ida Solheim-Olsen", "summary": "Wants to settle a plan B for the Udir shoot and suggests a production assistant drive the photographer." },
-    { "source": "slack", "from": "Linn Isaksen", "summary": "Asked the group what you want for food instead of Eckers." }
+    { "source": "gmail", "from": "Sofia Borisova (Holzweiler)", "summary": "Asks if you can share the videos, or the first one, to plan this week's roll-out." },
+    { "source": "gmail", "from": "Selin Yılmaz (Melontaxi)", "summary": "Sent feedback on your film project budget proposal and is waiting on Slack setup from Snorre." },
+    { "source": "gmail", "from": "Kristin Ålmo (Udir)", "summary": "Asks for a transparent version of the Teams background so logos don't look cut into an image." },
+    { "source": "gmail", "from": "Linn Isaksen", "summary": "Wants someone to review the Kirkevalgkampanje 2027 minikonkurranse so a bid decision can be made Monday." }
   ]
 }
