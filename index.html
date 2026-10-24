@@ -411,6 +411,54 @@ body.can-edit .kanban-add-board{display:flex}
   body.has-dd-split .right-pane{flex:1 1 auto;min-width:0;padding-left:8px}
 }
 
+/* ---------- Week ahead (Production Planner milestones) ---------- */
+.wa-ctrls{margin-left:auto;display:flex;align-items:center;gap:6px}
+.wa-week{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.wa-ctrls .pill{padding:5px 9px}
+.wa-grid{border:1px solid var(--line);background:var(--surface)}
+.wa-row{display:grid;grid-template-columns:180px repeat(5,minmax(0,1fr));border-top:1px solid var(--line)}
+.wa-row:first-child{border-top:none}
+.wa-headrow .wa-label,.wa-dayhead{
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+  padding:9px 12px;
+}
+.wa-dayhead{border-left:1px solid var(--line)}
+.wa-dayhead b{font-weight:500;color:var(--muted);margin-left:6px}
+.wa-dayhead.today,.wa-dayhead.today b{color:var(--ink)}
+.wa-label{padding:12px;border-right:1px solid var(--line);min-width:0}
+.wa-headrow .wa-label{border-right:none}
+.wa-label a{
+  color:var(--ink);text-decoration:none;font-size:14px;font-weight:500;letter-spacing:-.01em;line-height:1.3;
+  overflow-wrap:anywhere;hyphens:auto;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.wa-label a:hover{text-decoration:underline;text-underline-offset:3px}
+.wa-track{grid-column:2 / -1;position:relative;min-height:54px}
+.wa-bg{position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr)}
+.wa-bg span+span{border-left:1px solid var(--line)}
+.wa-bg span.today{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
+.wa-ev{
+  position:absolute;height:40px;padding:5px 8px;overflow:hidden;
+  border:1px solid;border-radius:var(--radius-sm);color:#14130f;
+  font-family:var(--mono);display:flex;flex-direction:column;justify-content:center;gap:2px;
+}
+.wa-ev.clip-l{border-left-style:dashed;border-top-left-radius:0;border-bottom-left-radius:0}
+.wa-ev.clip-r{border-right-style:dashed;border-top-right-radius:0;border-bottom-right-radius:0}
+.wa-ev-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wa-ev-notes{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.8}
+.wa-msg{padding:18px 12px;font-size:13px;color:var(--faint);grid-column:1 / -1}
+.wa-skel{grid-column:2 / -1;margin:13px 4px;height:28px;background:var(--surface-2);opacity:.6}
+@media (max-width:700px){
+  .wa-row{grid-template-columns:92px repeat(5,minmax(0,1fr))}
+  .wa-label{padding:10px 8px}
+  .wa-label a{font-size:12px}
+  .wa-headrow .wa-label,.wa-dayhead{padding:8px 6px}
+  .wa-dayhead b{display:block;margin-left:0}
+  .wa-ev{padding:4px 5px}
+  .wa-ev-notes{display:none}
+  .wa-week{display:none}
+}
+
 /* ---------- feedback button ---------- */
 .feedback-btn{
   position:fixed;right:20px;bottom:20px;z-index:70;
@@ -478,6 +526,20 @@ body.can-edit .kanban-add-board{display:flex}
 </header>
 
 <main class="wrap" id="app">
+  <!-- WEEK AHEAD — milestones from Production Planner plans, via /api/week-ahead; stays hidden if that endpoint is unavailable -->
+  <section class="section" id="weekAheadSection" hidden>
+    <div class="section-head">
+      <h2 id="waTitle">Week ahead</h2>
+      <div class="wa-ctrls">
+        <span class="wa-week" id="waWeek"></span>
+        <button class="pill" id="waPrev" aria-label="Previous week">‹</button>
+        <button class="pill" id="waToday">Today</button>
+        <button class="pill" id="waNext" aria-label="Next week">›</button>
+      </div>
+    </div>
+    <div class="wa-grid" id="waGrid"></div>
+  </section>
+
   <div class="split-container" id="splitContainer">
     <!-- DOUG'S DESK — only ever populated/shown for doug@newslab.no; hidden (not just empty) for everyone else -->
     <section class="section dd-section" id="dougsDeskSection" hidden>
@@ -685,7 +747,11 @@ const state = {
   dougsDesk: null,       // last-loaded { date, meetings, action_items, needs_reply }
   dougsDeskFetchedAt: null,
   dougsDeskStale: false,
-  dougsDeskDone: {}      // { "action:0": true, "reply:2": true, ... } — resets whenever the brief's date changes
+  dougsDeskDone: {},     // { "action:0": true, "reply:2": true, ... } — resets whenever the brief's date changes
+  weekAhead: null,       // last response from /api/week-ahead: { week:{start,end}, projects:[...] }
+  weekAheadStart: null,  // ISO Monday of the week being shown
+  weekAheadStatus: "idle", // "idle" | "loading" | "ok" | "error"
+  weekAheadEverLoaded: false
 };
 
 /* ---------- i18n ---------- */
@@ -731,6 +797,9 @@ const STRINGS = {
     newBoard:"New board", untitledBoard:"Untitled board", deleteBoardTitle:"Delete board", removeCardTitle:"Remove", addCardTitle:"Add card",
     authGateTitle:"Sign in to sync", authGateBody:"Sign in with your @newslab.no Google account to view and use the tools hub.",
     authGateBtn:"Sign in with Google",
+    waTitle:"Week ahead", waToday:"Today", waPrev:"Previous week", waNext:"Next week", waWk:"Wk",
+    waProject:"Project", waEmpty:"No milestones this week.", waError:"Couldn't load this week.",
+    waOpen:"Open in Production Planner",
     ddTitle:"Today's Brief", ddDesc:"Personal summary",
     ddMeetings:"Notable meetings", ddActions:"Action items", ddReplies:"Needs a reply",
     ddNoMeetings:"Nothing notable today.", ddNoActions:"Nothing outstanding.", ddNoReplies:"All caught up.",
@@ -778,6 +847,9 @@ const STRINGS = {
     newBoard:"Ny tavle", untitledBoard:"Uten navn", deleteBoardTitle:"Slett tavle", removeCardTitle:"Fjern", addCardTitle:"Legg til kort",
     authGateTitle:"Logg inn for å synkronisere", authGateBody:"Logg inn med din @newslab.no Google-konto for å se og bruke verktøyhuben.",
     authGateBtn:"Logg inn med Google",
+    waTitle:"Uka som kommer", waToday:"I dag", waPrev:"Forrige uke", waNext:"Neste uke", waWk:"Uke",
+    waProject:"Prosjekt", waEmpty:"Ingen milepæler denne uka.", waError:"Kunne ikke laste denne uka.",
+    waOpen:"Åpne i Production Planner",
     ddTitle:"Dagens sammendrag", ddDesc:"Personlig sammendrag",
     ddMeetings:"Viktige møter", ddActions:"Oppgaver", ddReplies:"Trenger svar",
     ddNoMeetings:"Ingenting spesielt i dag.", ddNoActions:"Ingenting utestående.", ddNoReplies:"Alt er unnagjort.",
@@ -1008,6 +1080,137 @@ function initSplitDivider(){
   divider.addEventListener("pointercancel", endDrag);
 }
 
+/* ---------- week ahead (Production Planner milestones) ---------- */
+// Same presets and edge-darkening as production-planner/index.html, so blocks match the planner.
+const PLANNER_PRESET_HEX = { cyan:{bg:'#d4f1ee',edge:'#a8ddd7'}, pink:{bg:'#f7d8ec',edge:'#e8b3d3'}, green:{bg:'#dcefcf',edge:'#b8d99e'}, coral:{bg:'#f1c9c0',edge:'#d99587'}, yellow:{bg:'#f5ecb8',edge:'#d9c876'}, lavender:{bg:'#ddd6ef',edge:'#b0a3d4'}, grey:{bg:'#e2e2e2',edge:'#b8b8b8'}, blue:{bg:'#d3e1f5',edge:'#a9bedc'}, mint:{bg:'#d4f0df',edge:'#a9ccb7'}, peach:{bg:'#fbe1cc',edge:'#dcb392'} };
+function plannerDarken(hex, amount){
+  const h = hex.replace('#',''), f = 1 - amount;
+  const c = i => Math.max(0, Math.round(parseInt(h.slice(i,i+2),16) * f)).toString(16).padStart(2,'0');
+  return `#${c(0)}${c(2)}${c(4)}`;
+}
+function plannerColor(c){
+  // Plan files come from anyone's Drive, so only accept a strict #rrggbb before it reaches a style attribute.
+  if(typeof c === "string" && /^#[0-9a-fA-F]{6}$/.test(c)) return { bg:c, edge:plannerDarken(c, 0.22) };
+  return PLANNER_PRESET_HEX[c] || PLANNER_PRESET_HEX.cyan;
+}
+
+const localISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const fromLocalISO = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const addDaysTo = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const dayDiff = (a, b) => Math.round((fromLocalISO(b) - fromLocalISO(a)) / 86400000);
+function isoWeekNumber(d){
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7);
+}
+// The "week ahead" on a weekend is next week; otherwise this week's Monday.
+function defaultWeekStart(){
+  const t = new Date(); t.setHours(0,0,0,0);
+  const dow = t.getDay();
+  if(dow === 6) return localISO(addDaysTo(t, 2));
+  if(dow === 0) return localISO(addDaysTo(t, 1));
+  return localISO(addDaysTo(t, 1 - dow));
+}
+
+let weekAheadReq = 0;
+async function loadWeekAhead(weekStart){
+  state.weekAheadStart = weekStart || state.weekAheadStart || defaultWeekStart();
+  const req = ++weekAheadReq;
+  state.weekAheadStatus = "loading";
+  renderWeekAhead();
+  try{
+    const res = await fetch("/api/week-ahead?week=" + encodeURIComponent(state.weekAheadStart), { cache:"no-store", credentials:"same-origin" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if(req !== weekAheadReq) return;
+    if(!data || !Array.isArray(data.projects)) throw new Error("unexpected response");
+    state.weekAhead = data;
+    state.weekAheadStatus = "ok";
+    state.weekAheadEverLoaded = true;
+  }catch(e){
+    if(req !== weekAheadReq) return;
+    console.warn("[hub] Week ahead unavailable:", e.message);
+    state.weekAheadStatus = "error";
+  }
+  renderWeekAhead();
+}
+function shiftWeekAhead(days){
+  loadWeekAhead(localISO(addDaysTo(fromLocalISO(state.weekAheadStart || defaultWeekStart()), days)));
+}
+
+const WA_LANE = 46;
+function weekAheadRowHTML(p, weekStart, weekEnd, todayCol){
+  const segs = p.events.map(e => {
+    const s = e.start < weekStart ? weekStart : e.start;
+    const en = e.end > weekEnd ? weekEnd : e.end;
+    return { e, startCol: dayDiff(weekStart, s), endCol: dayDiff(weekStart, en), clipL: e.start < weekStart, clipR: e.end > weekEnd };
+  }).filter(s => s.endCol >= 0 && s.startCol <= 4 && s.endCol >= s.startCol)
+    .sort((a,b) => a.startCol - b.startCol || b.endCol - a.endCol);
+  // Greedy lane packing, as in the planner: reuse the first lane that has ended before this one starts.
+  const laneEnds = [];
+  segs.forEach(s => {
+    let lane = laneEnds.findIndex(end => end < s.startCol);
+    if(lane < 0){ lane = laneEnds.length; laneEnds.push(s.endCol); } else laneEnds[lane] = s.endCol;
+    s.lane = lane;
+  });
+  const height = Math.max(1, laneEnds.length) * WA_LANE + 8;
+  const bg = [0,1,2,3,4].map(i => `<span${i === todayCol ? ' class="today"' : ""}></span>`).join("");
+  const blocks = segs.map(s => {
+    const c = plannerColor(s.e.color);
+    const span = s.endCol - s.startCol + 1;
+    const tip = s.e.name + (s.e.notes ? " — " + s.e.notes : "");
+    return `<div class="wa-ev${s.clipL ? " clip-l" : ""}${s.clipR ? " clip-r" : ""}"
+      style="left:calc(${s.startCol*20}% + 4px);width:calc(${span*20}% - 8px);top:${8 + s.lane*WA_LANE}px;background:${c.bg};border-color:${c.edge}"
+      title="${esc(tip)}">
+      <div class="wa-ev-title">${esc(s.e.name)}</div>
+      ${s.e.notes ? `<div class="wa-ev-notes">${esc(s.e.notes)}</div>` : ""}
+    </div>`;
+  }).join("");
+  const href = "production-planner/#open=" + encodeURIComponent(p.fileId);
+  return `<div class="wa-row">
+    <div class="wa-label"><a href="${esc(href)}" target="_blank" rel="noopener" title="${esc(tr("waOpen"))}">${esc(p.title)}</a></div>
+    <div class="wa-track" style="height:${height}px"><div class="wa-bg">${bg}</div>${blocks}</div>
+  </div>`;
+}
+
+function renderWeekAhead(){
+  const section = $("#weekAheadSection");
+  if(!section) return;
+  const st = state.weekAheadStatus;
+  // Hide entirely until the endpoint has worked once (e.g. local dev, or the Worker isn't deployed yet).
+  if(st === "idle" || (st === "error" && !state.weekAheadEverLoaded) || (st === "loading" && !state.weekAheadEverLoaded)){
+    section.hidden = true; return;
+  }
+  section.hidden = false;
+
+  const weekStart = state.weekAheadStart;
+  const ws = fromLocalISO(weekStart);
+  const days = [0,1,2,3,4].map(i => addDaysTo(ws, i));
+  const weekEnd = localISO(days[4]);
+  const loc = state.lang === "no" ? "nb-NO" : "en-GB";
+  const fmtDay = new Intl.DateTimeFormat(loc, { day:"numeric", month:"short" });
+  const fmtDow = new Intl.DateTimeFormat(loc, { weekday:"short" });
+  $("#waWeek").textContent = `${tr("waWk")} ${isoWeekNumber(ws)} · ${fmtDay.format(days[0])} – ${fmtDay.format(days[4])}`.replace(/\./g, "");
+
+  const todayCol = dayDiff(weekStart, localISO(new Date()));
+  const head = `<div class="wa-row wa-headrow"><div class="wa-label">${esc(tr("waProject"))}</div>${
+    days.map((d,i) => `<div class="wa-dayhead${i === todayCol ? " today" : ""}">${esc(fmtDow.format(d).replace(".", ""))}<b>${d.getDate()}</b></div>`).join("")
+  }</div>`;
+
+  let body;
+  const data = state.weekAhead;
+  if(st === "loading"){
+    body = `<div class="wa-row"><div class="wa-label"></div><div class="wa-skel"></div></div>`;
+  } else if(st === "error"){
+    body = `<div class="wa-row"><div class="wa-msg">${esc(tr("waError"))}</div></div>`;
+  } else if(!data.projects.length){
+    body = `<div class="wa-row"><div class="wa-msg">${esc(tr("waEmpty"))}</div></div>`;
+  } else {
+    body = data.projects.map(p => weekAheadRowHTML(p, weekStart, weekEnd, todayCol)).join("");
+  }
+  $("#waGrid").innerHTML = head + body;
+}
+
 /* ---------- persistence ---------- */
 function savePersonal(){
   store.set(K.personal, JSON.stringify(state.personal));
@@ -1031,6 +1234,7 @@ function render(){
   statusEl.classList.toggle("error", state.syncStatus === "error");
   statusEl.textContent = state.syncStatus === "syncing" ? tr("syncingLabel")
     : state.syncStatus === "error" ? tr("syncErrorLabel") : "";
+  renderWeekAhead();
   renderDougsDesk();
   renderNotice();
   renderChips();
@@ -1375,6 +1579,10 @@ function applyI18n(){
   $("#catBtn").textContent = tr("categoriesBtn");
   $("#agencySection h2").textContent = tr("agencyTitle");
   $("#agencySection .desc").textContent = tr("agencyDesc");
+  $("#waTitle").textContent = tr("waTitle");
+  $("#waToday").textContent = tr("waToday");
+  $("#waPrev").setAttribute("aria-label", tr("waPrev")); $("#waPrev").title = tr("waPrev");
+  $("#waNext").setAttribute("aria-label", tr("waNext")); $("#waNext").title = tr("waNext");
   $("#ddTitle").textContent = tr("ddTitle");
   $("#ddDesc").textContent = tr("ddDesc");
   $("#personalSection h2").textContent = tr("personalTitle");
@@ -1433,6 +1641,9 @@ $("#kanbanToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===
 $("#addBoardBtn").addEventListener("click", addBoard);
 $("#langToggle").addEventListener("click", ()=> setLang(state.lang==="en"?"no":"en"));
 initSplitDivider();
+$("#waPrev").addEventListener("click", ()=> shiftWeekAhead(-7));
+$("#waNext").addEventListener("click", ()=> shiftWeekAhead(7));
+$("#waToday").addEventListener("click", ()=> loadWeekAhead(defaultWeekStart()));
 $("#langToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setLang(state.lang==="en"?"no":"en"); } });
 
 document.addEventListener("keydown", e=>{
@@ -1643,6 +1854,7 @@ onAuthStateChanged(auth, async user => {
   else { stopPersonalSync(); }
   render();
   if(state.isDoug && !wasDoug) loadDougsDesk();
+  if(currentUser && state.weekAheadStatus === "idle") loadWeekAhead();
 });
 
 $("#authBtn").addEventListener("click", async () => {
