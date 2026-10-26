@@ -671,6 +671,14 @@
 </div>
 
 <script>
+// ============ PER-TAB PLAN STORAGE ============
+// Normally the current plan lives in localStorage, shared by every tab. A tab
+// opened from a colleague link (#open=<fileId>) keeps its plan in sessionStorage
+// instead, so it never replaces the plan the colleague has open elsewhere.
+if (/^#open=[A-Za-z0-9_-]{10,}/.test(window.location.hash)) sessionStorage.setItem('newslab-tab-scoped', '1');
+const isLinkedTab = sessionStorage.getItem('newslab-tab-scoped') === '1';
+const planStore = isLinkedTab ? sessionStorage : localStorage;
+
 // ============ CUSTOM DIALOG REPLACEMENTS ============
 let dialogCallback = null;
 function resetDialogLabels() {
@@ -735,10 +743,10 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
 const DEFAULT_PLANS_FOLDER_ID = '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
 
 let tokenClient; let gapiInited = false; let gisInited = false;
-let currentDriveFileId = localStorage.getItem('newslab-current-drive-file') || null;
-let currentDriveFileName = localStorage.getItem('newslab-current-drive-file-name') || null;
-let currentDriveCanEdit = localStorage.getItem('newslab-current-drive-canedit') !== '0';
-let lastKnownRevisionId = localStorage.getItem('newslab-drive-file-revision') || null;
+let currentDriveFileId = planStore.getItem('newslab-current-drive-file') || null;
+let currentDriveFileName = planStore.getItem('newslab-current-drive-file-name') || null;
+let currentDriveCanEdit = planStore.getItem('newslab-current-drive-canedit') !== '0';
+let lastKnownRevisionId = planStore.getItem('newslab-drive-file-revision') || null;
 const driveWasConnectedBefore = localStorage.getItem('newslab_drive_connected') === '1' || !!currentDriveFileId;
 let sessionExpired = false; let pendingDriveSave = false; let sessionExpiryTimer = null;
 let driveFilesCache = []; let driveFolderError = null; let lastCloudStatus = 'Disconnected';
@@ -1024,18 +1032,18 @@ function closeSettingsMenu() { document.getElementById('settingsMenu')?.classLis
 
 function setCurrentDriveFile(id, name, canEdit, revisionId) {
   currentDriveFileId = id; currentDriveFileName = stripJson(name) || null; currentDriveCanEdit = canEdit !== false;
-  localStorage.setItem('newslab-current-drive-file', id);
-  if (currentDriveFileName) localStorage.setItem('newslab-current-drive-file-name', currentDriveFileName); else localStorage.removeItem('newslab-current-drive-file-name');
-  localStorage.setItem('newslab-current-drive-canedit', currentDriveCanEdit ? '1' : '0');
+  planStore.setItem('newslab-current-drive-file', id);
+  if (currentDriveFileName) planStore.setItem('newslab-current-drive-file-name', currentDriveFileName); else planStore.removeItem('newslab-current-drive-file-name');
+  planStore.setItem('newslab-current-drive-canedit', currentDriveCanEdit ? '1' : '0');
   if (revisionId !== undefined) {
     lastKnownRevisionId = revisionId || null;
-    if (lastKnownRevisionId) localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId); else localStorage.removeItem('newslab-drive-file-revision');
+    if (lastKnownRevisionId) planStore.setItem('newslab-drive-file-revision', lastKnownRevisionId); else planStore.removeItem('newslab-drive-file-revision');
   }
   refreshCloudStatus();
 }
 function clearCurrentDriveFile() {
   currentDriveFileId = null; currentDriveFileName = null; currentDriveCanEdit = true; lastKnownRevisionId = null;
-  ['newslab-current-drive-file', 'newslab-current-drive-file-name', 'newslab-current-drive-canedit', 'newslab-drive-file-revision'].forEach(k => localStorage.removeItem(k));
+  ['newslab-current-drive-file', 'newslab-current-drive-file-name', 'newslab-current-drive-canedit', 'newslab-drive-file-revision'].forEach(k => planStore.removeItem(k));
   refreshCloudStatus();
 }
 
@@ -1275,7 +1283,7 @@ async function openDrivePlan(fileId) {
     setCurrentDriveFile(fileId, meta.result.name, !(meta.result.capabilities && meta.result.capabilities.canEdit === false), meta.result.headRevisionId);
     delete sessionCheckpointDone[fileId]; // first save after opening checkpoints "before these changes"
     if (state.lang) setLanguage(state.lang);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render(); updateCloudStatus('Connected');
+    planStore.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render(); updateCloudStatus('Connected');
     closeSettingsMenu(); closeModal();
     if (!currentDriveCanEdit) customAlert(t('view_only_msg'), t('view_only_title'));
   } catch (err) {
@@ -1298,7 +1306,7 @@ async function createDrivePlanFile(name, planState, resetHistory, folderId) {
     const json = await resp.json();
     state = planState;
     setCurrentDriveFile(fileId, fileName, true, json.headRevisionId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    planStore.setItem(STORAGE_KEY, JSON.stringify(state));
     if (resetHistory) initHistory();
     render();
     await fetchDriveFiles(); updateCloudStatus('Saved');
@@ -1617,7 +1625,7 @@ async function performDriveSave(force = false) {
     if (!resp.ok) throw { status: resp.status };
     const json = await resp.json();
     if (json.headRevisionId) {
-      lastKnownRevisionId = json.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId);
+      lastKnownRevisionId = json.headRevisionId; planStore.setItem('newslab-drive-file-revision', lastKnownRevisionId);
       maybeCheckpointAfterSave(fileId, previousRevisionId, json.headRevisionId);
     }
     pendingDriveSave = false;
@@ -1658,9 +1666,9 @@ function showSaveConflictPrompt() {
         ]);
         const driveState = typeof content.body === 'string' ? JSON.parse(content.body) : content.body;
         state = migrateData(driveState);
-        lastKnownRevisionId = meta.result.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId);
+        lastKnownRevisionId = meta.result.headRevisionId; planStore.setItem('newslab-drive-file-revision', lastKnownRevisionId);
         if (state.lang) setLanguage(state.lang);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render();
+        planStore.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render();
         updateCloudStatus('Connected');
       } catch (err) { updateCloudStatus('Error'); customAlert('Could not reload the latest version.', 'Error'); }
     } else {
@@ -1928,18 +1936,20 @@ function loadState() {
         const json = decodeURIComponent(escape(atob(encoded))); const sharedState = migrateData(JSON.parse(json));
         if (hashParts.length > 1 || window.location.href.includes('&ro=1')) { window.__isReadOnly = true; document.body.classList.add('read-only'); }
         history.replaceState(null, null, window.location.pathname); 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(sharedState));
+        planStore.setItem(STORAGE_KEY, JSON.stringify(sharedState));
         if (sharedState.lang) { currentLang = sharedState.lang; localStorage.setItem('newslab-planner-lang', currentLang); }
-        currentDriveFileId = null; localStorage.removeItem('newslab-current-drive-file');
-        currentDriveFileName = null; localStorage.removeItem('newslab-current-drive-file-name');
-        currentDriveCanEdit = true; localStorage.removeItem('newslab-current-drive-canedit');
-        lastKnownRevisionId = null; localStorage.removeItem('newslab-drive-file-revision');
+        currentDriveFileId = null; planStore.removeItem('newslab-current-drive-file');
+        currentDriveFileName = null; planStore.removeItem('newslab-current-drive-file-name');
+        currentDriveCanEdit = true; planStore.removeItem('newslab-current-drive-canedit');
+        lastKnownRevisionId = null; planStore.removeItem('newslab-drive-file-revision');
         return sharedState;
       } catch(e) {}
     }
-    const raw = localStorage.getItem(STORAGE_KEY); if (raw) return migrateData(JSON.parse(raw));
-    const v3Raw = localStorage.getItem('newslab-planner-v3'); if (v3Raw) return migrateData(JSON.parse(v3Raw));
-    const v2Raw = localStorage.getItem('newslab-planner-v2'); if (v2Raw) return migrateData(JSON.parse(v2Raw));
+    const raw = planStore.getItem(STORAGE_KEY); if (raw) return migrateData(JSON.parse(raw));
+    if (!isLinkedTab) {
+      const v3Raw = localStorage.getItem('newslab-planner-v3'); if (v3Raw) return migrateData(JSON.parse(v3Raw));
+      const v2Raw = localStorage.getItem('newslab-planner-v2'); if (v2Raw) return migrateData(JSON.parse(v2Raw));
+    }
   } catch(e){}
   
   return getBlankState();
@@ -1951,13 +1961,13 @@ initHistory();
 
 function saveState(pushToHistory = true) {
   if (window.__isReadOnly) return; 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  planStore.setItem(STORAGE_KEY, JSON.stringify(state));
   if (pushToHistory) { historyStack = historyStack.slice(0, historyIndex + 1); historyStack.push(JSON.stringify(state)); if (historyStack.length > 50) historyStack.shift(); else historyIndex++; }
   triggerAutoSave();
 }
 
-function undo() { if (window.__isReadOnly || historyIndex <= 0) return; historyIndex--; state = JSON.parse(historyStack[historyIndex]); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); triggerAutoSave(); render(); }
-function redo() { if (window.__isReadOnly || historyIndex >= historyStack.length - 1) return; historyIndex++; state = JSON.parse(historyStack[historyIndex]); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); triggerAutoSave(); render(); }
+function undo() { if (window.__isReadOnly || historyIndex <= 0) return; historyIndex--; state = JSON.parse(historyStack[historyIndex]); planStore.setItem(STORAGE_KEY, JSON.stringify(state)); triggerAutoSave(); render(); }
+function redo() { if (window.__isReadOnly || historyIndex >= historyStack.length - 1) return; historyIndex++; state = JSON.parse(historyStack[historyIndex]); planStore.setItem(STORAGE_KEY, JSON.stringify(state)); triggerAutoSave(); render(); }
 
 function toISO(d) { if (typeof d === 'string') return d; const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${day}`; }
 function fromISO(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
@@ -2160,7 +2170,7 @@ function render(preserveScroll = true) {
     document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
     document.getElementById('hideSingleDayToggle').classList.toggle('on', !!state.hideSingleDayOverview);
     const emptyState = document.getElementById('emptyState');
-    if (emptyState) emptyState.hidden = window.__isReadOnly || state.events.length > 0 || sessionStorage.getItem('newslab-empty-dismissed') === '1';
+    if (emptyState) emptyState.hidden = window.__isReadOnly || state.events.length > 0 || sessionStorage.getItem('newslab-empty-dismissed') === '1' || !!sessionStorage.getItem(PENDING_OPEN_KEY);
     syncDriveUi();
 
     if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); }
@@ -3155,7 +3165,7 @@ function openClearAllModal() {
     confirmBtn.disabled = true;
     saveLocalSnapshot('clear');
     await checkpointCurrentDriveVersion();
-    localStorage.removeItem(STORAGE_KEY);
+    planStore.removeItem(STORAGE_KEY);
     state = getBlankState(); saveState(); render(); closeModal();
   });
   modal.classList.add('open'); setTimeout(() => input.focus(), 50);
@@ -3441,6 +3451,11 @@ function promptSignInForPendingLink(startedAt = Date.now()) {
   history.replaceState(null, null, window.location.pathname + window.location.search);
   promptSignInForPendingLink();
 })();
+// A linked tab's plan storage disappears when the tab closes, so warn before
+// losing work there that was never saved to Drive.
+window.addEventListener('beforeunload', (e) => {
+  if (isLinkedTab && !window.__isReadOnly && hasUnsavedLocalWork()) { e.preventDefault(); e.returnValue = ''; }
+});
 
 if (window.__isReadOnly) document.querySelectorAll('#projectTitle, #projectDesc, #projectStart, #projectEnd').forEach(el => el.disabled = true);
 applyStaticTranslations(); updateLangToggle(); document.documentElement.lang = currentLang === 'nb' ? 'no' : 'en';
@@ -3637,7 +3652,7 @@ if (initialLoad) {
             // Keep the conflict check's baseline in step with this upload, or the
             // next autosave would mistake our own write for someone else's.
             const saved = await resp.json();
-            if (saved.headRevisionId) { lastKnownRevisionId = saved.headRevisionId; localStorage.setItem('newslab-drive-file-revision', lastKnownRevisionId); }
+            if (saved.headRevisionId) { lastKnownRevisionId = saved.headRevisionId; planStore.setItem('newslab-drive-file-revision', lastKnownRevisionId); }
             if (!already) await setFilePublic(fileId);
             const shareUrl = buildShareUrl(fileId);
             updateCloudStatus('Saved');
