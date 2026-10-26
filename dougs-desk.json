@@ -1,27 +1,29 @@
 {
-  "date": "2026-10-23",
+  "date": "2026-10-26",
   "meetings": [
-    { "time": "09:00", "title": "NSY Powerpoint fonts", "client": false },
-    { "time": "10:00", "title": "Holzweiler photo graphics", "client": false },
-    { "time": "12:00", "title": "Julegave kampanje (Holzweiler)", "client": true },
-    { "time": "12:00", "title": "Holzweiler Julekampanje", "client": false },
-    { "time": "13:15", "title": "Mikael / Doug", "client": false },
-    { "time": "14:00", "title": "Forbrukerrådet print ads", "client": false },
-    { "time": "17:00", "title": "Plan out design dept projects", "client": false },
-    { "time": "18:00", "title": "Subtitle tool?", "client": false },
-    { "time": "19:00", "title": "Find a way to keep track of hours in realtime, and to compare past Timely project hours to budgets from the projects.", "client": false }
+    { "time": "09:15", "title": "Internpolitisk kvarter", "client": false },
+    { "time": "09:30", "title": "Teamledermøte", "client": false },
+    { "time": "10:00", "title": "Design Dept — Ukentlig møte", "client": false },
+    { "time": "11:00", "title": "Torgeir / Doug", "client": false },
+    { "time": "11:30", "title": "Norad", "client": false },
+    { "time": "12:00", "title": "Drodling til vår take på fraværskampanje", "client": false },
+    { "time": "14:00", "title": "Budskap og sluttplakat til årets julekampanje for KBM", "client": true },
+    { "time": "14:30", "title": "Film til Norad-konferansen", "client": true },
+    { "time": "16:00", "title": "Quick sync on Holz Julekampanje", "client": false }
   ],
   "action_items": [
-    "Share the Down Education video (or the first one) with Sofia at Holzweiler so she can plan the roll-out.",
-    "Create a transparent-logo version of the Udir Teams backgrounds, alongside the new light and dark ones.",
-    "Review the Kirkevalgkampanje 2027 tender invitation so the team can decide on Monday whether to bid.",
-    "Get Slack set up for Melontaxi with Snorre.",
-    "Resolve the 12:00 clash between the Holzweiler client meeting and the internal Julekampanje meeting."
+    "Send the budget for the rest of the Holzweiler Julekampanje production to Sofia early this week.",
+    "Brief Ida at byHands on the Zarina illustration job (she is ready after 10:00 today).",
+    "Review Tobias's price estimate (Tilbud Newslab) and respond.",
+    "Review Grilli Type's GT America MS Office Embed quote and decide before taking it to the client.",
+    "Review Kristin Fagerlid's (NB) style-direction feedback on the intro film with Torgeir.",
+    "Decide which design projects to present at the 17 December Christmas breakfast and film screening."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Sofia Borisova (Holzweiler)", "summary": "Asks if you can share the videos, or the first one, to plan this week's roll-out." },
-    { "source": "gmail", "from": "Selin Yılmaz (Melontaxi)", "summary": "Sent feedback on your film project budget proposal and is waiting on Slack setup from Snorre." },
-    { "source": "gmail", "from": "Kristin Ålmo (Udir)", "summary": "Asks for a transparent version of the Teams background so logos don't look cut into an image." },
-    { "source": "gmail", "from": "Linn Isaksen", "summary": "Wants someone to review the Kirkevalgkampanje 2027 minikonkurranse so a bid decision can be made Monday." }
+    { "source": "gmail", "from": "tobiaslehrskov1@gmail.com", "summary": "Sent a price estimate (Tilbud Newslab) and notes that material costs are estimates." },
+    { "source": "gmail", "from": "Grilli Type", "summary": "Answered your questions with a quote for 8 styles of GT America MS Office Embed." },
+    { "source": "gmail", "from": "Ida Lund Bjørnsen (byHands)", "summary": "Ready for a briefing on Zarina's part today after 10:00." },
+    { "source": "gmail", "from": "Sofia Borisova (Holzweiler)", "summary": "Confirmed full-size production and awaits your budget for the rest of production this week." },
+    { "source": "slack", "from": "Linn Isaksen", "summary": "Asks if design can present a few projects from the past six months at the 17 December Christmas breakfast." }
   ]
 }
