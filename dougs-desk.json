@@ -1,29 +1,21 @@
 {
-  "date": "2026-10-26",
+  "date": "2026-10-27",
   "meetings": [
-    { "time": "09:15", "title": "Internpolitisk kvarter", "client": false },
-    { "time": "09:30", "title": "Teamledermøte", "client": false },
-    { "time": "10:00", "title": "Design Dept — Ukentlig møte", "client": false },
-    { "time": "11:00", "title": "Torgeir / Doug", "client": false },
-    { "time": "11:30", "title": "Norad", "client": false },
-    { "time": "12:00", "title": "Drodling til vår take på fraværskampanje", "client": false },
-    { "time": "14:00", "title": "Budskap og sluttplakat til årets julekampanje for KBM", "client": true },
-    { "time": "14:30", "title": "Film til Norad-konferansen", "client": true },
-    { "time": "16:00", "title": "Quick sync on Holz Julekampanje", "client": false }
+    { "time": "11:00", "title": "NSY identit — Ukentlig møte", "client": false },
+    { "time": "12:30", "title": "Mikael / Doug", "client": false },
+    { "time": "15:00", "title": "Møte med Skavl", "client": false }
   ],
   "action_items": [
-    "Send the budget for the rest of the Holzweiler Julekampanje production to Sofia early this week.",
-    "Brief Ida at byHands on the Zarina illustration job (she is ready after 10:00 today).",
-    "Review Tobias's price estimate (Tilbud Newslab) and respond.",
-    "Review Grilli Type's GT America MS Office Embed quote and decide before taking it to the client.",
-    "Review Kristin Fagerlid's (NB) style-direction feedback on the intro film with Torgeir.",
-    "Decide which design projects to present at the 17 December Christmas breakfast and film screening."
+    "Confirm with the photographer whether 12 or 13 November works for the Holzweiler Julekampanje shoot.",
+    "Review Zarina's latest message on showing her sketches and agree how to present options to Holzweiler.",
+    "Send Mikael a quick status on NSY and the magazines so you can skip your chat today.",
+    "Help Snorre with downloading and distributing the winners' assets and publishing the nomination site.",
+    "Plan the Holzweiler Down Education film posting order, starting with Dovre Light and then Steilia in about two weeks."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "tobiaslehrskov1@gmail.com", "summary": "Sent a price estimate (Tilbud Newslab) and notes that material costs are estimates." },
-    { "source": "gmail", "from": "Grilli Type", "summary": "Answered your questions with a quote for 8 styles of GT America MS Office Embed." },
-    { "source": "gmail", "from": "Ida Lund Bjørnsen (byHands)", "summary": "Ready for a briefing on Zarina's part today after 10:00." },
-    { "source": "gmail", "from": "Sofia Borisova (Holzweiler)", "summary": "Confirmed full-size production and awaits your budget for the rest of production this week." },
-    { "source": "slack", "from": "Linn Isaksen", "summary": "Asks if design can present a few projects from the past six months at the 17 December Christmas breakfast." }
+    { "source": "gmail", "from": "Zarina", "summary": "Thinks it is best to show the sketches differently and wants your take on how to present them." },
+    { "source": "slack", "from": "Mikael Lunde", "summary": "Asks for a quick NSY and magazines status so you can skip tomorrow's chat." },
+    { "source": "slack", "from": "Karoline", "summary": "Asks whether the Sikkerhetsrapport front cover should come today or tomorrow morning." },
+    { "source": "slack", "from": "Snorre Bryne", "summary": "Needs a way to download and distribute winners' assets and asks about publishing the site late." }
   ]
 }
