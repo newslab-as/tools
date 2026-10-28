@@ -1,21 +1,25 @@
 {
-  "date": "2026-10-27",
+  "date": "2026-10-28",
   "meetings": [
-    { "time": "11:00", "title": "NSY identit — Ukentlig møte", "client": false },
-    { "time": "12:30", "title": "Mikael / Doug", "client": false },
-    { "time": "15:00", "title": "Møte med Skavl", "client": false }
+    { "time": "09:00", "title": "Tibi Video", "client": false },
+    { "time": "12:30", "title": "Linn / Doug", "client": false }
   ],
   "action_items": [
-    "Confirm with the photographer whether 12 or 13 November works for the Holzweiler Julekampanje shoot.",
-    "Review Zarina's latest message on showing her sketches and agree how to present options to Holzweiler.",
-    "Send Mikael a quick status on NSY and the magazines so you can skip your chat today.",
-    "Help Snorre with downloading and distributing the winners' assets and publishing the nomination site.",
-    "Plan the Holzweiler Down Education film posting order, starting with Dovre Light and then Steilia in about two weeks."
+    "Fix the bulk of the 18 small text issues in the magazine design before lunch and work out how to fill the missing images.",
+    "Find a simple, general NewsLab presentation to show the potential new owner.",
+    "Ask the photographer whether 12 or 13 November works for the Holzweiler Julekampanje shoot, and send Holzweiler the budget.",
+    "Prepare to recolor or swap the robotic arm and nurse in the design so it differs more from the Norwegian version.",
+    "Check Tobias's updated price estimate (Tilbud Newslab) for the set cutouts.",
+    "Reply to Udir about a status meeting for Etter planen on 2 or 4 November after 12:00.",
+    "Decide where the Down Education final films should be delivered (Frame.io folder vs Drive) and plan the next posting, Steilia in about two weeks."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Zarina", "summary": "Thinks it is best to show the sketches differently and wants your take on how to present them." },
-    { "source": "slack", "from": "Mikael Lunde", "summary": "Asks for a quick NSY and magazines status so you can skip tomorrow's chat." },
-    { "source": "slack", "from": "Karoline", "summary": "Asks whether the Sikkerhetsrapport front cover should come today or tomorrow morning." },
-    { "source": "slack", "from": "Snorre Bryne", "summary": "Needs a way to download and distribute winners' assets and asks about publishing the site late." }
+    { "source": "gmail", "from": "Sofia Borisova (Holzweiler)", "summary": "Wants to add a day to film Zarina painting and will come back with her 11 favourite objects." },
+    { "source": "gmail", "from": "Aurora Berg Heltzer (Udir)", "summary": "Requests a status meeting on Etter planen on 2 or 4 November after 12:00 covering schedule, design direction and late texts." },
+    { "source": "gmail", "from": "Frode Karlsen (Hjemmekontoret)", "summary": "Asks about extra illustrations for the Etter planen research report and whether he can see it." },
+    { "source": "gmail", "from": "Tobias Lehrskov-Schmidt", "summary": "Sent an updated price estimate PDF awaiting your review." },
+    { "source": "slack", "from": "Linn Isaksen", "summary": "Asks for a simple general NewsLab presentation for the meeting with the potential new owner, and for meeting room 1 on 10 November 13-14." },
+    { "source": "slack", "from": "Group DM (Snorre, Nils, Jakob)", "summary": "Asks you to fix most of the 18 small text issues before lunch and how to fill in the missing images." },
+    { "source": "slack", "from": "Adam Enochsson", "summary": "Asks whether a Frame.io folder for the Down Education final films is fine or you want them in Drive." }
   ]
 }
