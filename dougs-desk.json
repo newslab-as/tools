@@ -1,24 +1,24 @@
 {
-  "date": "2026-10-29",
+  "date": "2026-10-30",
   "meetings": [
-    { "time": "09:00", "title": "NSY templates", "client": false },
-    { "time": "10:00", "title": "30 under 30 diplomas", "client": false },
-    { "time": "11:00", "title": "Norad", "client": false },
-    { "time": "12:30", "title": "Down Education photo graphics", "client": false },
-    { "time": "13:30", "title": "Holzweiler x Newslab", "client": true }
+    { "time": "09:00", "title": "Down Education photo graphics", "client": false },
+    { "time": "10:00", "title": "Norad", "client": false },
+    { "time": "13:00", "title": "Plan out design dept projects", "client": false }
   ],
   "action_items": [
     "Reply to Magnus Nordstrand on the 13 November Holzweiler shoot: studio choice (Dagslys vs his studio), budget, and who the lysmester and assistant are.",
-    "Send Udir (Kristin Ålmo) font-embedding test results on several machines before deciding on the USD 2,400 MS Office Embed licence.",
-    "Send Doris and Kjersti at Udir Figma design directions before the Tuesday 3 November 12:00 design meeting.",
-    "Follow up with Zarina on the board for painting and a 30x30 cm test piece, and confirm a Monday or Tuesday start.",
-    "Send Holzweiler the 4x5 version of Dovre Light when ready."
+    "Answer Kristin Ålmo (Udir) on whether to license MS Office Embed (USD 2,400) after the mixed Word/PowerPoint font test results.",
+    "Decide whether to help Talent Norge (Eira Edwards) with a standard invitation today.",
+    "Pass the chosen Holzweiler Christmas objects (11 total) on to Zarina and follow up on her test board and studio setup.",
+    "Send Holzweiler the 4x5 version of Dovre Light when ready.",
+    "Respond to Linn in #858 about the end text and animation timing after grade, and add 3mm bleed to the 30 under 30 stickers."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Magnus Nordstrand", "summary": "Prefers Dagslys studio and asks who the lysmester and assistant/digitech will be." },
-    { "source": "gmail", "from": "Kristin Ålmo (Udir)", "summary": "Waiting on font tests and examples of Archivo for the NSY Office templates." },
-    { "source": "gmail", "from": "Zarina Mingazova", "summary": "Wants a 30x30 cm test board, a Monday studio setup with projector, and asks how prominent the tree bows should be." },
-    { "source": "gmail", "from": "Frode Karlsen (Hjemmekontoret)", "summary": "Asks about extra illustrations for the Etter planen research report and whether he can see it." },
-    { "source": "gmail", "from": "Tobias Lehrskov-Schmidt", "summary": "Updated price estimate (Tilbud Newslab) awaiting your review." }
+    { "source": "gmail", "from": "Magnus Nordstrand", "summary": "Asks about studio, budget, and who the lysmester and assistant are for the Holzweiler shoot." },
+    { "source": "gmail", "from": "Eira Edwards (Talent Norge)", "summary": "Asks if you can help today with a standard invitation if they send the photos." },
+    { "source": "gmail", "from": "Kristin Ålmo (Udir)", "summary": "Waiting on your answer about licensing font embedding after the test results." },
+    { "source": "gmail", "from": "Zarina Mingazova", "summary": "Holzweiler julekampanje brief thread awaiting your response on the test board and setup." },
+    { "source": "slack", "from": "Linn Isaksen", "summary": "Asks whether the end text and animation should land after the grade is finished in #858." },
+    { "source": "slack", "from": "Linn Isaksen", "summary": "Tagged you and Snorre in #teamlederkanal on something she thinks you may have missed." }
   ]
 }
