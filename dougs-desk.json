@@ -1,24 +1,17 @@
 {
-  "date": "2026-10-30",
+  "date": "2026-11-02",
   "meetings": [
-    { "time": "09:00", "title": "Down Education photo graphics", "client": false },
-    { "time": "10:00", "title": "Norad", "client": false },
-    { "time": "13:00", "title": "Plan out design dept projects", "client": false }
+    { "time": "09:15", "title": "Internpolitisk kvarter", "client": false },
+    { "time": "09:30", "title": "Teamledermøte", "client": false },
+    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
+    { "time": "11:00", "title": "Design Dept — Ukentlig møte", "client": false },
+    { "time": "13:00", "title": "Receipts", "client": false }
   ],
   "action_items": [
-    "Reply to Magnus Nordstrand on the 13 November Holzweiler shoot: studio choice (Dagslys vs his studio), budget, and who the lysmester and assistant are.",
-    "Answer Kristin Ålmo (Udir) on whether to license MS Office Embed (USD 2,400) after the mixed Word/PowerPoint font test results.",
-    "Decide whether to help Talent Norge (Eira Edwards) with a standard invitation today.",
-    "Pass the chosen Holzweiler Christmas objects (11 total) on to Zarina and follow up on her test board and studio setup.",
-    "Send Holzweiler the 4x5 version of Dovre Light when ready.",
-    "Respond to Linn in #858 about the end text and animation timing after grade, and add 3mm bleed to the 30 under 30 stickers."
+    "Check Iso's email thread with Dagslys about studio 2 availability and pricing, where you are cc'd.",
+    "Look at Karoline's Figma comment mentioning you in Tibi appen — Introduksjonsvideo."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Magnus Nordstrand", "summary": "Asks about studio, budget, and who the lysmester and assistant are for the Holzweiler shoot." },
-    { "source": "gmail", "from": "Eira Edwards (Talent Norge)", "summary": "Asks if you can help today with a standard invitation if they send the photos." },
-    { "source": "gmail", "from": "Kristin Ålmo (Udir)", "summary": "Waiting on your answer about licensing font embedding after the test results." },
-    { "source": "gmail", "from": "Zarina Mingazova", "summary": "Holzweiler julekampanje brief thread awaiting your response on the test board and setup." },
-    { "source": "slack", "from": "Linn Isaksen", "summary": "Asks whether the end text and animation should land after the grade is finished in #858." },
-    { "source": "slack", "from": "Linn Isaksen", "summary": "Tagged you and Snorre in #teamlederkanal on something she thinks you may have missed." }
+    { "source": "gmail", "from": "Karoline (Figma)", "summary": "Mentioned you in a Figma comment on Tibi appen — Introduksjonsvideo." }
   ]
 }
