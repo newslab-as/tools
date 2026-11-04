@@ -1,24 +1,28 @@
 {
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "meetings": [
-    { "time": "09:00", "title": "Start up painting for Zarina", "client": false },
-    { "time": "09:45", "title": "Norad", "client": false },
-    { "time": "10:35", "title": "Kjapp Norad-prat", "client": false },
-    { "time": "11:00", "title": "NSY identit — Ukentlig møte", "client": false },
-    { "time": "11:30", "title": "Send Tibi", "client": false },
-    { "time": "12:00", "title": "Magazines Design with NewsLab (Udir)", "client": true },
-    { "time": "13:00", "title": "Design Dept monthly summary", "client": false },
-    { "time": "14:00", "title": "Hold for meeting with Kristin", "client": false },
-    { "time": "15:00", "title": "Receipts", "client": false }
+    { "time": "08:00", "title": "Bring in card for Zarina", "client": false },
+    { "time": "09:00", "title": "Talent Norge", "client": false },
+    { "time": "09:30", "title": "NSY", "client": false },
+    { "time": "10:45", "title": "Design Dept monthly summary", "client": false },
+    { "time": "11:00", "title": "Design Dept — Monthly Coffee & Catch-up", "client": false },
+    { "time": "11:45", "title": "Receipts", "client": false },
+    { "time": "12:30", "title": "Mikael / Doug", "client": false },
+    { "time": "13:00", "title": "Redaksjon interne kanaler", "client": false },
+    { "time": "13:30", "title": "Nils + Karoline buy some extra writing bits for work", "client": false },
+    { "time": "14:00", "title": "NSY identit — Ukentlig møte", "client": false },
+    { "time": "14:30", "title": "Update Norad timeline", "client": false },
+    { "time": "15:00", "title": "Statusmøte Etter planen (Udir)", "client": true }
   ],
   "action_items": [
-    "Prepare for the 12:00 Udir meeting on magazine design, focusing on front covers and last-round comments.",
-    "Send Tibi before the 11:30 block ends.",
-    "Test the four GT America MS Office Embed font styles from Grilli Type.",
-    "Note that Holzweiler is booking models for the 13th, so the date can no longer change, and measurements are due tomorrow morning."
+    "Prepare for the 15:00 Udir status meeting on progress plan and design-phase contact points.",
+    "Send Kristin (NB) the export of the intro film without the intro/outro once the main video is done.",
+    "Follow up with Holzweiler on studio measurements; the shoot date is fixed for the 13th.",
+    "Download the Talent Norge WeTransfer file before it expires on 6 November.",
+    "Hold Thursday 09:00 for the 2-hour meeting with Marlene Nilsen at Forskningsparken."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Cheryl (Grilli Type)", "summary": "Sent 4 GT America MS Office Embed styles for testing and asks how they work out." },
-    { "source": "gmail", "from": "Caroline Fjellbu (Holzweiler)", "summary": "Julegavekampanje illustrator update: models booked for the 13th, date is now fixed." }
+    { "source": "gmail", "from": "Eira Edwards / Sipel Rachid (Talent Norge)", "summary": "Sipel was introduced to answer your question on the technical format of the final image." },
+    { "source": "gmail", "from": "Nils (Figma)", "summary": "Mentioned you in the NSY file with a comment saying something is ready for you." }
   ]
 }
