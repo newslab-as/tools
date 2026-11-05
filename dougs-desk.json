@@ -1,28 +1,20 @@
 {
-  "date": "2026-11-04",
+  "date": "2026-11-05",
   "meetings": [
-    { "time": "08:00", "title": "Bring in card for Zarina", "client": false },
-    { "time": "09:00", "title": "Talent Norge", "client": false },
-    { "time": "09:30", "title": "NSY", "client": false },
-    { "time": "10:45", "title": "Design Dept monthly summary", "client": false },
-    { "time": "11:00", "title": "Design Dept — Monthly Coffee & Catch-up", "client": false },
-    { "time": "11:45", "title": "Receipts", "client": false },
-    { "time": "12:30", "title": "Mikael / Doug", "client": false },
+    { "time": "09:00", "title": "Newslab x After", "client": true },
+    { "time": "11:30", "title": "UDIR magasiner — Ukentlig møte", "client": false },
     { "time": "13:00", "title": "Redaksjon interne kanaler", "client": false },
-    { "time": "13:30", "title": "Nils + Karoline buy some extra writing bits for work", "client": false },
-    { "time": "14:00", "title": "NSY identit — Ukentlig møte", "client": false },
-    { "time": "14:30", "title": "Update Norad timeline", "client": false },
-    { "time": "15:00", "title": "Statusmøte Etter planen (Udir)", "client": true }
+    { "time": "13:30", "title": "Prat om Holzweiler-Van", "client": false },
+    { "time": "14:30", "title": "Prat om Karolines stilling fremover", "client": false },
+    { "time": "15:00", "title": "Datatilsynet!", "client": false }
   ],
   "action_items": [
-    "Prepare for the 15:00 Udir status meeting on progress plan and design-phase contact points.",
-    "Send Kristin (NB) the export of the intro film without the intro/outro once the main video is done.",
-    "Follow up with Holzweiler on studio measurements; the shoot date is fixed for the 13th.",
-    "Download the Talent Norge WeTransfer file before it expires on 6 November.",
-    "Hold Thursday 09:00 for the 2-hour meeting with Marlene Nilsen at Forskningsparken."
+    "Update the timeline and send the email summary plus printer question to Udir (11:30 block).",
+    "Send the email to Holzweiler (12:30 block).",
+    "Update the Norad timeline (16:00 block).",
+    "Find a way to track hours in real time and compare past Timely hours to project budgets (17:00 block)."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Eira Edwards / Sipel Rachid (Talent Norge)", "summary": "Sipel was introduced to answer your question on the technical format of the final image." },
-    { "source": "gmail", "from": "Nils (Figma)", "summary": "Mentioned you in the NSY file with a comment saying something is ready for you." }
+    { "source": "gmail", "from": "Kamilla Johanne Brandal (Udir)", "summary": "Sent three approved articles for the Vetuva magazine layout and design test, one of which needs illustration." }
   ]
 }
