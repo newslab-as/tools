@@ -1,20 +1,6 @@
 {
-  "date": "2026-11-05",
-  "meetings": [
-    { "time": "09:00", "title": "Newslab x After", "client": true },
-    { "time": "11:30", "title": "UDIR magasiner — Ukentlig møte", "client": false },
-    { "time": "13:00", "title": "Redaksjon interne kanaler", "client": false },
-    { "time": "13:30", "title": "Prat om Holzweiler-Van", "client": false },
-    { "time": "14:30", "title": "Prat om Karolines stilling fremover", "client": false },
-    { "time": "15:00", "title": "Datatilsynet!", "client": false }
-  ],
-  "action_items": [
-    "Update the timeline and send the email summary plus printer question to Udir (11:30 block).",
-    "Send the email to Holzweiler (12:30 block).",
-    "Update the Norad timeline (16:00 block).",
-    "Find a way to track hours in real time and compare past Timely hours to project budgets (17:00 block)."
-  ],
-  "needs_reply": [
-    { "source": "gmail", "from": "Kamilla Johanne Brandal (Udir)", "summary": "Sent three approved articles for the Vetuva magazine layout and design test, one of which needs illustration." }
-  ]
+  "date": "2026-11-06",
+  "meetings": [],
+  "action_items": [],
+  "needs_reply": []
 }
