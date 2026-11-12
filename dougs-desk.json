@@ -1,26 +1,20 @@
 {
-  "date": "2026-11-11",
+  "date": "2026-11-12",
   "meetings": [
-    { "time": "11:00", "title": "✏️ Design Dept — Ukentlig møte", "client": false },
-    { "time": "11:30", "title": "UDIR magasiner — Ukentlig møte", "client": false },
-    { "time": "12:30", "title": "Mikael / Doug", "client": false },
-    { "time": "14:30", "title": "Introfilm", "client": true }
+    { "time": "11:00", "title": "Design Dept — Monthly Coffee & Catch-up ☕️", "client": false },
+    { "time": "12:30", "title": "Vetuva timeline chat", "client": true },
+    { "time": "14:00", "title": "Mikael / Doug", "client": false },
+    { "time": "14:00", "title": "NewsLab x After", "client": true }
   ],
   "action_items": [
-    "Review Torgeir's Datatilsynet tender text on templates and visual identity before the 12:00 submission deadline today.",
-    "Accept Torgeir's Introfilm invite (14:30 with Kristin Fagerlid, NB) and prepare feedback on the intro film drafts.",
-    "Confirm in #partnerpreik whether you can be producer/project lead on the projects Linn listed.",
-    "Chase NSY for photo selects so Jan Tore can finish post-production.",
-    "Reply to Norad confirming the storyboard approach (sprout driving the film) and next steps for the opening film.",
-    "Suggest a few dates for Lasse (Klink Studio) to come by for a chat."
+    "Prepare for the 12:30 Vetuva timeline call with Leah Aursand (Udir), who will phone you.",
+    "Prepare for the 14:00 NewsLab x After session with Marlene and Snorre on After's communications structure and asset needs.",
+    "Note that NewsLab x After and Mikael / Doug both start at 14:00 and reschedule one of them.",
+    "Address Karoline's Figma comments on the Norad opening film storyboard (swap images, find a better person in a frame).",
+    "Set up the magazine (magasiner) tasks as blocked in your calendar this morning.",
+    "Follow up with Caroline at Holzweiler to confirm the dagsplan for Friday's julekampanje shoot."
   ],
   "needs_reply": [
-    { "source": "slack", "from": "Torgeir", "summary": "Asks you to review the process text on templates and visual identity in the Datatilsynet tender before the 12:00 deadline today." },
-    { "source": "slack", "from": "Linn Isaksen", "summary": "Needs confirmation that you can be producer/project lead on the listed projects, with Ida as production manager." },
-    { "source": "slack", "from": "Ida Solheim-Olsen", "summary": "Needs NSY's photo selects so Jan Tore can wrap up post-production." },
-    { "source": "gmail", "from": "Fartein Rudjord (Norad)", "summary": "Norad agrees to your storyboard proposal for the opening film and is waiting for next steps." },
-    { "source": "gmail", "from": "Aurora Berg Heltzer (Udir)", "summary": "Says their printer is Aksell and asks whether you need a specific contact person; photo selects coming Friday or Monday." },
-    { "source": "gmail", "from": "Linn Isaksen / Lasse Leonhardsen", "summary": "Lasse wants to drop by for a chat and Linn has left it to you to propose a time." },
-    { "source": "gmail", "from": "Frode (Hjemmekontoret)", "summary": "Has invoiced NewsLab for the illustration brief per the agreed budget and asks if any adjustments remain." }
+    { "source": "gmail", "from": "Aurora Berg Heltzer (Udir)", "summary": "Says their printer for Vetuva and Etter planen is Aksell and asks whether you need a contact person there." }
   ]
 }
