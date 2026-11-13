@@ -1,20 +1,23 @@
 {
-  "date": "2026-11-12",
+  "date": "2026-11-13",
   "meetings": [
-    { "time": "11:00", "title": "Design Dept — Monthly Coffee & Catch-up ☕️", "client": false },
-    { "time": "12:30", "title": "Vetuva timeline chat", "client": true },
-    { "time": "14:00", "title": "Mikael / Doug", "client": false },
-    { "time": "14:00", "title": "NewsLab x After", "client": true }
+    { "time": "09:00", "title": "HOLD — Holzweiler julekampanje shoot", "client": false },
+    { "time": "11:00", "title": "Down education budget for flytoget", "client": false },
+    { "time": "12:00", "title": "🥪 Lunch", "client": false },
+    { "time": "12:30", "title": "Design Dept Challenge — 1 material", "client": false },
+    { "time": "15:00", "title": "Vinlotto! 🍷", "client": false },
+    { "time": "18:00", "title": "Kaviarstjerna: En kulinarisk tragedie i fire akter", "client": false }
   ],
   "action_items": [
-    "Prepare for the 12:30 Vetuva timeline call with Leah Aursand (Udir), who will phone you.",
-    "Prepare for the 14:00 NewsLab x After session with Marlene and Snorre on After's communications structure and asset needs.",
-    "Note that NewsLab x After and Mikael / Doug both start at 14:00 and reschedule one of them.",
-    "Address Karoline's Figma comments on the Norad opening film storyboard (swap images, find a better person in a frame).",
-    "Set up the magazine (magasiner) tasks as blocked in your calendar this morning.",
-    "Follow up with Caroline at Holzweiler to confirm the dagsplan for Friday's julekampanje shoot."
+    "Run the Holzweiler julekampanje shoot today and go through outfit combinations with Caroline and the photographer first thing.",
+    "Note that the 11:00 flytoget budget block and 12:30 Design Dept Challenge overlap the all-day Holzweiler shoot hold.",
+    "Review Fartein's new Figma comments on the Norad opening film storyboards and prepare the temporary-voiceover version.",
+    "Download Kamilla's Jønningheia barnehage photos for Vetuva 2027 and confirm you have access.",
+    "Respond to Nils's Figma mention about the big standalone icon in the NSY file.",
+    "Pick up the drinks Jan Tore listed from Vinmonopolet for tonight's Kaviarstjerna dinner."
   ],
   "needs_reply": [
+    { "source": "gmail", "from": "Mikael Lunde", "summary": "Asks whether you remember the NB Skole Opplyst print templates and whether NewsLab can make nynorsk versions of all four, finished and invoiced by 15 December." },
     { "source": "gmail", "from": "Aurora Berg Heltzer (Udir)", "summary": "Says their printer for Vetuva and Etter planen is Aksell and asks whether you need a contact person there." }
   ]
 }
