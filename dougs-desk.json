@@ -1,21 +1,24 @@
 {
-  "date": "2026-11-16",
+  "date": "2026-11-17",
   "meetings": [
-    { "time": "09:15", "title": "Internpolitisk kvarter (fhv. Akkurat nå! fhv. Hammertime)", "client": false },
-    { "time": "09:30", "title": "Teamledermøte", "client": false },
-    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
-    { "time": "11:00", "title": "✏️ Design Dept — Ukentlig møte", "client": false },
-    { "time": "12:00", "title": "🥪 Lunch", "client": false }
+    { "time": "09:00", "title": "NSY", "client": false },
+    { "time": "11:00", "title": "NSY identit — Ukentlig møte", "client": false },
+    { "time": "11:30", "title": "Design Dept Challenge — 1 material", "client": false },
+    { "time": "12:00", "title": "🥪 Lunch", "client": false },
+    { "time": "12:30", "title": "Mikael / Doug", "client": false },
+    { "time": "13:00", "title": "Linn / Doug", "client": false },
+    { "time": "14:00", "title": "After Chat", "client": false }
   ],
   "action_items": [
-    "Follow up on the NB Skole Opplyst nynorsk print templates, since Mikael told NB you would come back to them after the weekend.",
-    "Review the After Tech copy resources (tone of voice, launch narrative, messaging) Carl Fredrik added to the shared folder and the Figma messaging house invite.",
-    "Address Karoline's Figma comment asking for a more specific country in the Norad opening film storyboard.",
-    "Watch for Norad feedback on the animatic you sent Friday before Fartein leaves for Nepal.",
-    "Vipps Nils for the wine from Saturday's dinner."
+    "Send Magnus Nordstrand a folder of the selected Holzweiler images with original filenames (no screenshots or renames).",
+    "Send Kristin's NSY photo selects (media and landbruk shoots) to the photographer.",
+    "Start the After budget once Snorre sends his written description of the project scope.",
+    "Address Karoline's new Figma comments on the Norad opening film and the Tibi introduction video.",
+    "Finalise the Down Education Flytoget budget with Linn and Ida, including the 4:5 versions and Adam's VFX hours.",
+    "Review the After messaging house in Figma that Carl Straumsheim invited you to."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Mikael Lunde", "summary": "Asks whether NewsLab can take on nynorsk versions of the NB Skole Opplyst print templates; NB is expecting an answer this week." },
+    { "source": "slack", "from": "August", "summary": "Asks whether he has access to the website-maker in Figma." },
     { "source": "gmail", "from": "Aurora Berg Heltzer (Udir)", "summary": "Says their printer for Vetuva and Etter planen is Aksell and asks whether you need a contact person there." }
   ]
 }
