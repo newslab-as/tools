@@ -1,24 +1,23 @@
 {
-  "date": "2026-11-17",
+  "date": "2026-11-18",
   "meetings": [
     { "time": "09:00", "title": "NSY", "client": false },
-    { "time": "11:00", "title": "NSY identit — Ukentlig møte", "client": false },
-    { "time": "11:30", "title": "Design Dept Challenge — 1 material", "client": false },
+    { "time": "10:30", "title": "Design Dept Challenge — 1 material", "client": false },
+    { "time": "11:00", "title": "UDIR magasiner — Ukentlig møte", "client": false },
+    { "time": "11:30", "title": "Truecolor budget", "client": false },
     { "time": "12:00", "title": "🥪 Lunch", "client": false },
-    { "time": "12:30", "title": "Mikael / Doug", "client": false },
-    { "time": "13:00", "title": "Linn / Doug", "client": false },
-    { "time": "14:00", "title": "After Chat", "client": false }
+    { "time": "13:00", "title": "Redaksjon interne kanaler", "client": false },
+    { "time": "13:30", "title": "Anbud", "client": false },
+    { "time": "14:30", "title": "Partnermøte for oktober", "client": true }
   ],
   "action_items": [
-    "Send Magnus Nordstrand a folder of the selected Holzweiler images with original filenames (no screenshots or renames).",
-    "Send Kristin's NSY photo selects (media and landbruk shoots) to the photographer.",
-    "Start the After budget once Snorre sends his written description of the project scope.",
+    "Review the After brand and product hierarchy presentation with Snorre with fresh eyes today.",
+    "Finish the Truecolor budget ahead of Friday's price offer meeting with Linn.",
+    "Plan to build the Holzweiler concept presentation with Nils before Monday's 14:00 internal meeting, once ideas and scripts land on Friday.",
     "Address Karoline's new Figma comments on the Norad opening film and the Tibi introduction video.",
-    "Finalise the Down Education Flytoget budget with Linn and Ida, including the 4:5 versions and Adam's VFX hours.",
     "Review the After messaging house in Figma that Carl Straumsheim invited you to."
   ],
   "needs_reply": [
-    { "source": "slack", "from": "August", "summary": "Asks whether he has access to the website-maker in Figma." },
-    { "source": "gmail", "from": "Aurora Berg Heltzer (Udir)", "summary": "Says their printer for Vetuva and Etter planen is Aksell and asks whether you need a contact person there." }
+    { "source": "slack", "from": "August", "summary": "Asks whether he has access to the website-maker in Figma." }
   ]
 }
