@@ -1,23 +1,23 @@
 {
-  "date": "2026-11-18",
+  "date": "2026-11-19",
   "meetings": [
-    { "time": "09:00", "title": "NSY", "client": false },
-    { "time": "10:30", "title": "Design Dept Challenge — 1 material", "client": false },
-    { "time": "11:00", "title": "UDIR magasiner — Ukentlig møte", "client": false },
-    { "time": "11:30", "title": "Truecolor budget", "client": false },
-    { "time": "12:00", "title": "🥪 Lunch", "client": false },
-    { "time": "13:00", "title": "Redaksjon interne kanaler", "client": false },
-    { "time": "13:30", "title": "Anbud", "client": false },
-    { "time": "14:30", "title": "Partnermøte for oktober", "client": true }
+    { "time": "09:00", "title": "Doug & Torgeir & Telenor-prez", "client": false },
+    { "time": "10:00", "title": "Travel to After meeting", "client": false },
+    { "time": "10:30", "title": "After X NewsLab", "client": true },
+    { "time": "11:00", "title": "Design Dept — Monthly Coffee & Catch-up ☕️", "client": false },
+    { "time": "12:30", "title": "🥪 Lunch", "client": false },
+    { "time": "13:00", "title": "Truecolor budget", "client": false },
+    { "time": "13:30", "title": "Send NSY stuff to Kristin", "client": false },
+    { "time": "14:00", "title": "Gulltaggen", "client": false }
   ],
   "action_items": [
-    "Review the After brand and product hierarchy presentation with Snorre with fresh eyes today.",
-    "Finish the Truecolor budget ahead of Friday's price offer meeting with Linn.",
-    "Plan to build the Holzweiler concept presentation with Nils before Monday's 14:00 internal meeting, once ideas and scripts land on Friday.",
-    "Address Karoline's new Figma comments on the Norad opening film and the Tibi introduction video.",
-    "Review the After messaging house in Figma that Carl Straumsheim invited you to."
+    "Polish the After Figma slides before the 10:30 meeting, including the launch timeline and teaser/launch film scope.",
+    "Finish the Truecolor budget ahead of Friday's price offer meeting with Linn and producer Andreas.",
+    "Send the NSY materials to Kristin this afternoon.",
+    "Proceed with the GT America MS Office license now that the client has approved buying the extra font license.",
+    "Address Karoline's four new Figma comments on the Norad opening film."
   ],
   "needs_reply": [
-    { "source": "slack", "from": "August", "summary": "Asks whether he has access to the website-maker in Figma." }
+    { "source": "gmail", "from": "Grilli Type", "summary": "Shared their updated licensing model and needs your go-ahead on which GT America license to purchase." }
   ]
 }
