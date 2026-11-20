@@ -447,6 +447,21 @@ body.can-edit .kanban-add-board{display:flex}
 .wa-ev-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wa-ev-notes{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.8}
 .wa-msg{padding:18px 12px;font-size:13px;color:var(--faint);grid-column:1 / -1}
+.wa-ctrls .pill.agency-only{display:none}
+body.can-edit .wa-ctrls .pill.agency-only{display:inline-flex}
+.wa-folders{list-style:none;margin:0;padding:0;border:1px solid var(--line)}
+.wa-folders li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--line);font-size:14px}
+.wa-folders li:first-child{border-top:none}
+.wa-f-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wa-f-del{flex:0 0 auto;background:none;border:none;color:var(--faint);font-size:18px;line-height:1;padding:0 4px}
+.wa-f-del:hover{color:var(--danger)}
+.wa-f-empty{color:var(--faint)}
+.wa-f-note{margin:12px 0 0;font-size:12px;line-height:1.45;color:var(--edit);overflow-wrap:anywhere}
+/* Google's picker: undo the page zoom so it renders at its native size, and pin it to the window centre. */
+html.picker-open{overflow:hidden}
+.picker-dialog-bg,.picker-dialog{zoom:.8}
+.picker-dialog-bg{position:fixed !important;inset:0 !important;width:auto !important;height:auto !important}
+.picker-dialog{position:fixed !important;top:50% !important;left:50% !important;transform:translate(-50%,-50%) !important;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px)}
 .wa-skel{grid-column:2 / -1;margin:13px 4px;height:28px;background:var(--surface-2);opacity:.6}
 @media (max-width:700px){
   .wa-row{grid-template-columns:92px repeat(5,minmax(0,1fr))}
@@ -532,6 +547,7 @@ body.can-edit .kanban-add-board{display:flex}
       <h2 id="waTitle">Week ahead</h2>
       <div class="wa-ctrls">
         <span class="wa-week" id="waWeek"></span>
+        <button class="pill agency-only" id="waFoldersBtn">Folders</button>
         <button class="pill" id="waPrev" aria-label="Previous week">‹</button>
         <button class="pill" id="waToday">Today</button>
         <button class="pill" id="waNext" aria-label="Next week">›</button>
@@ -660,6 +676,21 @@ body.can-edit .kanban-add-board{display:flex}
   </div>
 </div>
 
+<!-- Week ahead: which Drive folders to read Production Planner plans from -->
+<div class="scrim" id="waFoldersScrim">
+  <div class="modal">
+    <h3 id="waFoldersTitle">Plan folders</h3>
+    <p class="mh-sub" id="waFoldersSub">Week ahead shows plans saved in these Drive folders</p>
+    <ul class="wa-folders" id="waFolderList"></ul>
+    <p class="wa-f-note" id="waFolderNote" hidden></p>
+    <div class="modal-actions">
+      <button class="btn" id="waAddFolder">Add folders</button>
+      <span class="grow"></span>
+      <button class="btn primary" id="waFoldersDone">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Auth gate — blocks the whole page until signed in with @newslab.no. No close
      control by design: the module script below hides it once sign-in succeeds. -->
 <div class="scrim open auth-gate loading" id="authGateScrim">
@@ -751,7 +782,8 @@ const state = {
   weekAhead: null,       // last response from /api/week-ahead: { week:{start,end}, projects:[...] }
   weekAheadStart: null,  // ISO Monday of the week being shown
   weekAheadStatus: "idle", // "idle" | "loading" | "ok" | "error"
-  weekAheadEverLoaded: false
+  weekAheadEverLoaded: false,
+  weekAheadSA: null      // service account email the Worker reads Drive as (from /api/week-ahead)
 };
 
 /* ---------- i18n ---------- */
@@ -800,6 +832,13 @@ const STRINGS = {
     waTitle:"Week ahead", waToday:"Today", waPrev:"Previous week", waNext:"Next week", waWk:"Wk",
     waProject:"Project", waEmpty:"No milestones this week.", waError:"Couldn't load this week.",
     waOpen:"Open in Production Planner",
+    waFolders:"Folders", waFoldersTitle:"Plan folders", waFoldersSub:"Week ahead shows plans saved in these Drive folders",
+    waAddFolder:"Add folders", waDone:"Done", waRemoveFolder:"Remove folder", waPickerTitle:"Choose plan folders",
+    waNoFolders:"No folders yet. Add the folders your Production Planner plans are saved in.",
+    waNoFoldersMsg:"No plan folders chosen yet. Turn on Edit and click Folders to add some.",
+    waPickerFailed:"Couldn't open Google Drive. Check pop-ups aren't blocked and try again.",
+    waReadyTryAgain:"Google Drive is ready. Click Add folders again.",
+    waShareFailed:"Added, but couldn't give the week view access to: {folders}. Share them in Drive as Viewer with {email}.",
     ddTitle:"Today's Brief", ddDesc:"Personal summary",
     ddMeetings:"Notable meetings", ddActions:"Action items", ddReplies:"Needs a reply",
     ddNoMeetings:"Nothing notable today.", ddNoActions:"Nothing outstanding.", ddNoReplies:"All caught up.",
@@ -850,6 +889,13 @@ const STRINGS = {
     waTitle:"Uka som kommer", waToday:"I dag", waPrev:"Forrige uke", waNext:"Neste uke", waWk:"Uke",
     waProject:"Prosjekt", waEmpty:"Ingen milepæler denne uka.", waError:"Kunne ikke laste denne uka.",
     waOpen:"Åpne i Production Planner",
+    waFolders:"Mapper", waFoldersTitle:"Planmapper", waFoldersSub:"Uka som kommer viser planer lagret i disse Disk-mappene",
+    waAddFolder:"Legg til mapper", waDone:"Ferdig", waRemoveFolder:"Fjern mappe", waPickerTitle:"Velg planmapper",
+    waNoFolders:"Ingen mapper ennå. Legg til mappene der Production Planner-planene dine er lagret.",
+    waNoFoldersMsg:"Ingen planmapper valgt ennå. Slå på Rediger og klikk Mapper for å legge til.",
+    waPickerFailed:"Kunne ikke åpne Google Disk. Sjekk at popup-vinduer ikke er blokkert, og prøv igjen.",
+    waReadyTryAgain:"Google Disk er klar. Klikk Legg til mapper igjen.",
+    waShareFailed:"Lagt til, men fikk ikke gitt ukevisningen tilgang til: {folders}. Del dem i Disk som Leser med {email}.",
     ddTitle:"Dagens sammendrag", ddDesc:"Personlig sammendrag",
     ddMeetings:"Viktige møter", ddActions:"Oppgaver", ddReplies:"Trenger svar",
     ddNoMeetings:"Ingenting spesielt i dag.", ddNoActions:"Ingenting utestående.", ddNoReplies:"Alt er unnagjort.",
@@ -947,6 +993,9 @@ function normaliseConfig(cfg){
   c.cards = (Array.isArray(c.cards)?c.cards:[])
     .filter(card=>boardIds.has(card.boardId))
     .map(card=>({id:card.id||uid(), boardId:card.boardId, col:validCols.has(card.col)?card.col:"ideas", text:card.text||"", createdAt:card.createdAt||0}));
+  c.weekAheadFolders = (Array.isArray(c.weekAheadFolders)?c.weekAheadFolders:[])
+    .filter(f=>f && typeof f.id === "string" && DRIVE_FOLDER_ID.test(f.id))
+    .map(f=>({id:f.id, name:typeof f.name === "string" && f.name ? f.name : f.id}));
   return c;
 }
 
@@ -1112,18 +1161,26 @@ function defaultWeekStart(){
   return localISO(addDaysTo(t, 1 - dow));
 }
 
+const DRIVE_FOLDER_ID = /^[A-Za-z0-9_-]{10,100}$/;
+const weekAheadFolderKey = () => (state.config.weekAheadFolders || []).map(f => f.id).join(",");
+
 let weekAheadReq = 0;
+let weekAheadLoadedKey = null;
 async function loadWeekAhead(weekStart){
   state.weekAheadStart = weekStart || state.weekAheadStart || defaultWeekStart();
   const req = ++weekAheadReq;
+  const folderKey = weekAheadFolderKey();
+  weekAheadLoadedKey = folderKey;
   state.weekAheadStatus = "loading";
   renderWeekAhead();
   try{
-    const res = await fetch("/api/week-ahead?week=" + encodeURIComponent(state.weekAheadStart), { cache:"no-store", credentials:"same-origin" });
+    const qs = "week=" + encodeURIComponent(state.weekAheadStart) + (folderKey ? "&folders=" + encodeURIComponent(folderKey) : "");
+    const res = await fetch("/api/week-ahead?" + qs, { cache:"no-store", credentials:"same-origin" });
     if(!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     if(req !== weekAheadReq) return;
     if(!data || !Array.isArray(data.projects)) throw new Error("unexpected response");
+    if(data.serviceAccount) state.weekAheadSA = data.serviceAccount;
     state.weekAhead = data;
     state.weekAheadStatus = "ok";
     state.weekAheadEverLoaded = true;
@@ -1136,6 +1193,165 @@ async function loadWeekAhead(weekStart){
 }
 function shiftWeekAhead(days){
   loadWeekAhead(localISO(addDaysTo(fromLocalISO(state.weekAheadStart || defaultWeekStart()), days)));
+}
+function reloadWeekAheadIfFoldersChanged(){
+  if(state.weekAheadStatus !== "idle" && weekAheadFolderKey() !== weekAheadLoadedKey) loadWeekAhead();
+}
+
+/* ---------- week ahead: choosing plan folders ----------
+   Uses Production Planner's Google OAuth client and picker key (same origin, so
+   the same consent and the planner's cached Drive token both carry over). Each
+   picked folder is shared with the Worker's service account as Viewer, which is
+   what lets /api/week-ahead read the plans inside it. */
+const PLANNER_GOOGLE = {
+  clientId: "832442581745-q05f99oh25br5aeqkrtaj7f2tthc2l3q.apps.googleusercontent.com",
+  apiKey: "AIzaSyBrUd4L-IfFrfULoWYo8_d4cQEDIi6ir-I",
+  projectNumber: "832442581745",
+  scope: "https://www.googleapis.com/auth/drive"
+};
+let googleScriptsPromise = null;
+function loadScript(src){
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src; s.async = true; s.onload = resolve; s.onerror = () => reject(new Error("failed to load " + src));
+    document.head.appendChild(s);
+  });
+}
+function loadGoogleScripts(){
+  if(!googleScriptsPromise){
+    googleScriptsPromise = Promise.all([
+      loadScript("https://accounts.google.com/gsi/client"),
+      loadScript("https://apis.google.com/js/api.js").then(() => new Promise((resolve, reject) =>
+        gapi.load("picker", { callback: resolve, onerror: reject, timeout: 10000, ontimeout: reject })))
+    ]).catch(err => { googleScriptsPromise = null; throw err; });
+  }
+  return googleScriptsPromise;
+}
+function cachedDriveToken(){
+  try{
+    const t = JSON.parse(localStorage.getItem("newslab_drive_token") || "null");
+    if(t && t.token && Date.now() < t.expiresAt - 60000) return t.token;
+  }catch(e){}
+  return null;
+}
+// Must be called straight from a click: the token popup needs the user gesture.
+function withDriveToken(onToken, onError){
+  const cached = cachedDriveToken();
+  if(cached) return onToken(cached);
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: PLANNER_GOOGLE.clientId, scope: PLANNER_GOOGLE.scope,
+    callback: resp => {
+      if(!resp || !resp.access_token){ onError(new Error("no token")); return; }
+      // Same key and shape Production Planner uses, so it benefits too.
+      try{ localStorage.setItem("newslab_drive_token", JSON.stringify({ token: resp.access_token, expiresAt: Date.now() + resp.expires_in*1000 })); }catch(e){}
+      onToken(resp.access_token);
+    },
+    error_callback: err => onError(err)
+  });
+  client.requestAccessToken({ prompt: "" });
+}
+function showFolderPicker(token, onPicked){
+  const mime = "application/vnd.google-apps.folder";
+  const myDrive = new google.picker.DocsView(google.picker.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true).setMimeTypes(mime).setParent("root");
+  const sharedDrives = new google.picker.DocsView(google.picker.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true).setMimeTypes(mime).setEnableDrives(true);
+  const root = document.documentElement;
+  const unlock = () => root.classList.remove("picker-open");
+  const picker = new google.picker.PickerBuilder()
+    .setTitle(tr("waPickerTitle"))
+    .setSize(Math.min(1051, window.innerWidth - 32), Math.min(650, window.innerHeight - 32))
+    .enableFeature(google.picker.Feature.SUPPORT_DRIVES)
+    .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+    .setOAuthToken(token)
+    .setDeveloperKey(PLANNER_GOOGLE.apiKey)
+    .setAppId(PLANNER_GOOGLE.projectNumber)
+    .setLocale(state.lang === "no" ? "no" : "en")
+    .addView(myDrive).addView(sharedDrives)
+    .setCallback(data => {
+      const action = data[google.picker.Response.ACTION];
+      if(action === google.picker.Action.PICKED){
+        unlock();
+        onPicked((data[google.picker.Response.DOCUMENTS] || []).map(d => ({ id: d[google.picker.Document.ID], name: d[google.picker.Document.NAME] })));
+      } else if(action === google.picker.Action.CANCEL || action === "error"){
+        unlock();
+      }
+    })
+    .build();
+  root.classList.add("picker-open");
+  picker.setVisible(true);
+}
+async function serviceAccountEmail(){
+  if(state.weekAheadSA) return state.weekAheadSA;
+  const res = await fetch("/api/week-ahead", { cache:"no-store", credentials:"same-origin" });
+  const data = await res.json();
+  if(!data.serviceAccount) throw new Error("no service account");
+  state.weekAheadSA = data.serviceAccount;
+  return state.weekAheadSA;
+}
+async function shareFolderWithServiceAccount(token, folderId, email){
+  const url = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(folderId)}/permissions?supportsAllDrives=true&sendNotificationEmail=false`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+    body: JSON.stringify({ role: "reader", type: "user", emailAddress: email })
+  });
+  if(!res.ok) throw new Error("HTTP " + res.status);
+}
+
+let waFolderNote = "";
+function renderWaFolders(){
+  const folders = state.config.weekAheadFolders || [];
+  $("#waFolderList").innerHTML = folders.length
+    ? folders.map(f => `<li><span class="wa-f-name" title="${esc(f.id)}">${esc(f.name)}</span>
+        <button class="wa-f-del" data-wa-del="${esc(f.id)}" title="${esc(tr("waRemoveFolder"))}" aria-label="${esc(tr("waRemoveFolder"))}">×</button></li>`).join("")
+    : `<li class="wa-f-empty">${esc(tr("waNoFolders"))}</li>`;
+  $("#waFolderNote").textContent = waFolderNote;
+  $("#waFolderNote").hidden = !waFolderNote;
+  $$("[data-wa-del]", $("#waFolderList")).forEach(b => b.addEventListener("click", () => {
+    state.config.weekAheadFolders = folders.filter(f => f.id !== b.dataset.waDel);
+    syncAgency(); renderWaFolders(); loadWeekAhead();
+  }));
+}
+function openWaFolders(){
+  waFolderNote = "";
+  renderWaFolders();
+  openScrim("#waFoldersScrim");
+  loadGoogleScripts().catch(() => {}); // warm up so the Add click can open Google's popup directly
+  serviceAccountEmail().catch(() => {});
+}
+function addWaFolders(){
+  const btn = $("#waAddFolder");
+  const fail = msg => { waFolderNote = msg; btn.disabled = false; renderWaFolders(); };
+  if(typeof google === "undefined" || !google.accounts || !google.picker){
+    loadGoogleScripts().then(() => { waFolderNote = tr("waReadyTryAgain"); renderWaFolders(); }).catch(() => fail(tr("waPickerFailed")));
+    return;
+  }
+  btn.disabled = true;
+  withDriveToken(token => {
+    try{
+      showFolderPicker(token, async picked => {
+        const existing = new Set((state.config.weekAheadFolders || []).map(f => f.id));
+        const fresh = picked.filter(p => p.id && DRIVE_FOLDER_ID.test(p.id) && !existing.has(p.id));
+        if(!fresh.length){ btn.disabled = false; return; }
+        let email;
+        try{ email = await serviceAccountEmail(); }catch(e){ fail(tr("waPickerFailed")); return; }
+        const failed = [];
+        for(const f of fresh){
+          try{ await shareFolderWithServiceAccount(token, f.id, email); }
+          catch(e){ failed.push(f.name); }
+        }
+        state.config.weekAheadFolders = [...(state.config.weekAheadFolders || []), ...fresh];
+        syncAgency();
+        waFolderNote = failed.length ? tr("waShareFailed").replace("{folders}", failed.join(", ")).replace("{email}", email) : "";
+        btn.disabled = false;
+        renderWaFolders();
+        loadWeekAhead();
+      });
+      btn.disabled = false;
+    }catch(e){ fail(tr("waPickerFailed")); }
+  }, err => {
+    if(err && (err.type === "popup_closed" || err.type === "access_denied")){ btn.disabled = false; return; }
+    fail(tr("waPickerFailed"));
+  });
 }
 
 const WA_LANE = 46;
@@ -1204,7 +1420,7 @@ function renderWeekAhead(){
   } else if(st === "error"){
     body = `<div class="wa-row"><div class="wa-msg">${esc(tr("waError"))}</div></div>`;
   } else if(!data.projects.length){
-    body = `<div class="wa-row"><div class="wa-msg">${esc(tr("waEmpty"))}</div></div>`;
+    body = `<div class="wa-row"><div class="wa-msg">${esc(tr(weekAheadFolderKey() ? "waEmpty" : "waNoFoldersMsg"))}</div></div>`;
   } else {
     body = data.projects.map(p => weekAheadRowHTML(p, weekStart, weekEnd, todayCol)).join("");
   }
@@ -1580,6 +1796,11 @@ function applyI18n(){
   $("#agencySection h2").textContent = tr("agencyTitle");
   $("#agencySection .desc").textContent = tr("agencyDesc");
   $("#waTitle").textContent = tr("waTitle");
+  $("#waFoldersBtn").textContent = tr("waFolders");
+  $("#waFoldersTitle").textContent = tr("waFoldersTitle");
+  $("#waFoldersSub").textContent = tr("waFoldersSub");
+  $("#waAddFolder").textContent = tr("waAddFolder");
+  $("#waFoldersDone").textContent = tr("waDone");
   $("#waToday").textContent = tr("waToday");
   $("#waPrev").setAttribute("aria-label", tr("waPrev")); $("#waPrev").title = tr("waPrev");
   $("#waNext").setAttribute("aria-label", tr("waNext")); $("#waNext").title = tr("waNext");
@@ -1644,6 +1865,9 @@ initSplitDivider();
 $("#waPrev").addEventListener("click", ()=> shiftWeekAhead(-7));
 $("#waNext").addEventListener("click", ()=> shiftWeekAhead(7));
 $("#waToday").addEventListener("click", ()=> loadWeekAhead(defaultWeekStart()));
+$("#waFoldersBtn").addEventListener("click", openWaFolders);
+$("#waAddFolder").addEventListener("click", addWaFolders);
+$("#waFoldersDone").addEventListener("click", ()=> closeScrim("#waFoldersScrim"));
 $("#langToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setLang(state.lang==="en"?"no":"en"); } });
 
 document.addEventListener("keydown", e=>{
@@ -1720,6 +1944,7 @@ onSnapshot(AGENCY_DOC, snap => {
   $("#tagline").textContent = state.config.meta.tagline || "tools";
   render();
   applyingRemote = false;
+  if(currentUser) reloadWeekAheadIfFoldersChanged();
 }, err => console.warn("[hub] agency sync unavailable, using config.json fallback:", err.message));
 
 async function seedAgencyIfMissing(){
@@ -1728,7 +1953,8 @@ async function seedAgencyIfMissing(){
     if(!snap.exists()){
       await setDoc(AGENCY_DOC, {
         meta: state.base.meta, notice: state.base.notice, categories: state.base.categories,
-        agency: state.base.agency, boards: state.base.boards, cards: state.base.cards
+        agency: state.base.agency, boards: state.base.boards, cards: state.base.cards,
+        weekAheadFolders: state.base.weekAheadFolders || []
       });
     }
   }catch(e){ console.error("[hub] seed failed — check Firestore rules are published:", e.code, e.message); }
@@ -1740,7 +1966,8 @@ async function pushOrgUpdate(){
   try{
     await setDoc(AGENCY_DOC, {
       meta: state.config.meta, notice: state.config.notice, categories: state.config.categories,
-      agency: state.config.agency, boards: state.config.boards, cards: state.config.cards
+      agency: state.config.agency, boards: state.config.boards, cards: state.config.cards,
+      weekAheadFolders: state.config.weekAheadFolders || []
     });
     state.syncStatus = "idle"; render();
   }catch(e){
