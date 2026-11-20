@@ -412,7 +412,8 @@ body.can-edit .kanban-add-board{display:flex}
 }
 
 /* ---------- Week ahead (Production Planner milestones) ---------- */
-.wa-ctrls{margin-left:auto;display:flex;align-items:center;gap:6px}
+.wa-ctrls{margin-left:auto;display:flex;align-items:center;gap:6px;cursor:default}
+#weekAheadSection.collapsed .wa-ctrls{visibility:hidden}
 .wa-week{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:6px}
 .wa-ctrls .pill{padding:5px 9px}
 .wa-grid{border:1px solid var(--line);background:var(--surface)}
@@ -543,15 +544,17 @@ html.picker-open{overflow:hidden}
 <main class="wrap" id="app">
   <!-- WEEK AHEAD — milestones from Production Planner plans, via /api/week-ahead; stays hidden if that endpoint is unavailable -->
   <section class="section" id="weekAheadSection" hidden>
-    <div class="section-head">
+    <div class="section-head kanban-head" id="waToggle" role="button" tabindex="0" aria-expanded="true">
       <h2 id="waTitle">Week ahead</h2>
-      <div class="wa-ctrls">
+      <span class="count" id="waCount"></span>
+      <div class="wa-ctrls" id="waCtrls">
         <span class="wa-week" id="waWeek"></span>
         <button class="pill agency-only" id="waFoldersBtn">Folders</button>
         <button class="pill" id="waPrev" aria-label="Previous week">‹</button>
         <button class="pill" id="waToday">Today</button>
         <button class="pill" id="waNext" aria-label="Next week">›</button>
       </div>
+      <svg class="chev" id="waChev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
     </div>
     <div class="wa-grid" id="waGrid"></div>
   </section>
@@ -771,6 +774,7 @@ const state = {
   activeCat: null,
   dark: false,
   kanbanOpen: false,
+  weekAheadOpen: true,
   lang: "en",
   signedIn: false,
   syncStatus: "idle", // "idle" | "syncing" | "error" — surfaced so a failed write is never silently lost
@@ -942,6 +946,7 @@ async function boot(){
   const prefs = JSON.parse(store.get(K.prefs) || "{}");
   state.dark = prefs.dark ?? false;
   state.kanbanOpen = prefs.kanbanOpen ?? false;
+  state.weekAheadOpen = prefs.weekAheadOpen ?? true;
   state.lang = prefs.lang === "en" ? "en" : "no";
   applyI18n();
   applyTheme();
@@ -978,6 +983,7 @@ async function boot(){
   $("#tagline").textContent = state.config.meta.tagline || "tools";
   render();
   setKanbanOpen(state.kanbanOpen);
+  setWeekAheadOpen(state.weekAheadOpen);
 }
 
 const KANBAN_COLS = [ {id:"ideas", labelKey:"colIdeas"}, {id:"progress", labelKey:"colProgress"}, {id:"done", labelKey:"colDone"} ];
@@ -1413,16 +1419,24 @@ function renderWeekAhead(){
     days.map((d,i) => `<div class="wa-dayhead${i === todayCol ? " today" : ""}">${esc(fmtDow.format(d).replace(".", ""))}<b>${d.getDate()}</b></div>`).join("")
   }</div>`;
 
+  // Only single-day events (milestones, deadlines, meetings); multi-day phases made the grid too busy.
+  const projects = st === "ok"
+    ? state.weekAhead.projects
+        .map(p => ({ ...p, events: p.events.filter(e => e.start === e.end) }))
+        .filter(p => p.events.length)
+    : [];
+  const milestones = projects.reduce((n, p) => n + p.events.length, 0);
+  $("#waCount").textContent = st === "ok" ? String(milestones).padStart(2, "0") : "";
+
   let body;
-  const data = state.weekAhead;
   if(st === "loading"){
     body = `<div class="wa-row"><div class="wa-label"></div><div class="wa-skel"></div></div>`;
   } else if(st === "error"){
     body = `<div class="wa-row"><div class="wa-msg">${esc(tr("waError"))}</div></div>`;
-  } else if(!data.projects.length){
+  } else if(!projects.length){
     body = `<div class="wa-row"><div class="wa-msg">${esc(tr(weekAheadFolderKey() ? "waEmpty" : "waNoFoldersMsg"))}</div></div>`;
   } else {
-    body = data.projects.map(p => weekAheadRowHTML(p, weekStart, weekEnd, todayCol)).join("");
+    body = projects.map(p => weekAheadRowHTML(p, weekStart, weekEnd, todayCol)).join("");
   }
   $("#waGrid").innerHTML = head + body;
 }
@@ -1436,7 +1450,7 @@ function syncAgency(){
   window.dispatchEvent(new CustomEvent("nl-agency-change"));
 }
 function savePrefs(){
-  store.set(K.prefs, JSON.stringify({dark:state.dark, kanbanOpen:state.kanbanOpen, lang:state.lang}));
+  store.set(K.prefs, JSON.stringify({dark:state.dark, kanbanOpen:state.kanbanOpen, weekAheadOpen:state.weekAheadOpen, lang:state.lang}));
   window.dispatchEvent(new CustomEvent("nl-personal-change"));
 }
 function saveUsage(){ store.set(K.usage, JSON.stringify(state.usage)); }
@@ -1585,6 +1599,14 @@ function setKanbanOpen(open){
   $("#kanbanBody").hidden = !open;
   $("#kanbanToggle").setAttribute("aria-expanded", String(open));
   $("#kanbanChev").style.transform = open ? "rotate(180deg)" : "";
+  savePrefs();
+}
+function setWeekAheadOpen(open){
+  state.weekAheadOpen = open;
+  $("#waGrid").hidden = !open;
+  $("#weekAheadSection").classList.toggle("collapsed", !open);
+  $("#waToggle").setAttribute("aria-expanded", String(open));
+  $("#waChev").style.transform = open ? "rotate(180deg)" : "";
   savePrefs();
 }
 function boardCards(boardId, col){ return state.config.cards.filter(c=>c.boardId===boardId && c.col===col); }
@@ -1866,6 +1888,11 @@ $("#waPrev").addEventListener("click", ()=> shiftWeekAhead(-7));
 $("#waNext").addEventListener("click", ()=> shiftWeekAhead(7));
 $("#waToday").addEventListener("click", ()=> loadWeekAhead(defaultWeekStart()));
 $("#waFoldersBtn").addEventListener("click", openWaFolders);
+// The nav buttons sit inside the clickable header; keep their clicks from toggling it.
+$("#waCtrls").addEventListener("click", e => e.stopPropagation());
+$("#waCtrls").addEventListener("keydown", e => e.stopPropagation());
+$("#waToggle").addEventListener("click", ()=> setWeekAheadOpen(!state.weekAheadOpen));
+$("#waToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setWeekAheadOpen(!state.weekAheadOpen); } });
 $("#waAddFolder").addEventListener("click", addWaFolders);
 $("#waFoldersDone").addEventListener("click", ()=> closeScrim("#waFoldersScrim"));
 $("#langToggle").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setLang(state.lang==="en"?"no":"en"); } });
@@ -1990,15 +2017,17 @@ function listenPersonal(uid){
         state.dark = !!data.prefs.dark;
         state.lang = data.prefs.lang === "en" ? "en" : "no";
         state.kanbanOpen = !!data.prefs.kanbanOpen;
+        state.weekAheadOpen = data.prefs.weekAheadOpen ?? true;
       }
     } else {
       setDoc(personalDocRef(uid), {
         items: state.personal,
-        prefs: { dark: state.dark, lang: state.lang, kanbanOpen: state.kanbanOpen }
+        prefs: { dark: state.dark, lang: state.lang, kanbanOpen: state.kanbanOpen, weekAheadOpen: state.weekAheadOpen }
       }).catch(()=>{});
     }
     applyTheme();
     setKanbanOpen(state.kanbanOpen);
+    setWeekAheadOpen(state.weekAheadOpen);
     applyI18n(); // also calls render()
     applyingRemote = false;
   }, err => console.warn("[hub] personal sync unavailable:", err.message));
@@ -2009,7 +2038,7 @@ async function pushPersonalUpdate(){
   try{
     await setDoc(personalDocRef(currentUser.uid), {
       items: state.personal,
-      prefs: { dark: state.dark, lang: state.lang, kanbanOpen: state.kanbanOpen }
+      prefs: { dark: state.dark, lang: state.lang, kanbanOpen: state.kanbanOpen, weekAheadOpen: state.weekAheadOpen }
     });
   }catch(e){ console.error("[hub] personal sync write failed:", e.code, e.message); }
 }
