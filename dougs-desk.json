@@ -1,23 +1,23 @@
 {
-  "date": "2026-11-19",
+  "date": "2026-11-20",
   "meetings": [
-    { "time": "09:00", "title": "Doug & Torgeir & Telenor-prez", "client": false },
-    { "time": "10:00", "title": "Travel to After meeting", "client": false },
-    { "time": "10:30", "title": "After X NewsLab", "client": true },
-    { "time": "11:00", "title": "Design Dept — Monthly Coffee & Catch-up ☕️", "client": false },
-    { "time": "12:30", "title": "🥪 Lunch", "client": false },
-    { "time": "13:00", "title": "Truecolor budget", "client": false },
-    { "time": "13:30", "title": "Send NSY stuff to Kristin", "client": false },
-    { "time": "14:00", "title": "Gulltaggen", "client": false }
+    { "time": "09:00", "title": "Anbud", "client": false },
+    { "time": "11:00", "title": "Pristilbud til Truecolor på produksjon i Oslo", "client": true },
+    { "time": "12:00", "title": "🥪 Lunch", "client": false },
+    { "time": "12:30", "title": "Design Dept Challenge — 1 material", "client": false },
+    { "time": "13:00", "title": "Profil og filer NSY", "client": true },
+    { "time": "14:00", "title": "Doug & Torgeir & Telenor-prez", "client": false },
+    { "time": "15:00", "title": "Vinlotto! 🍷", "client": false }
   ],
   "action_items": [
-    "Polish the After Figma slides before the 10:30 meeting, including the launch timeline and teaser/launch film scope.",
-    "Finish the Truecolor budget ahead of Friday's price offer meeting with Linn and producer Andreas.",
-    "Send the NSY materials to Kristin this afternoon.",
-    "Proceed with the GT America MS Office license now that the client has approved buying the extra font license.",
-    "Address Karoline's four new Figma comments on the Norad opening film."
+    "Review Mikael's answers to the NTNU e-learning tender questions in #ntnu-elæring during the Anbud block.",
+    "Bring the Truecolor budget to the 11:00 price offer meeting with Linn and Uttrykk Oslo.",
+    "Prepare the NSY profile and files for the 13:00 Teams meeting with Kristin Ålmo at Udir.",
+    "Review Mikael's NewsLab Figma presentation before the 14:00 Telenor-prez with Torgeir.",
+    "Check Kristin Fagerlid's new voice-over for the NB intro film."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Grilli Type", "summary": "Shared their updated licensing model and needs your go-ahead on which GT America license to purchase." }
+    { "source": "gmail", "from": "Grilli Type", "summary": "Shared their updated licensing model and needs your go-ahead on which GT America license to purchase." },
+    { "source": "gmail", "from": "Linn Isaksen", "summary": "Invited you to 'Ideer til Kopinor' on Fri 27 Nov at 10:00 and needs an RSVP." }
   ]
 }
