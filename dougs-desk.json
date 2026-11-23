@@ -1,23 +1,25 @@
 {
-  "date": "2026-11-20",
+  "date": "2026-11-23",
   "meetings": [
-    { "time": "09:00", "title": "Anbud", "client": false },
-    { "time": "11:00", "title": "Pristilbud til Truecolor på produksjon i Oslo", "client": true },
+    { "time": "09:15", "title": "Internpolitisk kvarter (fhv. Akkurat nå! fhv. Hammertime)", "client": false },
+    { "time": "09:30", "title": "Teamledermøte", "client": false },
+    { "time": "10:00", "title": "Design Dept Challenge — 1 material", "client": false },
+    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
+    { "time": "11:00", "title": "✏️ Design Dept — Ukentlig møte", "client": false },
+    { "time": "11:30", "title": "UDIR magasiner — Ukentlig møte", "client": false },
     { "time": "12:00", "title": "🥪 Lunch", "client": false },
-    { "time": "12:30", "title": "Design Dept Challenge — 1 material", "client": false },
-    { "time": "13:00", "title": "Profil og filer NSY", "client": true },
-    { "time": "14:00", "title": "Doug & Torgeir & Telenor-prez", "client": false },
-    { "time": "15:00", "title": "Vinlotto! 🍷", "client": false }
+    { "time": "12:30", "title": "Holzweiler presentation", "client": false },
+    { "time": "14:00", "title": "Vi går gjennom Holzweiler-ideer UNS2", "client": false },
+    { "time": "15:00", "title": "Vagus nerve stimulation session", "client": false },
+    { "time": "16:00", "title": "NSY - check UU on ppt, Teams BG, icons proposal", "client": false }
   ],
   "action_items": [
-    "Review Mikael's answers to the NTNU e-learning tender questions in #ntnu-elæring during the Anbud block.",
-    "Bring the Truecolor budget to the 11:00 price offer meeting with Linn and Uttrykk Oslo.",
-    "Prepare the NSY profile and files for the 13:00 Teams meeting with Kristin Ålmo at Udir.",
-    "Review Mikael's NewsLab Figma presentation before the 14:00 Telenor-prez with Torgeir.",
-    "Check Kristin Fagerlid's new voice-over for the NB intro film."
+    "Sketch out the Holzweiler pitch presentation with Linn before the 14:00 internal ideas review.",
+    "Go through the Vetuva 2027 texts from Udir (now in the shared drive) ahead of the 11:30 UDIR magasiner meeting.",
+    "Check UU on the NSY ppt, the Teams background and the icons proposal so the full guidelines are ready for Friday's 11:00 NSY walkthrough.",
+    "Plan capacity for the NB Skole nynorsk booklets in the first week of December, once content lands on 30 November."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Grilli Type", "summary": "Shared their updated licensing model and needs your go-ahead on which GT America license to purchase." },
-    { "source": "gmail", "from": "Linn Isaksen", "summary": "Invited you to 'Ideer til Kopinor' on Fri 27 Nov at 10:00 and needs an RSVP." }
+    { "source": "gmail", "from": "Maria Maaneskiold", "summary": "Oslo illustrator (agent Kjersti on cc) asking for a meeting to present herself and discuss potential collaboration." }
   ]
 }
