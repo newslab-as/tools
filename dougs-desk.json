@@ -1,25 +1,21 @@
 {
-  "date": "2026-11-23",
+  "date": "2026-11-24",
   "meetings": [
-    { "time": "09:15", "title": "Internpolitisk kvarter (fhv. Akkurat nå! fhv. Hammertime)", "client": false },
-    { "time": "09:30", "title": "Teamledermøte", "client": false },
-    { "time": "10:00", "title": "Design Dept Challenge — 1 material", "client": false },
-    { "time": "10:30", "title": "Prepare Department Meeting", "client": false },
-    { "time": "11:00", "title": "✏️ Design Dept — Ukentlig møte", "client": false },
-    { "time": "11:30", "title": "UDIR magasiner — Ukentlig møte", "client": false },
+    { "time": "09:00", "title": "NTNU anbud", "client": false },
+    { "time": "09:00", "title": "Vagus nerve stimulation session", "client": false },
+    { "time": "11:00", "title": "NSY identit — Ukentlig møte", "client": false },
+    { "time": "11:30", "title": "Move Adobe license", "client": false },
     { "time": "12:00", "title": "🥪 Lunch", "client": false },
-    { "time": "12:30", "title": "Holzweiler presentation", "client": false },
-    { "time": "14:00", "title": "Vi går gjennom Holzweiler-ideer UNS2", "client": false },
-    { "time": "15:00", "title": "Vagus nerve stimulation session", "client": false },
-    { "time": "16:00", "title": "NSY - check UU on ppt, Teams BG, icons proposal", "client": false }
+    { "time": "12:30", "title": "Check ferie and overtime", "client": false },
+    { "time": "13:00", "title": "until next summer", "client": false },
+    { "time": "14:00", "title": "Ideer til Kopinor", "client": true },
+    { "time": "15:00", "title": "Design Dept Challenge — 1 material", "client": false }
   ],
   "action_items": [
-    "Sketch out the Holzweiler pitch presentation with Linn before the 14:00 internal ideas review.",
-    "Go through the Vetuva 2027 texts from Udir (now in the shared drive) ahead of the 11:30 UDIR magasiner meeting.",
-    "Check UU on the NSY ppt, the Teams background and the icons proposal so the full guidelines are ready for Friday's 11:00 NSY walkthrough.",
-    "Plan capacity for the NB Skole nynorsk booklets in the first week of December, once content lands on 30 November."
+    "Make 9x16 and 4x5 ad crops of the Holzweiler julekampanje images for Sofia first thing this morning, as promised.",
+    "Take Kristin's preferred first row (medium colours) forward for the NSY Teams backgrounds ahead of the 11:00 NSY meeting.",
+    "Read the Kopinor brief and notes docs before the 14:00 ideas session on the humorous anti-copying film.",
+    "Prepare for Lasse from Klink Studio dropping by tomorrow (25 Nov) at 11:00."
   ],
-  "needs_reply": [
-    { "source": "gmail", "from": "Maria Maaneskiold", "summary": "Oslo illustrator (agent Kjersti on cc) asking for a meeting to present herself and discuss potential collaboration." }
-  ]
+  "needs_reply": []
 }
