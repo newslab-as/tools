@@ -1,21 +1,22 @@
 {
-  "date": "2026-11-24",
+  "date": "2026-11-25",
   "meetings": [
-    { "time": "09:00", "title": "NTNU anbud", "client": false },
-    { "time": "09:00", "title": "Vagus nerve stimulation session", "client": false },
-    { "time": "11:00", "title": "NSY identit — Ukentlig møte", "client": false },
-    { "time": "11:30", "title": "Move Adobe license", "client": false },
+    { "time": "09:15", "title": "Fæbrik x NewsLab", "client": true },
+    { "time": "10:30", "title": "After", "client": false },
     { "time": "12:00", "title": "🥪 Lunch", "client": false },
-    { "time": "12:30", "title": "Check ferie and overtime", "client": false },
-    { "time": "13:00", "title": "until next summer", "client": false },
-    { "time": "14:00", "title": "Ideer til Kopinor", "client": true },
-    { "time": "15:00", "title": "Design Dept Challenge — 1 material", "client": false }
+    { "time": "12:30", "title": "After", "client": false },
+    { "time": "13:30", "title": "until next summer", "client": false },
+    { "time": "14:00", "title": "Leselyst Videos", "client": false },
+    { "time": "15:00", "title": "Ideas for Leselyst", "client": false }
   ],
   "action_items": [
-    "Make 9x16 and 4x5 ad crops of the Holzweiler julekampanje images for Sofia first thing this morning, as promised.",
-    "Take Kristin's preferred first row (medium colours) forward for the NSY Teams backgrounds ahead of the 11:00 NSY meeting.",
-    "Read the Kopinor brief and notes docs before the 14:00 ideas session on the humorous anti-copying film.",
-    "Prepare for Lasse from Klink Studio dropping by tomorrow (25 Nov) at 11:00."
+    "Be ready to host Fæbrik at the office at 09:15 (Linn is organising, Møterom 1).",
+    "Lasse from Klink Studio is dropping by at 11:00, which isn't on the calendar, so keep that slot free.",
+    "Keep going on the After film-ideas presentation and the ideas for Marlene, and decide whether to send her a status update.",
+    "Add Linn's summer-trip visuals as references in the Holzweiler charter-trip moodboard."
   ],
-  "needs_reply": []
+  "needs_reply": [
+    { "source": "gmail", "from": "Merete Carlsen (nb.no)", "summary": "RSVP to the Teams invite for the Sommerles 2027 kickoff meeting with Tibi." },
+    { "source": "gmail", "from": "marlene@after.tech", "summary": "Accept or decline the 'Hold: After x NewsLab' invite for Fri 27 Nov, 11:30–13:00." }
+  ]
 }
