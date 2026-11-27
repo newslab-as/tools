@@ -1,24 +1,27 @@
 {
-  "date": "2026-11-26",
+  "date": "2026-11-27",
   "meetings": [
     { "time": "09:00", "title": "After", "client": false },
-    { "time": "09:30", "title": "Norad check-in", "client": false },
-    { "time": "10:30", "title": "Holzweiler until next summer", "client": false },
-    { "time": "12:00", "title": "🥪 Lunch", "client": false },
-    { "time": "12:30", "title": "After Tech - Distribution", "client": false },
-    { "time": "14:00", "title": "Pitch: Ideer til Until Next Summer 2 - SS27", "client": true },
-    { "time": "16:00", "title": "NSY illy proposal", "client": false },
-    { "time": "16:30", "title": "Design Dept Challenge — 1 material", "client": false }
+    { "time": "10:00", "title": "Vetuva check-in", "client": false },
+    { "time": "11:00", "title": "🥪 Lunch", "client": false },
+    { "time": "11:30", "title": "After x NewsLab", "client": true },
+    { "time": "11:30", "title": "NewsLab + After", "client": false },
+    { "time": "13:30", "title": "Mikael / Doug", "client": false },
+    { "time": "14:15", "title": "NSY illy proposal", "client": false },
+    { "time": "15:00", "title": "Vinlotto! 🍷", "client": false },
+    { "time": "15:00", "title": "Check ferie and overtime", "client": false },
+    { "time": "15:30", "title": "Design Dept Challenge — 1 material", "client": false }
   ],
   "action_items": [
-    "Finish the Until Next Summer 2 pitch in the 10:30 block, ready to present at Holzweiler HQ at 14:00.",
-    "Update the Etter planen designs so the refleksjonsspørsmål sit at the end of each article, as promised to Aurora (Udir).",
-    "Look at Bram van der Laar's portfolio, which Linn forwarded, and decide whether a chat is worthwhile.",
-    "Nils is renewing his licence this morning and will be in closer to lunch."
+    "Prepare for After x NewsLab at 11:30 with Marlene, Jon and Henrik (After) and Snorre.",
+    "Update the Etter planen designs so the refleksjonsspørsmål sit at the end of each article, ahead of the 2 Dec delivery to Udir.",
+    "Send the Holzweiler campaign files to byHands and agree on a joint SoMe post.",
+    "Fill in the correct role names (Tobias, lighting) in the Holzweiler press release draft."
   ],
   "needs_reply": [
-    { "source": "gmail", "from": "Ida Lund Bjørnsen (byHands)", "summary": "Wants the Holzweiler campaign files and asks about a joint SoMe post, plus whether the client is happy." },
+    { "source": "gmail", "from": "Linn Isaksen (Google Docs)", "summary": "Asks what to call Tobias's role and who did the lighting, and suggests cutting your AI note from the Holzweiler press release." },
     { "source": "gmail", "from": "Torgeir Gjendem Mortensen", "summary": "Asks in the NTNU minikonkurranse doc whether the proposed plan is OK and realistic." },
-    { "source": "gmail", "from": "marlene@after.tech", "summary": "RSVP to the updated After x NewsLab invite (Fri 27 Nov, 11:30) and the new 'Hold: NewsLab' for Thu 3 Dec, 12:00–15:30." }
+    { "source": "gmail", "from": "Ida Lund Bjørnsen (byHands)", "summary": "Waiting on the Holzweiler campaign files and your view on a joint SoMe post." },
+    { "source": "slack", "from": "Linn Isaksen", "summary": "Thinks the t-shirts and postcard should have stayed in the deck and asks if two slides would be too much." }
   ]
 }
